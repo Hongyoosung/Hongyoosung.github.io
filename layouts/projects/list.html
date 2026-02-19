@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="{{ .Site.LanguageCode | default .Lang }}">
+<head>
+    <title>{{ .Title }} - {{ .Site.Title }}</title>
+    {{ partial "head_custom.html" . }}
+</head>
+<body class="bg-background-light text-text-main min-h-screen flex flex-col items-center relative overflow-x-hidden selection:bg-slate-200 selection:text-slate-900">
+
+    <a href="{{ site.Home.RelPermalink }}"
+       class="fixed top-6 left-6 z-50 flex items-center gap-2 px-4 py-2 rounded-xl font-sans text-sm transition-all duration-300 group bg-slate-500/10 backdrop-blur-sm border border-slate-300/30 text-slate-500 hover:text-slate-800">
+        <span class="group-hover:-translate-x-1 transition-transform duration-300 inline-block">←</span>
+        {{ if eq .Lang "ko" }}홈으로{{ else }}Back{{ end }}
+    </a>
+
+    <div class="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none opacity-30">
+        <div class="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-slate-200/40 rounded-full blur-[120px]"></div>
+        <div class="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-gray-200/40 rounded-full blur-[120px]"></div>
+    </div>
+
+    <main class="w-full max-w-5xl px-6 py-20 flex flex-col items-center">
+
+        <header class="w-full text-center mb-16 opacity-0 animate-fade-in-up">
+            <h1 class="text-4xl md:text-5xl font-serif font-bold">{{ .Title }}</h1>
+        </header>
+
+        {{ $projectPages := where (where .Site.RegularPages "Section" "projects") "Lang" .Lang }}
+        {{ if $projectPages }}
+        <ul class="w-full flex flex-col gap-6 opacity-0 animate-fade-in-up-delay-1">
+            {{ range $projectPages.ByWeight }}
+            <li>
+                <a href="{{ .RelPermalink }}"
+                   class="block w-full p-8 rounded-2xl border border-border-color/30 bg-slate-500/5 hover:bg-white hover:shadow-hover-card transition-all duration-300 group">
+                    <h2 class="text-2xl font-serif font-semibold mb-2 group-hover:text-slate-900 transition-colors duration-300">{{ .Title }}</h2>
+                    {{ if .Params.description }}
+                    <p class="text-text-muted font-sans text-base mt-1">{{ .Params.description }}</p>
+                    {{ end }}
+                </a>
+            </li>
+            {{ end }}
+        </ul>
+        {{ else }}
+        <p class="text-text-muted font-sans text-lg opacity-0 animate-fade-in-up-delay-1">
+            {{ if eq .Lang "ko" }}아직 등록된 프로젝트가 없습니다.{{ else }}No projects yet.{{ end }}
+        </p>
+        {{ end }}
+
+    </main>
+
+    {{ partial "extend_footer.html" . }}
+</body>
+</html>

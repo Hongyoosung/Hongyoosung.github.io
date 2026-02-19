@@ -6,16 +6,17 @@
 <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
 <script>
     tailwind.config = {
+        darkMode: 'class',
         theme: {
             extend: {
                 colors: {
-                    primary: "#334155", 
-                    "background-light": "#ffffff",
-                    "background-subtle": "#fafafa",
-                    "text-main": "#1e293b",
-                    "text-muted": "#64748b",
-                    "accent": "#0ea5e9",
-                    "border-color": "#e2e8f0",
+                    primary: "var(--tw-text)",
+                    "background-light": "var(--tw-bg)",
+                    "background-subtle": "var(--tw-bg)",
+                    "text-main": "var(--tw-text)",
+                    "text-muted": "var(--secondary)",
+                    "accent": "var(--color-accent)",
+                    "border-color": "var(--tw-border)",
                 },
                 fontFamily: {
                     serif: ["'Times New Roman'", "'Playfair Display'", "serif"],
@@ -43,7 +44,6 @@
     };
 </script>
 <style>
-    /* 스크롤바 및 네비게이션 호버 효과 */
     ::-webkit-scrollbar { width: 8px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -51,3 +51,23 @@
     .nav-item { transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); }
     .nav-item:hover { transform: translateY(-20px); padding-bottom: 20px; z-index: 10; }
 </style>
+
+<script>
+    // Theme initialization — ensures custom CSS variables and dark class apply before paint
+    (function () {
+        var pref = localStorage.getItem("pref-theme");
+        var html = document.documentElement;
+        if (pref === "dark") {
+            html.dataset.theme = "dark";
+            html.classList.add("dark");
+        } else if (pref === "light") {
+            html.dataset.theme = "light";
+            html.classList.remove("dark");
+        } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+            html.dataset.theme = "dark";
+            html.classList.add("dark");
+        } else {
+            html.dataset.theme = "light";
+        }
+    })();
+</script>

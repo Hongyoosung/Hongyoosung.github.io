@@ -43,7 +43,7 @@ defaultContentLanguage = 'en'
         # 네비게이션 버튼 (HTML 디자인의 Nav 항목)
         [[languages.en.params.profileMode.buttons]]
             name = "Projects"
-            url = "/projects"
+            url = "/projects/project-1"
         [[languages.en.params.profileMode.buttons]]
             name = "Archive"
             url = "/archives"
@@ -84,7 +84,7 @@ defaultContentLanguage = 'en'
         # 네비게이션 버튼 (한글)
         [[languages.ko.params.profileMode.buttons]]
             name = "프로젝트"
-            url = "/ko/projects"
+            url = "/ko/projects/project-1"
         [[languages.ko.params.profileMode.buttons]]
             name = "아카이브"
             url = "/ko/archives"

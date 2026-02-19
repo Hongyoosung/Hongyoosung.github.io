@@ -24,6 +24,8 @@
     /* Updated for deeper gray in white mode */
     --tw-border: #cbd5e1;
     /* Darker gray for dividers */
+    --secondary: rgba(100, 116, 139, 1);
+    /* slate-500 – light mode muted text */
 }
 
 [data-theme='dark'],

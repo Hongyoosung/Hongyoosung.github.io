@@ -21,11 +21,19 @@
         </button>
 
         <div class="lang-toggle-sticky">
-            {{- $lang := .Lang}}
-            {{- range site.Home.Translations }}
-            <a href="{{ .Permalink }}" title="{{ .Language.LanguageName | default .Lang | title }}">
-                {{ .Lang | title }}
-            </a>
+            {{- $translations := .Translations }}
+            {{- if $translations }}
+                {{- range $translations }}
+                <a href="{{ .Permalink }}" title="{{ .Language.LanguageName | default .Lang | title }}">
+                    {{ .Lang | upper }}
+                </a>
+                {{- end }}
+            {{- else }}
+                {{- range site.Home.Translations }}
+                <a href="{{ .Permalink }}" title="{{ .Language.LanguageName | default .Lang | title }}">
+                    {{ .Lang | upper }}
+                </a>
+                {{- end }}
             {{- end }}
         </div>
     </div>
