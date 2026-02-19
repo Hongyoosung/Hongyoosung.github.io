@@ -22,7 +22,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      HUGO_VERSION: 0.121.0 # 설치된 Hugo 버전과 맞춰주면 좋습니다.
+      HUGO_VERSION: 0.146.0
     steps:
       - name: Checkout
         uses: actions/checkout@v4
