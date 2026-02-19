@@ -1,37 +1,109 @@
-baseURL = "https://yoosung-h.github.io/"
-languageCode = "en-us"
+baseURL = "https://Hongyoosung.github.io/"
 title = "Yoosung's Dev Log"
 theme = "PaperMod"
+defaultContentLanguage = 'en'
 
+# -------------------------------------------------------------------------
+# Core Params
+# -------------------------------------------------------------------------
 [params]
     env = "production"
-    title = "Yoosung's Dev Log"
     description = "Game Programmer Technical Blog"
     author = "Yoosung"
     
-    # PaperMod 전용 설정
-    defaultTheme = "auto" # 접속자 설정에 따라 다크/라이트 모드 자동 전환
-    showCodeCopyButtons = true # 코드 복사 버튼 활성화 (기술 블로그 필수!)
-    displayFullContent = false
+    # PaperMod UI 설정
+    defaultTheme = "light" # 디자인에 맞춰 Light 모드 기본 설정 권장
+    showCodeCopyButtons = true
     ShowReadingTime = true
+    
+    # 로고 설정 (좌측 상단, 홈으로 가기 위함)
+    label = { text = "Yoosung's DevLog", icon = "", iconHeight = 35 }
 
-    [params.profileMode]
+# -------------------------------------------------------------------------
+# [English] - Default
+# -------------------------------------------------------------------------
+[languages.en]
+    languageName = "EN"
+    weight = 1
+    title = "Yoosung's DevLog"
+    
+    [languages.en.params.profileMode]
         enabled = true
-        title = "Hi there! 👋"
-        subtitle = "Game Programmer | C++ | Unreal Engine | Graphics"
-        imageUrl = "https://github.com/yoosung-h.png" # 본인 깃허브 프로필 사진 활용
+        title = "Yoosung's DevLog" # 메인 타이틀 (h1)
+        
+        # 서브타이틀 (HTML/Tailwind 클래스 포함하여 디자인 유지)
+        subtitle = """
+        <span class="subtitle-highlight">Game Engineer</span> specializing in  <br class="subtitle-br"/> Unreal Engine Architecture and Intelligent Gameplay Systems.
+        """
+        
+        imageUrl = "https://github.com/Hongyoosung.png" # (디자인상 숨김 처리되지만 데이터 유지)
         imageWidth = 120
         imageHeight = 120
-        [[params.profileMode.buttons]]
-            name = "Posts"
-            url = "posts"
-        [[params.profileMode.buttons]]
-            name = "Github"
-            url = "https://github.com/yoosung-h"
+        
+        # 네비게이션 버튼 (HTML 디자인의 Nav 항목)
+        [[languages.en.params.profileMode.buttons]]
+            name = "Projects"
+            url = "/projects"
+        [[languages.en.params.profileMode.buttons]]
+            name = "Archive"
+            url = "/archives"
+        [[languages.en.params.profileMode.buttons]]
+            name = "Writing"
+            url = "/posts"
+        [[languages.en.params.profileMode.buttons]]
+            name = "Experience"
+            url = "/experience"
 
-    [[params.socialIcons]]
+    # 소셜 아이콘 (FontAwesome 클래스명 매핑: github, linkedin 등)
+    [[languages.en.params.socialIcons]]
         name = "github"
-        url = "https://github.com/yoosung-h"
-    [[params.socialIcons]]
+        url = "https://github.com/Hongyoosung"
+    [[languages.en.params.socialIcons]]
         name = "linkedin"
-        url = "https://linkedin.com/in/your-id" # 본인 링크드인 주소로 수정
+        url = "https://www.linkedin.com/in/yoosunghong/"
+
+# -------------------------------------------------------------------------
+# [Korean]
+# -------------------------------------------------------------------------
+[languages.ko]
+    languageName = "KR"
+    weight = 2
+    title = "유성의 개발일지"
+    
+    [languages.ko.params.profileMode]
+        enabled = true
+        title = "유성의 개발일지"
+        
+        # 한국어 서브타이틀
+        subtitle = """
+        <span class="subtitle-highlight">Game Engineer</span> 엔진 아키텍처와 <br class="subtitle-br"/> 그래픽스에 열정적인 개발자.
+        """
+        
+        imageUrl = "https://github.com/Hongyoosung.png"
+        
+        # 네비게이션 버튼 (한글)
+        [[languages.ko.params.profileMode.buttons]]
+            name = "프로젝트"
+            url = "/ko/projects"
+        [[languages.ko.params.profileMode.buttons]]
+            name = "아카이브"
+            url = "/ko/archives"
+        [[languages.ko.params.profileMode.buttons]]
+            name = "글 목록"
+            url = "/ko/posts"
+        [[languages.ko.params.profileMode.buttons]]
+            name = "이력"
+            url = "/ko/experience"
+
+    [[languages.ko.params.socialIcons]]
+        name = "github"
+        url = "https://github.com/Hongyoosung"
+    [[languages.ko.params.socialIcons]]
+        name = "linkedin"
+        url = "https://linkedin.com/in/your-id"
+
+# -------------------------------------------------------------------------
+# Output Formats
+# -------------------------------------------------------------------------
+[outputs]
+    home = ["HTML", "RSS", "JSON"]

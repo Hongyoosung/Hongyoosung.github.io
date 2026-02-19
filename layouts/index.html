@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="{{ .Site.LanguageCode }}">
+
+<head>
+    <title>{{ .Site.Title }}</title>
+    {{ hugo.Generator }}
+    {{ partial "head_custom.html" . }}
+</head>
+
+<body
+    class="bg-background-light text-text-main min-h-screen flex flex-col items-center justify-center relative overflow-hidden selection:bg-slate-200 selection:text-slate-900">
+
+    <div class="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none opacity-30">
+        <div class="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-slate-200/40 rounded-full blur-[120px]"></div>
+        <div class="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-gray-200/40 rounded-full blur-[120px]"></div>
+    </div>
+
+    <main class="w-full max-w-6xl px-6 py-16 flex flex-col items-center text-center">
+        <div class="profile w-full">
+            <header class="header opacity-0 animate-fade-in-up">
+                <h1 class="">
+                    {{ .Site.Title }}
+                </h1>
+                <div class="max-w-4xl mx-auto">
+                    <div class="subtitle">
+                        {{ .Site.Params.profileMode.subtitle | safeHTML }}
+                    </div>
+                </div>
+                <div class="social-icons flex gap-10 justify-center opacity-0 animate-fade-in-up-delay-1">
+                    {{ range .Site.Params.socialIcons }}
+                    <a class="group text-slate-400 hover:text-slate-900 transition-all duration-300 transform hover:scale-110"
+                        href="{{ .url }}">
+                        <i class="fab fa-{{ .name }} text-4xl"></i>
+                        <span class="sr-only">{{ .name }}</span>
+                    </a>
+                    {{ end }}
+                </div>
+            </header>
+
+            <div
+                class="w-full max-w-5xl h-px bg-slate-200 opacity-0 animate-fade-in-up-delay-2 relative z-0 mx-auto my-16">
+            </div>
+
+            <nav class="w-full max-w-5xl opacity-0 animate-fade-in-up-delay-2 pt-2 relative mx-auto">
+                <ul class="buttons flex flex-col md:flex-row justify-between items-stretch relative">
+                    {{- $buttons := .Site.Params.profileMode.buttons }}
+                    {{- range $index, $element := $buttons }}
+                    <li class="flex-1 group relative flex justify-center perspective-1000">
+                        <a class="nav-item button block w-full py-8 px-4 text-3xl md:text-4xl font-serif text-slate-500 hover:text-black transition-all duration-300 origin-center text-center rounded-xl bg-transparent hover:bg-white hover:shadow-hover-card"
+                            href="{{ .url }}">
+                            {{ .name }}
+                        </a>
+                    </li>
+                    {{ if ne (add $index 1) (len $buttons) }}
+                    <li class="hidden md:block w-px bg-slate-200 self-stretch my-4 z-0"></li>
+                    {{ end }}
+                    {{- end }}
+                </ul>
+            </nav>
+        </div>
+    </main>
+
+    <footer class="fixed bottom-6 w-full text-center opacity-0 animate-fade-in-up-delay-3 pointer-events-none">
+        <p
+            class="text-sm font-sans text-slate-400 pointer-events-auto hover:text-slate-600 transition-colors inline-block">
+            © {{ now.Year }} <span class="underline decoration-slate-300 underline-offset-4">{{ .Site.Title }}</span>
+        </p>
+    </footer>
+</body>
+
+</html>

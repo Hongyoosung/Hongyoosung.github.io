@@ -1,0 +1,266 @@
+/* ---------------------------------------------------------
+   1. Fonts & Variables (Tailwind Theme Translation)
+   --------------------------------------------------------- */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=JetBrains+Mono:wght@400&family=Inter:wght@300;400;600&display=swap');
+
+:root {
+    /* 폰트 설정 */
+    --font-serif: 'Times New Roman', Times, serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-sans: 'Inter', sans-serif;
+
+    /* 색상 팔레트 (Slate 테마) */
+    --color-bg-dark: #1a1b1e;
+    /* 배경 (Dark) */
+    --color-bg-light: #f8fafc;
+    /* 배경 (Light) */
+    --color-text-dark: #e2e8f0;
+    /* 텍스트 (Dark) */
+    --color-text-light: #1e293b;
+    /* 텍스트 (Light) */
+    --color-accent: #7c7c7c;
+    /* 강조색 (Sky Blue) */
+    --color-border: #334155;
+    /* 구분선 색상 */
+}
+
+/* PaperMod 기본 변수 오버라이드 */
+body {
+    font-family: var(--font-sans) !important;
+}
+
+/* 다크모드 색상 강제 적용 (PaperMod 변수 매핑) */
+.dark {
+    --theme: var(--color-bg-dark);
+    --entry: #25262b;
+    --primary: var(--color-text-dark);
+    --secondary: #94a3b8;
+    /* 서브 텍스트 */
+    --border: var(--color-border);
+}
+
+/* ---------------------------------------------------------
+   2. Header Adjustment (우측 상단 배치)
+   --------------------------------------------------------- */
+.header {
+    justify-content: flex-end;
+    /* 모든 요소를 우측으로 */
+    max-width: 100% !important;
+    /* 헤더 너비 확장 */
+    padding: 20px 40px;
+}
+
+.header .logo {
+    display: none;
+    /* 좌측 로고/타이틀 완전 숨김 */
+}
+
+.header .menu {
+    padding: 10px 40px;
+}
+
+.main {
+    padding-top: 0;
+}
+
+/* ---------------------------------------------------------
+   3. Profile Section (Center Content)
+   --------------------------------------------------------- */
+.main .profile {
+    align-items: flex-start;
+    padding-top: 5vh;
+    min-height: auto;
+}
+
+.profile {
+    margin-top: -150px;
+    animation: fadeUp 0.8s ease-out forwards;
+}
+
+/* 메인 타이틀 (Yoosung's DevLog) */
+.profile header h1 {
+    font-family: var(--font-serif) !important;
+    font-size: 3.5rem !important;
+    font-weight: 700;
+    margin-top: 1rem;
+    margin-bottom: 2.0rem;
+    letter-spacing: 0.05em;
+    line-height: 1.2;
+}
+
+/* 서브타이틀 영역 커스텀 */
+.profile .subtitle-highlight {
+    font-weight: 600;
+    color: var(--primary);
+    /* 다크모드 대응을 위해 변수 사용 */
+}
+
+/* 데스크탑에서만 줄바꿈 적용 */
+.profile .subtitle-br {
+    display: none;
+}
+
+@media (min-width: 768px) {
+    .profile .subtitle-br {
+        display: block;
+    }
+}
+
+/* 서브타이틀 전체 스타일 */
+.profile .subtitle {
+    font-family: var(--font-serif);
+    font-size: 1.5rem;
+    color: var(--secondary);
+    margin-top: 1.5rem;
+    margin-bottom: 3.5rem;
+    line-height: 1.6;
+}
+
+.profile-meta-mono {
+    font-family: var(--font-mono);
+    font-size: 1.0rem;
+    color: #64748b;
+    /* Slate-500 */
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 3rem;
+}
+
+.profile-meta-mono .icon {
+    margin-right: 8px;
+}
+
+/* ---------------------------------------------------------
+   4. Navigation Grid (핵심 디자인 구현)
+   --------------------------------------------------------- */
+/* 버튼들을 감싸는 컨테이너 */
+.profile .buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    width: 100%;
+    max-width: 1000px;
+    margin: 3rem auto 0;
+    padding: 30;
+    gap: 2rem;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+}
+
+/* 개별 버튼 아이템 */
+.profile .buttons .button {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background: transparent;
+    color: var(--secondary);
+    font-family: var(--font-serif);
+
+    /* 1. 글씨 크기 키움 (기존 1.5rem -> 1.8rem) */
+    font-size: 1.8rem;
+    font-weight: 400;
+    /* 볼드 제거 (600 -> 400) */
+
+    /* 2. 위아래 구분선과의 간격을 좁히기 위해 padding 축소 */
+    /* padding: [상] [좌우] [하] */
+    padding: 1rem 1.5rem 1rem 1.5rem;
+
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+
+    /* 좌우 간격을 gap으로 조절하므로 기존 border-right는 제거 권장 */
+    border-right: none;
+
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+/* 마지막 버튼은 우측 구분선 제거 */
+.profile .buttons .button:last-child {
+    border-right: none;
+}
+
+/* 호버 효과 */
+.profile .buttons .button:hover {
+    background: transparent;
+    /* 배경색 변경 없음 */
+    color: var(--primary);
+    /* 글자색만 밝게 */
+    transform: translateY(-2px);
+    /* 살짝 위로 */
+}
+
+/* 호버 시 밑줄 효과 유지 및 조정 */
+.profile .buttons .button::after {
+    content: '';
+    position: absolute;
+    bottom: 15%;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: var(--color-accent);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+
+.profile .buttons .button:hover::after {
+    width: 50%;
+    /* 호버시 밑줄 생김 */
+}
+
+/* 모바일 대응 */
+@media (max-width: 768px) {
+    .profile .buttons {
+        gap: 0;
+        /* 모바일에서는 간격 제거 */
+        flex-direction: column;
+    }
+
+    .profile .buttons .button {
+        font-size: 1.5rem;
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border);
+    }
+}
+
+/* ---------------------------------------------------------
+   5. Animation
+   --------------------------------------------------------- */
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 소셜 아이콘 간격 조정 */
+.social-icons {
+    margin-bottom: 2rem !important;
+    /* 여백 축소 (2rem -> 1rem) */
+    justify-content: center;
+}
+
+/* 구분선 상단 여백 축소 */
+.profile header+div.my-16 {
+    margin-top: 1rem !important;
+    margin-bottom: 2rem !important;
+}
+
+.social-icons a {
+    color: var(--secondary);
+}
+
+.social-icons a:hover {
+    color: var(--primary);
+    transform: scale(1.1);
+}
