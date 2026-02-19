@@ -14,13 +14,13 @@
         theme: {
             extend: {
                 colors: {
-                    primary: "#334155",
-                    "background-light": "#ffffff",
-                    "background-subtle": "#fafafa",
-                    "text-main": "#1e293b",
-                    "text-muted": "#64748b",
-                    "accent": "#0ea5e9",
-                    "border-color": "#e2e8f0",
+                    primary: "var(--tw-text)",
+                    "background-light": "var(--tw-bg)",
+                    "background-subtle": "var(--tw-bg)",
+                    "text-main": "var(--tw-text)",
+                    "text-muted": "var(--secondary)",
+                    "accent": "var(--color-accent)",
+                    "border-color": "var(--tw-border)",
                 },
                 fontFamily: {
                     serif: ["'Times New Roman'", "'Playfair Display'", "serif"],
@@ -75,6 +75,23 @@
         z-index: 10;
     }
 </style>
+
+<script>
+    // Theme initialization
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+        document.querySelector("html").classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.querySelector("html").dataset.theme = 'light';
+        document.querySelector("html").classList.remove('dark');
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+        document.querySelector("html").classList.add('dark');
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+        document.querySelector("html").classList.remove('dark');
+    }
+</script>
 
 {{- /* Bundle and inject all CSS from assets/css/extended/ */ -}}
 {{- $cssFiles := resources.Match "css/extended/*.css" -}}

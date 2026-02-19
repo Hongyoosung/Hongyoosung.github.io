@@ -38,7 +38,7 @@
             </header>
 
             <div
-                class="w-full max-w-5xl h-px bg-slate-200 opacity-0 animate-fade-in-up-delay-2 relative z-0 mx-auto my-16">
+                class="w-full max-w-5xl h-px bg-slate-200 opacity-0 animate-fade-in-up-delay-2 relative z-0 mx-auto my-8">
             </div>
 
             <nav class="w-full max-w-5xl opacity-0 animate-fade-in-up-delay-2 pt-2 relative mx-auto">
@@ -66,6 +66,7 @@
             © {{ now.Year }} <span class="underline decoration-slate-300 underline-offset-4">{{ .Site.Title }}</span>
         </p>
     </footer>
+    {{ partial "extend_footer.html" . }}
 </body>
 
 </html>

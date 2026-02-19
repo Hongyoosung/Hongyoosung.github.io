@@ -25,15 +25,15 @@ defaultContentLanguage = 'en'
 [languages.en]
     languageName = "EN"
     weight = 1
-    title = "Yoosung's DevLog"
+    title = "Yoosung's Library"
     
     [languages.en.params.profileMode]
         enabled = true
-        title = "Yoosung's DevLog" # 메인 타이틀 (h1)
+        title = "Yoosung's Library" # 메인 타이틀 (h1)
         
         # 서브타이틀 (HTML/Tailwind 클래스 포함하여 디자인 유지)
         subtitle = """
-        <span class="subtitle-highlight">Game Engineer</span> specializing in  <br class="subtitle-br"/> Unreal Engine Architecture and Intelligent Gameplay Systems.
+        <span class="subtitle-highlight">Game Engineer</span> specializing in  <br class="subtitle-br"/> Unreal Engine Architecture and AI Systems.
         """
         
         imageUrl = "https://github.com/Hongyoosung.png" # (디자인상 숨김 처리되지만 데이터 유지)
@@ -68,15 +68,15 @@ defaultContentLanguage = 'en'
 [languages.ko]
     languageName = "KR"
     weight = 2
-    title = "유성의 개발일지"
+    title = "Yoosung's Library"
     
     [languages.ko.params.profileMode]
         enabled = true
-        title = "유성의 개발일지"
+        title = "Yoosung's Library"
         
         # 한국어 서브타이틀
         subtitle = """
-        <span class="subtitle-highlight">Game Engineer</span> 엔진 아키텍처와 <br class="subtitle-br"/> 그래픽스에 열정적인 개발자.
+        <span class="subtitle-highlight">Game Engineer</span> 엔진 아키텍처와 <br class="subtitle-br"/> AI 시스템을 전문으로 하는 게임 엔지니어입니다.
         """
         
         imageUrl = "https://github.com/Hongyoosung.png"
