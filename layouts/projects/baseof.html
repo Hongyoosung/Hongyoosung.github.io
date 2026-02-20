@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="{{ .Site.LanguageCode | default .Lang }}">
+
+<head>
+    <title>{{ .Title }} - {{ .Site.Title }}</title>
+    {{ partial "head_custom.html" . }}
+</head>
+
+<body
+    class="bg-background-light text-text-main min-h-screen flex flex-col items-center relative selection:bg-slate-200 selection:text-slate-900"
+    style="overflow-x: clip;">
+
+    <a href="{{ site.Home.RelPermalink }}"
+        class="back-button fixed top-8 left-16 z-50 flex items-center gap-3 px-6 py-3 rounded-2xl transition-all duration-300 group">
+        <span class="group-hover:-translate-x-2 transition-transform duration-300 inline-block text-2xl">←</span>
+        {{ if eq .Lang "ko" }}홈으로{{ else }}Back{{ end }}
+    </a>
+
+    <div class="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none opacity-30">
+        <div class="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-slate-200/40 rounded-full blur-[120px]"></div>
+        <div class="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-gray-200/40 rounded-full blur-[120px]"></div>
+    </div>
+
+    {{ block "main" . }}{{ end }}
+
+    {{ partial "extend_footer.html" . }}
+</body>
+
+</html>

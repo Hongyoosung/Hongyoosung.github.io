@@ -28,8 +28,7 @@
                 </div>
                 <div class="social-icons flex gap-10 justify-center opacity-0 animate-fade-in-up-delay-1">
                     {{ range .Site.Params.socialIcons }}
-                    <a class="group text-slate-400 hover:text-slate-900 transition-all duration-300 transform hover:scale-110"
-                        href="{{ .url }}">
+                    <a class="group" href="{{ .url }}">
                         <i class="fab fa-{{ .name }} text-4xl"></i>
                         <span class="sr-only">{{ .name }}</span>
                     </a>
@@ -42,12 +41,11 @@
             </div>
 
             <nav class="w-full max-w-5xl opacity-0 animate-fade-in-up-delay-2 pt-2 relative mx-auto">
-                <ul class="buttons flex flex-col md:flex-row justify-between items-stretch relative">
+                <ul class="buttons">
                     {{- $buttons := .Site.Params.profileMode.buttons }}
                     {{- range $index, $element := $buttons }}
                     <li class="flex-1 group relative flex justify-center perspective-1000">
-                        <a class="nav-item button block w-full py-8 px-4 text-3xl md:text-4xl font-serif text-slate-500 hover:text-black transition-all duration-300 origin-center text-center rounded-xl bg-transparent hover:bg-white hover:shadow-hover-card"
-                            href="{{ .url }}">
+                        <a class="nav-item button origin-center text-center" href="{{ .url }}">
                             {{ .name }}
                         </a>
                     </li>

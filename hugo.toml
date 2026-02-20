@@ -17,7 +17,7 @@ defaultContentLanguage = 'en'
     ShowReadingTime = true
     
     # 로고 설정 (좌측 상단, 홈으로 가기 위함)
-    label = { text = "Yoosung's DevLog", icon = "", iconHeight = 35 }
+    label = { text = "Yoosung Hong", icon = "", iconHeight = 35 }
 
 # -------------------------------------------------------------------------
 # [English] - Default
@@ -25,11 +25,11 @@ defaultContentLanguage = 'en'
 [languages.en]
     languageName = "EN"
     weight = 1
-    title = "Yoosung's Library"
+    title = "Yoosung Hong"
     
     [languages.en.params.profileMode]
         enabled = true
-        title = "Yoosung's Library" # 메인 타이틀 (h1)
+        title = "Yoosung Hong" # 메인 타이틀 (h1)
         
         # 서브타이틀 (HTML/Tailwind 클래스 포함하여 디자인 유지)
         subtitle = """
@@ -68,15 +68,15 @@ defaultContentLanguage = 'en'
 [languages.ko]
     languageName = "KR"
     weight = 2
-    title = "Yoosung's Library"
+    title = "Yoosung Hong"
     
     [languages.ko.params.profileMode]
         enabled = true
-        title = "Yoosung's Library"
+        title = "Yoosung Hong"
         
         # 한국어 서브타이틀
         subtitle = """
-        <span class="subtitle-highlight">Game Engineer</span> 엔진 아키텍처와 <br class="subtitle-br"/> AI 시스템을 전문으로 하는 게임 엔지니어입니다.
+        <span class="subtitle-highlight">엔진 아키텍처</span>와 <br class="subtitle-br"/> AI 시스템을 전문으로 하는 게임 엔지니어입니다.
         """
         
         imageUrl = "https://github.com/Hongyoosung.png"

@@ -1,54 +1,71 @@
 /* ---------------------------------------------------------
-   1. Fonts & Variables (Tailwind Theme Translation)
+   1. Fonts & Variables (Unified Theme & Tailwind Translation)
    --------------------------------------------------------- */
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=JetBrains+Mono:wght@400&family=Inter:wght@300;400;600&display=swap');
 
 :root {
     /* 폰트 설정 */
-    --font-serif: 'Times New Roman', Times, serif;
+    --font-serif: 'Lora', 'Playfair Display', serif;
     --font-mono: 'JetBrains Mono', monospace;
     --font-sans: 'Inter', sans-serif;
+    --font-cinzel: 'Cinzel', serif;
 
-    /* 색상 팔레트 (Slate 테마) - CSS 변수로 정의하여 Tailwind와 공용 */
-    --color-bg-dark: #1a1b1e;
-    --color-bg-light: #f8fafc;
-    --color-text-dark: #e2e8f0;
-    --color-text-light: #1e293b;
+    /* --- Global Navigation & Back Button Settings --- */
+    --nav-font-size: 1.0rem;
+    --nav-font-family: var(--font-cinzel);
+    --back-button-font-size: 1.5rem;
+    --back-button-letter-spacing: 0.25em;
+
+    /* --- 라이트 모드 색상 --- */
+    --color-bg-base: #f8fafc;
+    --color-text-title: #000000;
+    /* 메인 타이틀, 강조 텍스트 */
+    --color-text-subtitle: #1e293b;
+    /* 서브타이틀 */
+    --color-text-muted: #475569;
+    /* 일반 텍스트, 아이콘, 버튼 등 */
+    --color-line: #cbd5e1;
+    /* 테두리, 구분선 */
     --color-accent: #7c7c7c;
-    --color-border: #334155;
+    /* 포인트 컬러 (밑줄 등) */
 
-    /* 현재 테마에 따른 동적 변수 */
-    --tw-bg: var(--color-bg-light);
-    --tw-text: #475569;
-    /* Slightly lighter Slate for better visibility */
-    /* Updated for deeper gray in white mode */
-    --tw-border: #cbd5e1;
-    /* Darker gray for dividers */
-    --secondary: rgba(100, 116, 139, 1);
-    /* slate-500 – light mode muted text */
+    /* Tailwind 공용 변수 연동 */
+    --tw-bg: var(--color-bg-base);
+    --tw-text: var(--color-text-muted);
+    --tw-border: var(--color-line);
+
+    /* PaperMod 기본 변수 연동 */
+    --theme: var(--color-bg-base);
+    --primary: var(--color-text-title);
+    --secondary: var(--color-text-muted);
+    --border: var(--color-line);
 }
 
 [data-theme='dark'],
 .dark {
-    --tw-bg: var(--color-bg-dark);
-    --tw-text: #94a3b8;
-    /* Muted Slate-400 for dark mode base */
-    --tw-border: var(--color-border);
-}
+    /* --- 다크 모드 색상 --- */
+    --color-bg-base: #1a1b1e;
+    --color-text-title: #ffffff;
+    --color-text-subtitle: #e2e8f0;
+    --color-text-muted: #94a3b8;
+    --color-line: #334155;
 
-/* PaperMod 기본 변수 오버라이드 */
-body {
-    font-family: var(--font-sans) !important;
-}
+    /* Tailwind 공용 변수 연동 */
+    --tw-bg: var(--color-bg-base);
+    --tw-text: var(--color-text-muted);
+    --tw-border: var(--color-line);
 
-/* 다크모드 색상 강제 적용 (PaperMod 변수 매핑) */
-.dark {
-    --theme: var(--color-bg-dark);
+    /* PaperMod 기본 변수 오버라이드 */
+    --theme: var(--color-bg-base);
     --entry: #25262b;
-    --primary: var(--color-text-dark);
-    --secondary: #94a3b8;
-    /* 서브 텍스트 */
-    --border: var(--color-border);
+    --primary: var(--color-text-title);
+    --secondary: var(--color-text-muted);
+    --border: var(--color-line);
+}
+
+/* PaperMod 기본 폰트 오버라이드 */
+body {
+    font-family: var(--font-serif) !important;
 }
 
 /* Ensure no default PaperMod blue border in dark mode */
@@ -62,15 +79,12 @@ body {
    --------------------------------------------------------- */
 .header {
     justify-content: flex-end;
-    /* 모든 요소를 우측으로 */
     max-width: 100% !important;
-    /* 헤더 너비 확장 */
     padding: 20px 40px;
 }
 
 .header .logo {
     display: none;
-    /* 좌측 로고/타이틀 완전 숨김 */
 }
 
 .header .menu {
@@ -91,33 +105,29 @@ body {
 }
 
 .profile {
-    margin-top: -180px;
+    margin-top: -100px;
     animation: fadeUp 0.8s ease-out forwards;
 }
 
 /* 메인 타이틀 (Yoosung's DevLog) */
 .profile header h1 {
     font-family: var(--font-serif) !important;
-    font-size: 3.5rem !important;
-    font-weight: 700;
+    font-size: 3.0rem !important;
+    font-weight: 500 !important;
     margin-top: 1rem;
     margin-bottom: 2.5rem;
     letter-spacing: 0.05em;
     line-height: 1.2;
-}
-
-.dark .profile header h1 {
-    color: #ffffff;
+    color: var(--primary) !important;
+    /* 라이트: 검정, 다크: 흰색 */
 }
 
 /* 서브타이틀 영역 커스텀 */
 .profile .subtitle-highlight {
-    font-weight: 600;
+    font-weight: 300;
     color: var(--primary);
-    /* 다크모드 대응을 위해 변수 사용 */
 }
 
-/* 데스크탑에서만 줄바꿈 적용 */
 .profile .subtitle-br {
     display: none;
 }
@@ -131,20 +141,20 @@ body {
 /* 서브타이틀 전체 스타일 */
 .profile .subtitle {
     font-family: var(--font-serif);
-    font-size: 1.5rem;
-    color: var(--tw-text);
-    /* Updated for deep gray */
+    font-size: 1.3rem;
+    color: var(--color-text-subtitle);
     margin-top: 1.5rem;
     margin-bottom: 3.5rem;
-    /* Reduced spacing */
     line-height: 1.6;
+    letter-spacing: 0.05em;
+    font-weight: 500 !important;
 }
 
 .profile-meta-mono {
     font-family: var(--font-mono);
     font-size: 1.0rem;
-    color: #64748b;
-    /* Slate-500 */
+    color: var(--secondary);
+    /* Slate 계열 텍스트 반전 적용 */
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
@@ -156,10 +166,33 @@ body {
     margin-right: 8px;
 }
 
+/* 소셜 아이콘 간격 및 색상 조정 */
+.social-icons {
+    margin-bottom: 1rem !important;
+    justify-content: center;
+}
+
+.social-icons a {
+    color: var(--primary);
+    /* 라이트: 검정, 다크: 흰색 */
+    transition: all 0.3s ease;
+}
+
+.social-icons a:hover {
+    color: var(--secondary);
+    /* 호버 시 약간 옅어지게 */
+    transform: scale(1.1);
+}
+
+/* 구분선 상단 여백 축소 */
+.profile header+div.my-16 {
+    margin-top: 1rem !important;
+    margin-bottom: 2rem !important;
+}
+
 /* ---------------------------------------------------------
    4. Navigation Grid (핵심 디자인 구현)
    --------------------------------------------------------- */
-/* 버튼들을 감싸는 컨테이너 */
 .profile .buttons {
     display: flex;
     flex-direction: row;
@@ -167,67 +200,41 @@ body {
     width: 100%;
     max-width: 1000px;
     margin: 1rem auto 0;
-    /* Reduced top margin */
-    padding: 30;
+    padding: 30px;
     gap: 2rem;
-    /* border-top: 1px solid var(--tw-border); */
-    /* border-bottom: 1px solid var(--tw-border); */
 }
 
-/* 개별 버튼 아이템 */
 .profile .buttons .button {
     flex: 1;
     display: flex;
     justify-content: center;
     align-items: center;
-
     background: transparent;
     color: var(--tw-text);
-    /* Updated for deep gray */
-    font-family: var(--font-serif);
-
-    /* 1. 글씨 크기 키움 (기존 1.5rem -> 1.8rem) */
-    font-size: 1.8rem;
+    font-family: var(--font-cinzel);
+    font-size: 2.0rem;
     font-weight: 400;
-    /* 볼드 제거 (600 -> 400) */
-
-    /* 2. 위아래 구분선과의 간격을 좁히기 위해 padding 축소 */
-    /* padding: [상] [좌우] [하] */
     padding: 0rem 1.5rem 1rem 1.5rem;
-
     border: none;
     border-radius: 0;
     box-shadow: none !important;
-    /* Ensure no border/shadow */
-
-    /* 좌우 간격을 gap으로 조절하므로 기존 border-right는 제거 권장 */
     border-right: none;
-
     transition: all 0.3s ease;
     position: relative;
 }
 
-/* 마지막 버튼은 우측 구분선 제거 */
 .profile .buttons .button:last-child {
     border-right: none;
 }
 
-/* 호버 효과 */
+/* 호버 효과: 라이트/다크 모두 메인 텍스트 색상으로 강조 */
 .profile .buttons .button:hover {
     background: transparent;
-    /* 배경색 변경 없음 */
-    color: #000000;
-    /* Full black in white mode */
+    color: var(--primary);
     transform: translateY(-2px);
-    /* 살짝 위로 */
 }
 
-.dark .profile .buttons .button:hover {
-    color: #ffffff;
-    /* Pure white on hover as requested */
-}
-
-/* 호버 시 밑줄 효과 유지 및 조정 */
+/* 호버 시 밑줄 효과 */
 .profile .buttons .button::after {
     content: '';
     position: absolute;
@@ -242,21 +249,18 @@ body {
 
 .profile .buttons .button:hover::after {
     width: 50%;
-    /* 호버시 밑줄 생김 */
 }
 
-/* 모바일 대응 */
 @media (max-width: 768px) {
     .profile .buttons {
         gap: 0;
-        /* 모바일에서는 간격 제거 */
         flex-direction: column;
     }
 
     .profile .buttons .button {
         font-size: 1.5rem;
         padding: 1.5rem;
-        border-bottom: 1px solid var(--border);
+        border-bottom: 1px solid var(--tw-border);
     }
 }
 
@@ -275,30 +279,51 @@ body {
     }
 }
 
-/* 소셜 아이콘 간격 조정 */
-.social-icons {
-    margin-bottom: 1rem !important;
-    /* Reduced spacing */
-    justify-content: center;
+/* ---------------------------------------------------------
+   6. Project Page Layout & Nav
+   --------------------------------------------------------- */
+.project-main {
+    padding-top: 1.25rem !important;
+    padding-bottom: 5rem !important;
 }
 
-/* 구분선 상단 여백 축소 */
-.profile header+div.my-16 {
-    margin-top: 1rem !important;
-    margin-bottom: 2rem !important;
+.project-nav {
+    margin-bottom: 6.5rem !important;
 }
 
-.social-icons a {
-    color: var(--secondary);
+.nav-item {
+    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    position: relative;
+    font-size: var(--nav-font-size);
+    font-family: var(--nav-font-family);
+    color: var(--color-text-muted);
 }
 
-.social-icons a:hover {
-    color: var(--primary);
-    transform: scale(1.1);
+.nav-item.active,
+.nav-item:hover {
+    color: var(--primary) !important;
+    /* Light 모드에선 검정, 다크 모드에선 흰색 */
+    transform: translateY(-2px);
+}
+
+.nav-item::after {
+    content: '';
+    position: absolute;
+    bottom: 15%;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: var(--color-accent);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+
+.nav-item:hover::after {
+    width: 50%;
 }
 
 /* ---------------------------------------------------------
-   6. Sticky Bar
+   7. Sticky Bar
    --------------------------------------------------------- */
 .sticky-bar {
     position: fixed;
@@ -311,14 +336,13 @@ body {
     gap: 0.8rem;
     padding: 0.8rem 1.5rem;
 
-    /* Blur effect and gray glassmorphism - Optimized for visibility */
+    /* 글래스모피즘 효과는 투명도 기반이므로 테마 무관하게 유지 */
     background: rgba(128, 128, 128, 0.25);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(255, 255, 255, 0.25);
     border-radius: 50px;
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-
     transition: all 0.3s ease;
 }
 
@@ -328,7 +352,6 @@ body {
     top: 2.2rem;
 }
 
-/* Short divider line */
 .sticky-bar-divider {
     width: 30px;
     height: 2px;
@@ -346,7 +369,6 @@ body {
     gap: 1.5rem;
 }
 
-/* Theme Toggle Button */
 #theme-toggle-sticky {
     background: none;
     border: none;
@@ -368,7 +390,6 @@ body {
     height: 20px;
 }
 
-/* Hide/Show Sun/Moon icons based on theme */
 [data-theme='dark'] #sun-sticky {
     display: block;
 }
@@ -385,7 +406,6 @@ html:not([data-theme='dark']) #moon-sticky {
     display: block;
 }
 
-/* Language Toggle Link */
 .lang-toggle-sticky a {
     text-decoration: none;
     font-family: var(--font-mono);
@@ -400,10 +420,37 @@ html:not([data-theme='dark']) #moon-sticky {
     color: var(--primary);
 }
 
-/* Responsive adjustment */
 @media (max-width: 768px) {
     .sticky-bar {
         bottom: 1.5rem;
         padding: 0.6rem 1.2rem;
     }
+}
+
+/* ---------------------------------------------------------
+   8. Back Button (Projects Page)
+   --------------------------------------------------------- */
+.back-button {
+    font-family: var(--font-serif) !important;
+    font-size: var(--back-button-font-size) !important;
+    letter-spacing: var(--back-button-letter-spacing) !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    color: var(--color-text-muted) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+.back-button:hover {
+    color: var(--primary) !important;
+    background: transparent !important;
+}
+
+.dark .back-button {
+    color: var(--color-text-muted) !important;
+}
+
+.dark .back-button:hover {
+    color: var(--primary) !important;
 }
