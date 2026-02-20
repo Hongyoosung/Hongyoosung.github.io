@@ -1,0 +1,110 @@
+{{ define "main" }}
+<main class="project-main w-full max-w-4xl mx-auto px-6 flex flex-col pt-12">
+
+
+
+    <header class="mb-8" style="animation: fadeUp 0.8s ease-out forwards; opacity: 0;">
+        <h1 class="text-4xl md:text-5xl font-serif font-bold text-[var(--primary)]">{{ .Title }}</h1>
+    </header>
+
+    <hr class="exp-divider" style="animation: fadeUp 0.8s ease-out 0.1s forwards; opacity: 0;">
+
+    {{ if .Params.publishes }}
+    <section style="animation: fadeUp 0.8s ease-out 0.2s forwards; opacity: 0;">
+        <h2 class="exp-section-title">Publish</h2>
+        <div class="exp-list-gap">
+            {{ range .Params.publishes }}
+            <div class="flex flex-col">
+                <a href="{{ .url }}" target="_blank" class="exp-item-title">
+                    {{ .title }}
+                </a>
+                <p class="exp-item-meta mt-1 text-sm">
+                    {{ .authors }} <span class="mx-2 text-[var(--color-line)]">|</span> <span class="exp-item-date">{{ .date }}</span>
+                </p>
+            </div>
+            {{ end }}
+        </div>
+    </section>
+    <hr class="exp-divider">
+    {{ end }}
+
+    {{ $sections := slice (dict "title" "Awards" "data" .Params.awards) (dict "title" "Certifications" "data" .Params.certifications) (dict "title" "Educations" "data" .Params.educations) }}
+    
+    {{ range $index, $sec := $sections }}
+    {{ if $sec.data }}
+    <section style="animation: fadeUp 0.8s ease-out {{ add 0.4 (mul $index 0.2) }}s forwards; opacity: 0;">
+        <h2 class="exp-section-title">{{ $sec.title }}</h2>
+        <div class="exp-list-gap">
+            {{ range $sec.data }}
+            <div class="flex flex-col">
+                {{ if .image }}
+                    <span onclick="openImageModal('{{ .image }}')" class="exp-item-title" style="cursor: pointer;">
+                        {{ .title }}
+                    </span>
+                {{ else if .url }}
+                    <a href="{{ .url }}" target="_blank" rel="noopener noreferrer" class="exp-item-title">
+                        {{ .title }}
+                    </a>
+                {{ else }}
+                    <span class="exp-item-title">
+                        {{ .title }}
+                    </span>
+                {{ end }}
+                <p class="exp-item-meta mt-1 text-sm">
+                    {{ .issuer }} <span class="mx-2 text-[var(--color-line)]">|</span> <span class="exp-item-date">{{ .date }}</span>
+                </p>
+            </div>
+            {{ end }}
+        </div>
+    </section>
+    <hr class="exp-divider">
+    {{ end }}
+    {{ end }}
+
+    {{ if .Params.careers }}
+    <section style="animation: fadeUp 0.8s ease-out 1.0s forwards; opacity: 0;">
+        <h2 class="exp-section-title">Career</h2>
+        <ol class="relative border-s border-[var(--color-line)] ml-3 md:ml-4 pb-20"> {{ range .Params.careers }}
+            <li class="mb-12 ms-8 relative">
+                <span class="absolute flex items-center justify-center w-4 h-4 rounded-full -left-[41px] bg-[var(--color-bg-base)] border-2 border-[var(--primary)]"></span>
+                <div class="flex flex-col justify-start">
+                    <h3 class="exp-item-title font-bold text-xl">{{ .company }}</h3>
+                    <p class="exp-item-meta mt-1">{{ .department }} <span class="mx-2 text-[var(--color-line)]">|</span> <span class="exp-item-date">{{ .duration }}</span></p>
+                </div>
+            </li>
+            {{ end }}
+            <li class="ms-8 h-20"></li> 
+        </ol>
+    </section>
+    {{ end }}
+
+    <div id="imageModal" class="modal-overlay" onclick="closeImageModal()">
+        <span class="modal-close" onclick="closeImageModal()">&times;</span>
+        <img id="modalImage" class="modal-content" src="" alt="Expanded View" onclick="event.stopPropagation()">
+    </div>
+
+    <script>
+        const modal = document.getElementById("imageModal");
+        const modalImg = document.getElementById("modalImage");
+
+        function openImageModal(src) {
+            modal.classList.add("active");
+            modalImg.src = src;
+            document.body.style.overflow = "hidden"; // 모달 오픈 시 배경 스크롤 방지
+        }
+
+        function closeImageModal() {
+            modal.classList.remove("active");
+            setTimeout(() => { modalImg.src = ""; }, 300); // 애니메이션 후 이미지 초기화
+            document.body.style.overflow = "auto"; // 스크롤 원복
+        }
+
+        // ESC 키 입력 시 모달 닫기
+        document.addEventListener('keydown', function(event) {
+            if (event.key === "Escape" && modal.classList.contains("active")) {
+                closeImageModal();
+            }
+        });
+    </script>
+</main>
+{{ end }}

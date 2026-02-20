@@ -14,7 +14,7 @@
     --nav-font-size: 1.0rem;
     --nav-font-family: var(--font-cinzel);
     --back-button-font-size: 1.5rem;
-    --back-button-letter-spacing: 0.25em;
+    --back-button-letter-spacing: 0.1em;
 
     /* --- 라이트 모드 색상 --- */
     --color-bg-base: #f8fafc;
@@ -574,4 +574,142 @@ html:not([data-theme='dark']) #moon-sticky {
 .dark .notion-button:hover {
     background-color: #2a2b2e;
     box-shadow: 0 10px 15px -3px rgba(255, 255, 255, 0.1), 0 4px 6px -2px rgba(255, 255, 255, 0.05);
+}
+
+
+/* ---------------------------------------------------------
+   10. Experience Page Specific Styles
+   --------------------------------------------------------- */
+
+/* 대단원 구분선 */
+.exp-divider {
+    width: 100%;
+    border: none;
+    border-top: 1px solid var(--color-line);
+    margin: 3rem 0; /* 위아래 여백 제어 */
+    opacity: 0.5;
+}
+
+/* 대단원 제목 (Publish, Awards 등) */
+.exp-section-title {
+    font-family: var(--font-serif);
+    font-size: 2rem; /* 글씨 크기 제어 */
+    color: var(--primary);
+    margin-bottom: 2rem; /* 제목과 아래 콘텐츠 사이의 여백 제어 */
+}
+
+/* 요소들 간의 간격 제어 (Publish 리스트 간격 등) */
+.exp-list-gap {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem; /* 리스트 사이의 여백 제어 */
+}
+
+/* Publish 섹션 텍스트 강조 */
+.exp-list-gap .exp-item-title {
+    font-size: 1.25rem;
+    line-height: 1.4;
+    color: var(--primary);
+    text-decoration: none;
+    display: inline-block;
+    position: relative;
+}
+
+/* 개별 아이템 제목 (논문 제목, 자격증 이름 등) */
+.exp-item-title {
+    font-family: var(--font-serif);
+    font-size: 1.25rem;
+    font-weight: 400;          /* 폰트 두께 조절 */
+    letter-spacing: 0.02em;    /* 자간 조절 (원하는 수치로 변경 가능) */
+    line-height: 1.4;          /* 행간 조절 */
+    color: var(--primary);
+    text-decoration: none;
+    transition: color 0.3s ease;
+    display: inline-block;     /* 클릭 영역 확보 */
+}
+
+.exp-item-title:hover {
+    color: var(--color-accent);
+}
+
+.exp-item-title:hover {
+    color: var(--color-accent);
+}
+
+/* 개별 아이템 부가 정보 (저자, 날짜, 회사 부서 등) */
+.exp-item-meta {
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    color: var(--color-text-subtitle);
+    margin-top: 0.5rem; /* 제목과 부가정보 사이 여백 */
+}
+
+.exp-item-date {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+}
+
+/* 3. Career 타임라인 선 연장 및 두께 강조 */
+.border-s {
+    border-inline-start-width: 2px !important; /* 선을 조금 더 뚜렷하게 */
+    border-color: var(--color-line) !important;
+}
+
+
+/* ---------------------------------------------------------
+   11. Image Modal (Lightbox)
+   --------------------------------------------------------- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.75); /* 반투명한 검은색 백그라운드 */
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    backdrop-filter: blur(4px); /* 배경을 약간 흐리게 (선택사항) */
+    -webkit-backdrop-filter: blur(4px);
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    max-width: 90vw;
+    max-height: 90vh;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    transform: scale(0.95);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* 부드럽게 튀어오르는 효과 */
+}
+
+.modal-overlay.active .modal-content {
+    transform: scale(1);
+}
+
+.modal-close {
+    position: absolute;
+    top: 30px;
+    right: 40px;
+    color: #ffffff;
+    font-size: 40px;
+    font-family: var(--font-sans);
+    font-weight: 300;
+    cursor: pointer;
+    transition: color 0.3s ease;
+    z-index: 10000;
+}
+
+.modal-close:hover {
+    color: #cccccc;
 }
