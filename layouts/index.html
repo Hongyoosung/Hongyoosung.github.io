@@ -10,14 +10,16 @@
 <body
     class="bg-background-light text-text-main min-h-screen flex flex-col items-center justify-center relative overflow-hidden selection:bg-slate-200 selection:text-slate-900">
 
-    <div class="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none opacity-30">
-        <div class="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-slate-200/40 rounded-full blur-[120px]"></div>
-        <div class="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-gray-200/40 rounded-full blur-[120px]"></div>
-    </div>
+
 
     <main class="w-full max-w-6xl px-6 py-16 flex flex-col items-center text-center">
         <div class="profile w-full">
-            <header class="header opacity-0 animate-fade-in-up">
+            <header class="header opacity-0 animate-fade-in-up relative z-10">
+                
+                <div class="absolute top-[0%] left-1/2 -translate-x-1/2 w-[100%] max-w-[850px] h-[160px] blur-[100px] -z-10 pointer-events-none">
+                    <div class="w-full h-full bg-slate-400/80 dark:bg-slate-500/60" style="clip-path: polygon(0 0, 100% 0, 75% 100%, 25% 100%);"></div>
+                </div>
+
                 <h1 class="">
                     {{ .Site.Title }}
                 </h1>

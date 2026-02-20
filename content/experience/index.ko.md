@@ -15,15 +15,15 @@ publishes:
     image: "/images/experience/paper2.png"
 
 awards:
-  - title: "우수논문상 (학술대회)"
+  - title: "우수논문상"
     issuer: "한국멀티미디어학회"
     date: "2024. 05. 18"
     image: "/images/experience/award1.png"
-  - title: "우수논문상 (학술대회)"
+  - title: "우수논문상"
     issuer: "한국디지털콘텐츠학회"
     date: "2023. 11. 10"
     image: "/images/experience/award2.png"
-  - title: "동상 (학술대회)"
+  - title: "동상 (대학생논문경진대회)"
     issuer: "한국디지털콘텐츠학회"
     date: "2023. 11. 10"
     image: "/images/experience/award3.png"

@@ -1,37 +1,37 @@
 {{ define "main" }}
-<main class="project-main w-full max-w-5xl px-6 flex flex-col items-center">
+<main class="project-main w-full max-w-4xl px-5 flex flex-col items-center">
 
     {{ $currentURL := .RelPermalink }}
     {{ $projectPages := where (where .Site.RegularPages "Section" "projects") "Lang" .Lang }}
-    <nav class="project-nav w-full max-w-5xl opacity-0 animate-fade-in-up-delay-2 relative mx-auto">
+    <nav class="project-nav w-full max-w-4xl opacity-0 animate-fade-in-up-delay-2 relative mx-auto">
         <ul class="buttons flex flex-col md:flex-row justify-between items-stretch relative">
             {{- $pages := $projectPages.ByWeight }}
             {{- range $index, $page := $pages }}
             {{- $isActive := eq $page.RelPermalink $currentURL }}
             <li class="flex-1 group relative flex justify-center perspective-1000">
-                <a href="{{ $page.RelPermalink }}" class="nav-item button block w-full py-8 px-4 text-3xl md:text-4xl transition-all duration-300 origin-center text-center rounded-xl bg-transparent
+                <a href="{{ $page.RelPermalink }}" class="nav-item button block w-full py-6 px-3 text-2xl md:text-3xl transition-all duration-300 origin-center text-center rounded-xl bg-transparent
                        {{ if $isActive }}active{{ end }}">
                     {{ index (dict "1" "I" "2" "II" "3" "III" "4" "IV" "5" "V") (cast.ToString $page.Weight) | default
                     $page.Weight }}
                 </a>
             </li>
             {{ if ne (add $index 1) (len $pages) }}
-            <li class="hidden md:block w-px bg-slate-200 self-stretch my-4 z-0"></li>
+            <li class="hidden md:block w-px bg-slate-200 self-stretch my-3 z-0"></li>
             {{ end }}
             {{- end }}
         </ul>
     </nav>
 
     <article
-        class="w-full opacity-0 animate-fade-in-up-delay-1 prose prose-slate dark:prose-invert prose-lg max-w-none">
-        <header class="mb-12 text-center">
-            <h1 class="text-4xl md:text-5xl font-serif font-bold mb-4">{{ .Title }}</h1>
+        class="w-full opacity-0 animate-fade-in-up-delay-1 prose prose-slate dark:prose-invert max-w-none">
+        <header class="mb-10 text-center">
+            <h1 class="text-3xl md:text-4xl font-serif font-bold mb-3">{{ .Title }}</h1>
             {{ if .Params.description }}
-            <p class="text-xl text-text-muted font-sans mt-0">{{ .Params.description }}</p>
+            <p class="text-lg text-text-muted font-sans mt-0">{{ .Params.description }}</p>
             {{ end }}
         </header>
 
-        <div class="content text-lg leading-relaxed">
+        <div class="content text-base leading-relaxed">
             {{ .Content }}
         </div>
     </article>

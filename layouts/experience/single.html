@@ -4,14 +4,14 @@
 
 
     <header class="mb-8" style="animation: fadeUp 0.8s ease-out forwards; opacity: 0;">
-        <h1 class="text-4xl md:text-5xl font-serif font-bold text-[var(--primary)]">{{ .Title }}</h1>
+        <h1 class="text-3xl md:text-4xl font-serif font-bold text-[var(--primary)]">{{ .Title }}</h1>
     </header>
 
     <hr class="exp-divider" style="animation: fadeUp 0.8s ease-out 0.1s forwards; opacity: 0;">
 
     {{ if .Params.publishes }}
     <section style="animation: fadeUp 0.8s ease-out 0.2s forwards; opacity: 0;">
-        <h2 class="exp-section-title">Publish</h2>
+        <h2 class="exp-section-title">Published</h2>
         <div class="exp-list-gap">
             {{ range .Params.publishes }}
             <div class="flex flex-col">
@@ -63,7 +63,7 @@
 
     {{ if .Params.careers }}
     <section style="animation: fadeUp 0.8s ease-out 1.0s forwards; opacity: 0;">
-        <h2 class="exp-section-title">Career</h2>
+        <h2 class="exp-section-title">Careers</h2>
         <ol class="relative border-s border-[var(--color-line)] ml-3 md:ml-4 pb-20"> {{ range .Params.careers }}
             <li class="mb-12 ms-8 relative">
                 <span class="absolute flex items-center justify-center w-4 h-4 rounded-full -left-[41px] bg-[var(--color-bg-base)] border-2 border-[var(--primary)]"></span>
