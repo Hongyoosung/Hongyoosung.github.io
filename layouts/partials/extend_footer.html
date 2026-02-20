@@ -1,3 +1,10 @@
+{{ if not .IsHome }}
+<a href="{{ site.Home.RelPermalink }}" class="back-button">
+    <span class="icon-arrow">←</span>
+    {{ if eq .Lang "ko" }}홈으로{{ else }}Back{{ end }}
+</a>
+{{ end }}
+
 <div class="sticky-bar">
     <div class="sticky-bar-divider"></div>
     <div class="sticky-bar-buttons">
@@ -23,17 +30,17 @@
         <div class="lang-toggle-sticky">
             {{- $translations := .Translations }}
             {{- if $translations }}
-                {{- range $translations }}
-                <a href="{{ .Permalink }}" title="{{ .Language.LanguageName | default .Lang | title }}">
-                    {{ .Lang | upper }}
-                </a>
-                {{- end }}
+            {{- range $translations }}
+            <a href="{{ .Permalink }}" title="{{ .Language.LanguageName | default .Lang | title }}">
+                {{ .Lang | upper }}
+            </a>
+            {{- end }}
             {{- else }}
-                {{- range site.Home.Translations }}
-                <a href="{{ .Permalink }}" title="{{ .Language.LanguageName | default .Lang | title }}">
-                    {{ .Lang | upper }}
-                </a>
-                {{- end }}
+            {{- range site.Home.Translations }}
+            <a href="{{ .Permalink }}" title="{{ .Language.LanguageName | default .Lang | title }}">
+                {{ .Lang | upper }}
+            </a>
+            {{- end }}
             {{- end }}
         </div>
     </div>
