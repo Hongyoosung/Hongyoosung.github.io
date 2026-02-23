@@ -11,7 +11,7 @@
     --font-cinzel: 'Cinzel', serif;
 
     /* --- Global Navigation & Back Button Settings --- */
-    --nav-font-size: 1.0rem;
+    --nav-font-size: 2.0rem;
     --nav-font-family: var(--font-cinzel);
     --back-button-font-size: 1.5rem;
     --back-button-letter-spacing: 0.1em;
@@ -303,18 +303,64 @@ body {
    6. Project Page Layout & Nav
    --------------------------------------------------------- */
 .project-main {
-    padding-top: 1.1rem !important;   
-    padding-bottom: 4.5rem !important;
+    padding-top: 0 !important; 
+    padding-bottom: 5rem !important;
 }
 
 .project-nav {
-    margin-bottom: 5.8rem !important;  /* 6.5rem -> 5.8rem */
+    position: sticky;
+    top: 0; 
+    z-index: 40;
+    background-color: var(--color-bg-base);
+    /* border-bottom 삭제 */
+    padding-top: 2rem; 
+    padding-bottom: 0.6rem;
+    margin-bottom: 4rem; 
+    transition: background-color 0.3s ease;
+    
+    /* 전체 배경 확장 */
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
 }
 
+/* 👇 여기서 구분선의 길이와 위치를 자유롭게 조절합니다 */
+.project-nav::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%); /* 선을 정확히 가운데로 정렬 */
+    
+    width: 40%; /* 👈 원하는 선의 길이로 조절하세요! (예: 80%, 1000px 등) */
+    height: 1px; /* 선의 두께 */
+    background-color: var(--color-line); /* 선의 색상 */
+}
+
+
+.project-main article {
+    margin-top: 3rem !important; 
+}
+
+.project-header {
+    margin-bottom: 2.5rem; 
+}
+
+.project-title {
+    font-size: 1.875rem; 
+    margin-bottom: 0.75rem; 
+    color: var(--primary);
+}
+
+@media (min-width: 768px) {
+    .project-title {
+        font-size: 2.25rem; 
+    }
+}
 .nav-item {
     transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
     position: relative;
-    font-size: calc(var(--nav-font-size) * 0.9); /* 네비게이션 기본 폰트 크기 90%로 축소 */
+    font-size: var(--nav-font-size);
     font-family: var(--nav-font-family);
     color: var(--color-text-muted);
 }
@@ -340,7 +386,6 @@ body {
 .nav-item:hover::after {
     width: 50%;
 }
-
 /* ---------------------------------------------------------
    7. Sticky Bar
    --------------------------------------------------------- */
@@ -705,4 +750,43 @@ html:not([data-theme='dark']) #moon-sticky {
 
 .modal-close:hover {
     color: #cccccc;
+}
+
+
+/* ---------------------------------------------------------
+   12. project-links
+   --------------------------------------------------------- */
+.project-links {
+    display: flex;
+    justify-content: center; /* 가로 중앙 정렬 */
+    align-items: center;     /* 세로 중앙 정렬 */
+    gap: 2rem;               /* 링크 사이 간격 확대 */
+    margin: 1.5rem 0 3rem 0; /* 상하 여백 조정 */
+    width: 100%;
+}
+
+/* 개별 링크 아이템 */
+.project-link-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: var(--font-mono); /* 기존 custom.css의 모노 폰트 사용 */
+    font-size: 0.95rem;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+}
+
+/* 호버 효과: 텍스트 색상 변경 및 약간의 부유 효과 */
+.project-link-item:hover {
+    color: var(--primary);
+    transform: translateY(-2px);
+    background-color: rgba(128, 128, 128, 0.05); /* 은은한 배경 강조 */
+}
+
+/* 아이콘 선 굵기 조절 */
+.icon-link {
+    stroke-width: 1.8px;
 }

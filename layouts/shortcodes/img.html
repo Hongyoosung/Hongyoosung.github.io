@@ -1,0 +1,11 @@
+<figure class="flex flex-col items-center my-8">
+    <img src="{{ .Get "src" }}" 
+         alt="{{ .Get "alt" }}" 
+         class="{{ .Get "class" | default "max-w-full" }} rounded-lg shadow-md mb-2 modal-trigger cursor-pointer">
+    
+    {{ if .Get "caption" }}
+    <figcaption class="text-sm text-gray-500 italic font-sans">
+        {{ .Get "caption" }}
+    </figcaption>
+    {{ end }}
+</figure>

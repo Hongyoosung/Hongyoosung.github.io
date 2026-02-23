@@ -1,0 +1,23 @@
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
+    <figure class="flex flex-col items-center">
+        <img src="{{ .Get "src1" }}" 
+             alt="{{ .Get "alt1" | default "image 1" }}" 
+             class="{{ .Get "class" | default "w-full" }} rounded-lg shadow-md mb-2 modal-trigger cursor-pointer">
+        {{ if .Get "cap1" }}
+        <figcaption class="text-sm text-gray-500 italic font-sans text-center">
+            {{ .Get "cap1" }}
+        </figcaption>
+        {{ end }}
+    </figure>
+
+    <figure class="flex flex-col items-center">
+        <img src="{{ .Get "src2" }}" 
+             alt="{{ .Get "alt2" | default "image 2" }}" 
+             class="{{ .Get "class" | default "w-full" }} rounded-lg shadow-md mb-2 modal-trigger cursor-pointer">
+        {{ if .Get "cap2" }}
+        <figcaption class="text-sm text-gray-500 italic font-sans text-center">
+            {{ .Get "cap2" }}
+        </figcaption>
+        {{ end }}
+    </figure>
+</div>
