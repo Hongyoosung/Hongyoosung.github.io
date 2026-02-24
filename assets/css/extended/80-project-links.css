@@ -1,0 +1,38 @@
+/* ---------------------------------------------------------
+   12. project-links
+   --------------------------------------------------------- */
+.project-links {
+    display: flex;
+    justify-content: center; /* 가로 중앙 정렬 */
+    align-items: center;     /* 세로 중앙 정렬 */
+    gap: 2rem;               /* 링크 사이 간격 확대 */
+    margin: 1.5rem 0 3rem 0; /* 상하 여백 조정 */
+    width: 100%;
+}
+
+/* 개별 링크 아이템 */
+.project-link-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: var(--font-mono); /* 기존 custom.css의 모노 폰트 사용 */
+    font-size: 0.95rem;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+}
+
+/* 호버 효과: 텍스트 색상 변경 및 약간의 부유 효과 */
+.project-link-item:hover {
+    color: var(--primary);
+    transform: translateY(-2px);
+    background-color: rgba(128, 128, 128, 0.05); /* 은은한 배경 강조 */
+}
+
+/* 아이콘 선 굵기 조절 */
+.icon-link {
+    stroke-width: 1.8px;
+}
+

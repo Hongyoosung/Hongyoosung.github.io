@@ -1,0 +1,170 @@
+/* ---------------------------------------------------------
+   3. Profile Section (Center Content)
+   --------------------------------------------------------- */
+.main .profile {
+    align-items: flex-start;
+    padding-top: 5vh;
+    min-height: auto;
+}
+
+.profile {
+    margin-top: -100px;
+    animation: fadeUp 0.8s ease-out forwards;
+}
+
+/* 메인 타이틀 */
+.profile header h1 {
+    font-family: var(--font-cinzel) !important;
+    font-size: 2.7rem !important;
+    font-weight: 500 !important;
+    margin-top: 0rem;
+    margin-bottom: 2.5rem;
+    letter-spacing: 0.05em;
+    line-height: 1.2;
+    color: var(--primary) !important;
+    /* 라이트: 검정, 다크: 흰색 */
+}
+
+/* 서브타이틀 영역 커스텀 */
+.profile .subtitle-highlight {
+    font-weight: 300;
+    color: var(--primary);
+}
+
+.profile .subtitle-br {
+    display: none;
+}
+
+@media (min-width: 768px) {
+    .profile .subtitle-br {
+        display: block;
+    }
+}
+
+/* 서브타이틀 전체 스타일 */
+.profile .subtitle {
+    font-family: var(--font-serif);
+    font-size: 1.1rem;
+    color: var(--color-text-subtitle);
+    margin-top: 1.5rem;
+    margin-bottom: 3.5rem;
+    line-height: 1.6;
+    letter-spacing: 0.05em;
+    font-weight: 500 !important;
+}
+
+.profile-meta-mono {
+    font-family: var(--font-mono);
+    font-size: 1.0rem;
+    color: var(--secondary);
+    /* Slate 계열 텍스트 반전 적용 */
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 3rem;
+}
+
+.profile-meta-mono .icon {
+    margin-right: 8px;
+}
+
+/* 소셜 아이콘 간격 및 색상 조정 */
+.social-icons {
+    margin-bottom: 1rem !important;
+    justify-content: center;
+}
+
+.social-icons a {
+    color: var(--primary);
+    /* 라이트: 검정, 다크: 흰색 */
+    transition: all 0.3s ease;
+}
+
+.social-icons a:hover {
+    color: var(--secondary);
+    /* 호버 시 약간 옅어지게 */
+    transform: scale(1.1);
+}
+
+/* 구분선 상단 여백 축소 */
+.profile header + div.my-8,
+.profile header + div.relative {
+    margin-top: 0.5rem !important;    /* 위쪽 여백 (원하는 수치로 조절) */
+    margin-bottom: 0.8rem !important; /* 아래쪽 여백 (원하는 수치로 조절) */
+}
+
+/* ---------------------------------------------------------
+   4. Navigation Grid (핵심 디자인 구현)
+   --------------------------------------------------------- */
+.profile .buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    width: 100%;
+    max-width: 1000px;
+    margin: 1rem auto 0;
+    padding: 30px;
+    gap: 2rem;
+}
+
+.profile .buttons .button {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: transparent;
+    color: var(--tw-text);
+    font-family: var(--font-cinzel);
+    font-size: 1.8rem;
+    font-weight: 400;
+    padding: 0rem 1.5rem 1rem 1.5rem;
+    border: none;
+    border-radius: 0;
+    box-shadow: none !important;
+    border-right: none;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.profile .buttons .button:last-child {
+    border-right: none;
+}
+
+/* 호버 효과: 라이트/다크 모두 메인 텍스트 색상으로 강조 */
+.profile .buttons .button:hover {
+    background: transparent;
+    color: var(--primary);
+    transform: translateY(-2px);
+}
+
+/* 호버 시 밑줄 효과 */
+.profile .buttons .button::after {
+    content: '';
+    position: absolute;
+    bottom: 15%;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: var(--color-accent);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+
+.profile .buttons .button:hover::after {
+    width: 50%;
+}
+
+@media (max-width: 768px) {
+    .profile .buttons {
+        gap: 0;
+        flex-direction: column;
+    }
+
+    .profile .buttons .button {
+        font-size: 1.5rem;
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--tw-border);
+    }
+}
+

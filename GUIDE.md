@@ -47,7 +47,17 @@ yoosung-h/
 │       ├── list.html         # Projects index template
 │       └── single.html       # Single project template
 ├── assets/css/extended/
-│   └── custom.css            # All custom styles
+│   ├── 00-base.css           # Fonts, variables, global layout/animation
+│   ├── 10-home.css           # 홈 프로필/내비게이션
+│   ├── 20-project.css        # 프로젝트 레이아웃/탭 내비게이션
+│   ├── 30-sticky-bar.css     # 우측 상단 스티키바
+│   ├── 40-back-button.css    # 프로젝트 페이지 Back 버튼
+│   ├── 50-archive.css        # 아카이브 & Notion 버튼
+│   ├── 60-experience.css     # Experience 페이지
+│   ├── 70-modal.css          # 이미지 모달
+│   ├── 80-project-links.css  # 프로젝트 링크 영역
+│   ├── 90-writing-list.css   # 글 목록 페이지
+│   └── 91-journal.css        # Journal 목록 페이지
 ├── themes/PaperMod/          # Theme (git submodule, do not edit)
 ├── archetypes/default.md     # Template for new content
 └── hugo.toml                 # Main configuration
@@ -185,11 +195,11 @@ For the projects **list page** (`_index.md` / `_index.ko.md`), update the front 
 
 ## 3. Modifying Styles
 
-All custom styles are in **`assets/css/extended/custom.css`**. This file is loaded on top of PaperMod's base styles.
+All custom styles are split across multiple files under **`assets/css/extended/`**, which are bundled together and loaded on top of PaperMod's base styles.
 
 ### 3.1 CSS Custom Properties (Variables)
 
-At the top of `custom.css`, CSS variables define the design tokens used throughout the file. Change values here to propagate updates everywhere.
+In `00-base.css`, CSS variables defined in `:root` act as design tokens used across all other files. Change values here to propagate updates everywhere.
 
 ```css
 :root {
@@ -345,7 +355,7 @@ File: `layouts/index.html`
 This is the full homepage template. Key sections:
 
 - **Profile image / name block** — The large centered title area
-- **Navigation buttons** — Links to Projects, Archive, Writing, Experience
+- **Navigation buttons** — Links to Projects, Archive, Journal, Experience
 - **Social icons** — GitHub, LinkedIn links
 
 **To add a navigation button**, find the nav buttons section and add a new `<a>` tag:

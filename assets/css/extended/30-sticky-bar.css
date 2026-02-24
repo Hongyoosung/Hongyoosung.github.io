@@ -1,0 +1,108 @@
+/* ---------------------------------------------------------
+   7. Sticky Bar
+   --------------------------------------------------------- */
+.sticky-bar {
+    position: fixed;
+    top: 32px;
+    right: 32px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 13px;
+    padding: 13px 24px;
+    font-size: 16px;
+    line-height: 1.5;
+
+    /* 글래스모피즘 효과는 투명도 기반이므로 테마 무관하게 유지 */
+    background: rgba(128, 128, 128, 0.25);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 50px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    transition: background 0.3s ease, box-shadow 0.3s ease, top 0.3s ease;
+}
+
+.sticky-bar:hover {
+    background: rgba(128, 128, 128, 0.15);
+    box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.3);
+    top: 35px;
+}
+
+.sticky-bar-divider {
+    width: 30px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+}
+
+.dark .sticky-bar-divider {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.sticky-bar-buttons {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+#theme-toggle-sticky {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: var(--secondary);
+    transition: color 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#theme-toggle-sticky:hover {
+    color: var(--primary);
+}
+
+#theme-toggle-sticky svg {
+    width: 20px;
+    height: 20px;
+    display: block;
+}
+
+[data-theme='dark'] #sun-sticky {
+    display: block;
+}
+
+[data-theme='dark'] #moon-sticky {
+    display: none;
+}
+
+html:not([data-theme='dark']) #sun-sticky {
+    display: none;
+}
+
+html:not([data-theme='dark']) #moon-sticky {
+    display: block;
+}
+
+.lang-toggle-sticky a {
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--secondary);
+    transition: color 0.3s ease;
+    text-transform: uppercase;
+}
+
+.lang-toggle-sticky a:hover {
+    color: var(--primary);
+}
+
+@media (max-width: 768px) {
+    .sticky-bar {
+        bottom: 24px;
+        padding: 10px 19px;
+    }
+}
+

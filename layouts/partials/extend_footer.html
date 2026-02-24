@@ -1,7 +1,11 @@
 {{ if not .IsHome }}
-<a href="{{ site.Home.RelPermalink }}" class="back-button">
+<a href="{{ if and (eq .Section "journal") .IsPage }}{{ "journal/" | relLangURL }}{{ else }}{{ site.Home.RelPermalink }}{{ end }}" class="back-button">
     <span class="icon-arrow">←</span>
-    {{ if eq .Lang "ko" }}홈으로{{ else }}Back{{ end }}
+    {{ if eq .Lang "ko" }}
+        {{ if and (eq .Section "journal") .IsPage }}뒤로가기{{ else }}홈으로{{ end }}
+    {{ else }}
+        {{ if and (eq .Section "journal") .IsPage }}Back to list{{ else }}Back{{ end }}
+    {{ end }}
 </a>
 {{ end }}
 

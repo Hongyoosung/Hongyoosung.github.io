@@ -1,0 +1,88 @@
+/* ---------------------------------------------------------
+   6. Project Page Layout & Nav
+   --------------------------------------------------------- */
+.project-main {
+    padding-top: 0 !important; 
+    padding-bottom: 5rem !important;
+}
+
+.project-nav {
+    position: sticky;
+    top: 0; 
+    z-index: 40;
+    background-color: var(--color-bg-base);
+    /* border-bottom 삭제 */
+    padding-top: 2rem; 
+    padding-bottom: 0.6rem;
+    margin-bottom: 4rem; 
+    transition: background-color 0.3s ease;
+    
+    /* 전체 배경 확장 */
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+}
+
+/* 👇 여기서 구분선의 길이와 위치를 자유롭게 조절합니다 */
+.project-nav::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%); /* 선을 정확히 가운데로 정렬 */
+    
+    width: 40%; /* 👈 원하는 선의 길이로 조절하세요! (예: 80%, 1000px 등) */
+    height: 1px; /* 선의 두께 */
+    background-color: var(--color-line); /* 선의 색상 */
+}
+
+.project-main article {
+    margin-top: 3rem !important; 
+}
+
+.project-header {
+    margin-bottom: 2.5rem; 
+}
+
+.project-title {
+    font-size: 1.875rem; 
+    margin-bottom: 0.75rem; 
+    color: var(--primary);
+}
+
+@media (min-width: 768px) {
+    .project-title {
+        font-size: 2.25rem; 
+    }
+}
+
+.nav-item {
+    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    position: relative;
+    font-size: var(--nav-font-size);
+    font-family: var(--nav-font-family);
+    color: var(--color-text-muted);
+}
+
+.nav-item.active,
+.nav-item:hover {
+    color: var(--primary) !important;
+    transform: translateY(-2px);
+}
+
+.nav-item::after {
+    content: '';
+    position: absolute;
+    bottom: 15%;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: var(--color-accent);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+
+.nav-item:hover::after {
+    width: 50%;
+}
+

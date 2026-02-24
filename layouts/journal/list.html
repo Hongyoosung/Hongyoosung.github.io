@@ -1,0 +1,213 @@
+{{ define "main" }}
+<main class="project-main w-full max-w-4xl mx-auto px-6 flex flex-col pt-12">
+
+    {{ partial "section_header.html" . }}
+
+    <div class="journal-controls-wrap w-full">
+            <div class="journal-filter-wrap relative flex items-center gap-3">
+                <div class="relative">
+                    <button id="filter-toggle"
+                        type="button"
+                        class="journal-filter-btn">
+                        <span class="journal-filter-icon" aria-hidden="true">☰</span>
+                        <span>Filter</span>
+                    </button>
+
+                    <div id="filter-panel" class="journal-filter-panel" aria-hidden="true">
+                        <div class="journal-filter-section">
+                            <p class="journal-filter-label">정렬</p>
+                            <button type="button" data-filter-sort="newest" class="journal-filter-option">최신순</button>
+                            <button type="button" data-filter-sort="oldest" class="journal-filter-option">오래된 순</button>
+                        </div>
+                        <div class="journal-filter-divider"></div>
+                        <div class="journal-filter-section">
+                            <button type="button" data-filter-tag class="journal-filter-option journal-filter-option-tag">태그로 찾기</button>
+                        </div>
+                    </div>
+
+                    <div id="tag-panel" class="journal-tag-panel" aria-hidden="true">
+                        <p class="journal-filter-label">태그</p>
+                        <div id="tag-list" class="journal-tag-list"></div>
+                    </div>
+                </div>
+
+                <input type="text" id="list-search" class="journal-search-input" placeholder="Search" />
+            </div>
+        </div>
+        <hr class="exp-divider journal-divider">
+    </div>
+
+    <section class="journal-post-section">
+        <div class="exp-list-gap" id="post-list">
+            {{ range $index, $page := .Paginator.Pages }}
+            <article class="post-entry"
+                     data-title="{{ .Title | lower }}" 
+                     data-tags="{{ if .Params.tags }}{{ delimit .Params.tags " " | lower }}{{ end }}"
+                     data-summary="{{ .Summary | plainify | lower }}"
+                     data-date="{{ .Date.Format "20060102150405" }}">
+                
+                <a href="{{ .RelPermalink }}" class="post-entry-title">
+                    {{ .Title }}
+                </a>
+                
+                <p class="post-entry-summary">
+                    {{ .Summary | plainify | truncate 130 }}
+                </p>
+                
+                <div class="post-entry-meta">
+                    {{ if .Params.tags }}
+                        <div class="post-entry-tags">
+                        {{ range .Params.tags }}
+                            <span class="post-entry-tag">#{{ . }}</span>
+                        {{ end }}
+                        </div>
+                        <span class="separator">|</span>
+                    {{ end }}
+                    <span class="post-entry-date">{{ .Date.Format "2006. 02. 04" }}</span>
+                </div>
+            </article>
+            {{ end }}
+        </div>
+    </section>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('list-search');
+            const postsContainer = document.getElementById('post-list');
+            const posts = document.querySelectorAll('.post-entry');
+
+            const filterToggle = document.getElementById('filter-toggle');
+            const filterPanel = document.getElementById('filter-panel');
+            const tagPanel = document.getElementById('tag-panel');
+            const tagListEl = document.getElementById('tag-list');
+            const sortButtons = document.querySelectorAll('[data-filter-sort]');
+            const tagFilterButton = document.querySelector('[data-filter-tag]');
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const searchQuery = urlParams.get('search');
+
+            const filterPosts = (term) => {
+                const lowerTerm = (term || '').toLowerCase().trim();
+                posts.forEach(post => {
+                    const title = post.getAttribute('data-title') || '';
+                    const tags = post.getAttribute('data-tags') || '';
+                    const summary = post.getAttribute('data-summary') || '';
+                    const match = !lowerTerm || title.includes(lowerTerm) || tags.includes(lowerTerm) || summary.includes(lowerTerm);
+                    post.style.display = match ? 'flex' : 'none';
+                });
+            };
+
+            const sortPostsByDate = (direction) => {
+                if (!postsContainer) return;
+                const sorted = Array.from(posts).sort((a, b) => {
+                    const aDate = a.getAttribute('data-date') || '';
+                    const bDate = b.getAttribute('data-date') || '';
+                    return direction === 'oldest' ? aDate.localeCompare(bDate) : bDate.localeCompare(aDate);
+                });
+                sorted.forEach(post => postsContainer.appendChild(post));
+            };
+
+            function openFilterPanel() {
+                tagPanel.classList.remove('is-open');
+                filterPanel.classList.add('is-open');
+                filterPanel.setAttribute('aria-hidden', 'false');
+            }
+            function closeFilterPanel() {
+                filterPanel.classList.remove('is-open');
+                filterPanel.setAttribute('aria-hidden', 'true');
+            }
+            function openTagPanel() {
+                filterPanel.classList.remove('is-open');
+                filterPanel.setAttribute('aria-hidden', 'true');
+                buildTagList();
+                tagPanel.classList.add('is-open');
+                tagPanel.setAttribute('aria-hidden', 'false');
+            }
+            function closeTagPanel() {
+                tagPanel.classList.remove('is-open');
+                tagPanel.setAttribute('aria-hidden', 'true');
+            }
+
+            function buildTagList() {
+                if (!tagListEl) return;
+                const tagSet = new Set();
+                posts.forEach(post => {
+                    const raw = post.getAttribute('data-tags') || '';
+                    raw.split(/\s+/).filter(Boolean).forEach(t => tagSet.add(t.toLowerCase()));
+                });
+                const sorted = Array.from(tagSet).sort((a, b) => a.localeCompare(b));
+                if (sorted.length === 0) {
+                    tagListEl.innerHTML = '<p class="journal-tag-empty">등록된 태그가 없습니다.</p>';
+                    return;
+                }
+                tagListEl.innerHTML = sorted.map(tag =>
+                    '<button type="button" class="journal-tag-chip" data-tag="' + escapeAttr(tag) + '">#' + escapeHtml(tag) + '</button>'
+                ).join('');
+                tagListEl.querySelectorAll('.journal-tag-chip').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const tag = this.getAttribute('data-tag');
+                        if (searchInput) {
+                            searchInput.value = tag;
+                            filterPosts(tag);
+                            searchInput.placeholder = 'Search';
+                        }
+                        closeTagPanel();
+                        closeFilterPanel();
+                    });
+                });
+            }
+            function escapeAttr(s) {
+                const div = document.createElement('div');
+                div.textContent = s;
+                return div.innerHTML.replace(/"/g, '&quot;');
+            }
+            function escapeHtml(s) {
+                const div = document.createElement('div');
+                div.textContent = s;
+                return div.innerHTML;
+            }
+
+            if (searchQuery && searchInput) {
+                searchInput.value = searchQuery;
+                filterPosts(searchQuery);
+            }
+            if (searchInput) {
+                searchInput.addEventListener('input', function(e) {
+                    filterPosts(e.target.value);
+                });
+            }
+
+            if (filterToggle && filterPanel) {
+                filterToggle.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    if (filterPanel.classList.contains('is-open')) {
+                        closeFilterPanel();
+                    } else {
+                        closeTagPanel();
+                        openFilterPanel();
+                    }
+                });
+            }
+
+            document.addEventListener('click', function (e) {
+                if (!filterPanel.contains(e.target) && e.target !== filterToggle) closeFilterPanel();
+                if (tagPanel && !tagPanel.contains(e.target) && e.target !== tagFilterButton) closeTagPanel();
+            });
+
+            sortButtons.forEach(button => {
+                button.addEventListener('click', function () {
+                    const direction = this.getAttribute('data-filter-sort');
+                    if (direction) sortPostsByDate(direction);
+                    closeFilterPanel();
+                });
+            });
+
+            if (tagFilterButton) {
+                tagFilterButton.addEventListener('click', function () {
+                    openTagPanel();
+                });
+            }
+        });
+    </script>
+</main>
+{{ end }}

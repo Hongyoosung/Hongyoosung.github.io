@@ -1,12 +1,9 @@
 ---
 title: "아카이브"
-layout: "single" # basic PaperMod single layout
+description: "The Learning Journey: Personal Wiki — 게임 공학 및 AI 학습의 통합 아카이브입니다. 기초 CS 개념부터 심화 연구까지, 저의 모든 학습 과정을 이곳에 기록했습니다."
+layout: "single"
 hideMeta: true
 ---
-
-<span class="archive-subtitle">"The Learning Journey: Personal Wiki"</span>
-
-게임 공학 및 AI 학습의 통합 아카이브입니다. 기초 CS 개념부터 심화 연구까지, 저의 모든 학습 과정을 이곳에 기록했습니다.
 
 <div class="archive-container">
     <div class="image-wrapper">

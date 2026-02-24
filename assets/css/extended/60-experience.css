@@ -1,0 +1,67 @@
+/* ---------------------------------------------------------
+   10. Experience Page Specific Styles
+   --------------------------------------------------------- */
+
+/* 대단원 구분선 */
+.exp-divider {
+    width: 100%;
+    border: none;
+    border-top: 1px solid var(--color-line);
+    margin: 3rem 0; /* 위아래 여백 제어 */
+    opacity: 0.5;
+}
+
+/* 대단원 제목 (Publish, Awards 등) */
+.exp-section-title {
+    font-family: var(--font-cinzel);
+    font-size: 1.7rem; /* 글씨 크기 제어 */
+    color: var(--primary);
+    margin-bottom: 2rem; /* 제목과 아래 콘텐츠 사이의 여백 제어 */
+    letter-spacing: 0.07em;
+    font-weight: 500;
+}
+
+/* 요소들 간의 간격 제어 (Publish 리스트 간격 등) */
+.exp-list-gap {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem; /* 리스트 사이의 여백 제어 */
+}
+
+/* 개별 아이템 제목 (논문 제목, 자격증 이름 등) */
+.exp-item-title {
+    font-family: var(--font-serif);
+    font-size: 1.1rem;
+    font-weight: 400;          /* 폰트 두께 조절 */
+    letter-spacing: 0.02em;    /* 자간 조절 (원하는 수치로 변경 가능) */
+    line-height: 1.4;          /* 행간 조절 */
+    color: var(--primary);
+    text-decoration: none;
+    transition: color 0.3s ease;
+    display: inline-block;     /* 클릭 영역 확보 */
+}
+
+.exp-item-title:hover {
+    color: var(--color-accent);
+}
+
+/* 개별 아이템 부가 정보 (저자, 날짜, 회사 부서 등) */
+.exp-item-meta {
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    color: var(--color-text-subtitle);
+    margin-top: 0.5rem; /* 제목과 부가정보 사이 여백 */
+}
+
+.exp-item-date {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+}
+
+/* 3. Career 타임라인 선 연장 및 두께 강조 */
+.border-s {
+    border-inline-start-width: 2px !important; /* 선을 조금 더 뚜렷하게 */
+    border-color: var(--color-line) !important;
+}
+

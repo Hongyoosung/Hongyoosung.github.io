@@ -1,0 +1,26 @@
+/* ---------------------------------------------------------
+   공통 섹션 헤더 (Archive, Journal, Experience 메인 페이지)
+   대제목 + 설명 스타일
+   --------------------------------------------------------- */
+
+.section-header {
+    margin-bottom: 2rem;
+}
+
+.section-header__title {
+    font-family: var(--font-cinzel);
+    font-size: 2.7rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    color: var(--primary);
+    margin: 0;
+}
+
+.section-header__description {
+    margin: 1rem 0 0;
+    font-size: 1.125rem;
+    font-family: var(--font-serif);
+    color: var(--color-text-subtitle);
+    font-style: italic;
+    line-height: 1.5;
+}

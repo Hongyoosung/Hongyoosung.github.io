@@ -1,0 +1,9 @@
+{{ define "main" }}
+<main class="project-main w-full max-w-4xl mx-auto px-6 flex flex-col pt-12">
+    {{ partial "section_header.html" . }}
+
+    <div class="section-header-content prose dark:prose-invert max-w-none" style="animation: fadeUp 0.8s ease-out 0.1s forwards; opacity: 0;">
+        {{ .Content }}
+    </div>
+</main>
+{{ end }}

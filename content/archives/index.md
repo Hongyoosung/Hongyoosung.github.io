@@ -1,12 +1,9 @@
 ---
 title: "Archive"
+description: "The Learning Journey: Personal Wiki — A comprehensive archive of my studies in Game Engineering and AI. From fundamental CS concepts to advanced research, all my insights are documented here."
 layout: "single"
 hideMeta: true
 ---
-
-<span class="archive-subtitle">"The Learning Journey: Personal Wiki"</span>
-
-A comprehensive archive of my studies in Game Engineering and AI. From fundamental CS concepts to advanced research, all my insights are documented here.
 
 <div class="archive-container">
     <div class="image-wrapper">

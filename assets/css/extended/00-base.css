@@ -1,0 +1,131 @@
+/* ---------------------------------------------------------
+   1. Fonts & Variables (Unified Theme & Tailwind Translation)
+   --------------------------------------------------------- */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=JetBrains+Mono:wght@400&family=Inter:wght@300;400;600&display=swap');
+
+:root {
+    /* 폰트 설정 */
+    --font-serif: 'Lora', 'Playfair Display', serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-sans: 'Inter', sans-serif;
+    --font-cinzel: 'Cinzel', serif;
+
+    /* --- Global Navigation & Back Button Settings --- */
+    --nav-font-size: 2.0rem;
+    --nav-font-family: var(--font-cinzel);
+    --back-button-font-size: 1.5rem;
+    --back-button-letter-spacing: 0.1em;
+
+    /* --- 라이트 모드 색상 --- */
+    --color-bg-base: #f8fafc;
+    --color-text-title: #000000;
+    /* 메인 타이틀, 강조 텍스트 */
+    --color-text-subtitle: #1e293b;
+    /* 서브타이틀 */
+    --color-text-muted: #475569;
+    /* 일반 텍스트, 아이콘, 버튼 등 */
+    --color-line: #cbd5e1;
+    /* 테두리, 구분선 */
+    --color-accent: #7c7c7c;
+    /* 포인트 컬러 (밑줄 등) */
+
+    /* Tailwind 공용 변수 연동 */
+    --tw-bg: var(--color-bg-base);
+    --tw-text: var(--color-text-muted);
+    --tw-border: var(--color-line);
+
+    /* PaperMod 기본 변수 연동 */
+    --theme: var(--color-bg-base);
+    --primary: var(--color-text-title);
+    --secondary: var(--color-text-muted);
+    --border: var(--color-line);
+}
+
+[data-theme='dark'],
+.dark {
+    /* --- 다크 모드 색상 --- */
+    --color-bg-base: #1a1b1e;
+    --color-text-title: #ffffff;
+    --color-text-subtitle: #e2e8f0;
+    --color-text-muted: #94a3b8;
+    --color-line: #334155;
+
+    /* Tailwind 공용 변수 연동 */
+    --tw-bg: var(--color-bg-base);
+    --tw-text: var(--color-text-muted);
+    --tw-border: var(--color-line);
+
+    /* PaperMod 기본 변수 오버라이드 */
+    --theme: var(--color-bg-base);
+    --entry: #25262b;
+    --primary: var(--color-text-title);
+    --secondary: var(--color-text-muted);
+    --border: var(--color-line);
+}
+
+/* PaperMod 기본 폰트 오버라이드 */
+body {
+    font-family: var(--font-serif) !important;
+}
+
+/* Ensure no default PaperMod blue border in dark mode */
+.dark .profile .buttons .button {
+    box-shadow: none !important;
+    border: none !important;
+}
+
+/* ---------------------------------------------------------
+   2. Header Adjustment (우측 상단 배치)
+   --------------------------------------------------------- */
+.header {
+    justify-content: flex-end;
+    max-width: 100% !important;
+    padding: 20px 40px;
+}
+
+.header .logo {
+    display: none;
+}
+
+.header .menu {
+    padding: 10px 40px;
+}
+
+.main {
+    padding-top: 0;
+}
+
+/* Sequential animations for non-project pages */
+.main .post-header,
+.list .main > header {
+    opacity: 0;
+    animation: fadeUp 0.8s ease-out forwards;
+}
+
+.main .post-content,
+.list .main > .post-entry {
+    opacity: 0;
+    animation: fadeUp 0.8s ease-out 0.2s forwards;
+}
+
+.main .post-footer,
+.main .page-footer {
+    opacity: 0;
+    animation: fadeUp 0.8s ease-out 0.4s forwards;
+}
+
+/* ---------------------------------------------------------
+   5. Animation
+   --------------------------------------------------------- */
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+

@@ -1,0 +1,8 @@
+{{- /* 공통 섹션 헤더: archive, journal, experience 메인 페이지 대제목 + 설명 */ -}}
+<header class="section-header mb-8" style="animation: fadeUp 0.8s ease-out forwards; opacity: 0;">
+    <h1 class="section-header__title">{{ .Title }}</h1>
+    {{- $desc := .Description | default .Params.description -}}
+    {{- if $desc }}
+    <p class="section-header__description">{{ $desc }}</p>
+    {{- end }}
+</header>

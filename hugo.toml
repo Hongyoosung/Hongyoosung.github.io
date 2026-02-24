@@ -48,8 +48,8 @@ defaultContentLanguage = 'en'
             name = "Archive"
             url = "/archives"
         [[languages.en.params.profileMode.buttons]]
-            name = "Writing"
-            url = "/posts"
+            name = "Journal"
+            url = "/journal"
         [[languages.en.params.profileMode.buttons]]
             name = "Experience"
             url = "/experience"
@@ -90,7 +90,7 @@ defaultContentLanguage = 'en'
             url = "/ko/archives"
         [[languages.ko.params.profileMode.buttons]]
             name = "글 목록"
-            url = "/ko/posts"
+            url = "/ko/journal"
         [[languages.ko.params.profileMode.buttons]]
             name = "이력"
             url = "/ko/experience"

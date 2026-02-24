@@ -1,0 +1,35 @@
+{{ define "main" }}
+<main class="project-main w-full max-w-4xl mx-auto px-6 flex flex-col pt-12">
+
+    <article class="w-full max-w-none" style="animation: fadeUp 0.8s ease-out 0.2s forwards; opacity: 0;">
+        <header class="post-header mb-6">
+            <h1 class="text-3xl md:text-4xl font-bold mb-3">
+                {{ .Title }}
+            </h1>
+            <p class="exp-item-meta mt-1 text-sm">
+                <span class="exp-item-date">{{ .Date.Format "2006. 02. 04" }}</span>
+            </p>
+        </header>
+
+        <div class="post-content prose prose-slate dark:prose-invert max-w-none text-base leading-relaxed">
+            {{ .Content }}
+        </div>
+    </article>
+
+    {{ if .Params.tags }}
+    <div class="post-tags" style="margin-top: 2.5rem; padding-top: 1.25rem; border-top: 1px solid var(--color-line); animation: fadeUp 0.8s ease-out 0.4s forwards; opacity: 0;">
+        <ul style="list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 10px;">
+            {{ range .Params.tags }}
+            <li>
+                <a href='{{ "journal/" | relLangURL }}?search={{ . | urlquery }}'
+                   style="font-family: var(--font-serif); color: var(--color-text-muted); text-decoration: none; border: 1px solid var(--color-line); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; transition: all 0.3s ease;">
+                    #{{ . }}
+                </a>
+            </li>
+            {{ end }}
+        </ul>
+    </div>
+    {{ end }}
+
+</main>
+{{ end }}
