@@ -1,6 +1,10 @@
 {{ define "main" }}
 <main class="project-main w-full max-w-4xl px-5 flex flex-col items-center">
 
+    {{ if .Params.math | default .Site.Params.math }}
+        {{ partial "math.html" . }}
+    {{ end }}
+
     {{ $currentURL := .RelPermalink }}
     {{ $projectPages := where (where .Site.RegularPages "Section" "projects") "Lang" .Lang }}
     

@@ -10,6 +10,7 @@ defaultContentLanguage = 'en'
     env = "production"
     description = "Game Programmer Technical Blog"
     author = "Yoosung"
+    math = true
     
     # PaperMod UI 설정
     defaultTheme = "light" # 디자인에 맞춰 Light 모드 기본 설정 권장
@@ -112,3 +113,9 @@ defaultContentLanguage = 'en'
   [markup.goldmark]
     [markup.goldmark.renderer]
       unsafe = true
+    [markup.goldmark.extensions]
+      [markup.goldmark.extensions.passthrough]
+        enable = true
+        [markup.goldmark.extensions.passthrough.delimiters]
+          block = [['$$', '$$']]
+          inline = [['$', '$']]
