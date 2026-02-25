@@ -1,44 +1,44 @@
 {{ define "main" }}
-<main class="project-main w-full max-w-4xl mx-auto px-6 flex flex-col pt-12">
+<main class="project-main">
 
     {{ partial "section_header.html" . }}
 
-    <div class="journal-controls-wrap w-full">
-            <div class="journal-filter-wrap relative flex items-center gap-3">
-                <div class="relative">
-                    <button id="filter-toggle"
-                        type="button"
-                        class="journal-filter-btn">
-                        <span class="journal-filter-icon" aria-hidden="true">☰</span>
-                        <span>Filter</span>
-                    </button>
+    <div class="journal-controls-wrap">
+        <div class="journal-filter-wrap">
+            <div class="journal-filter-dropdown-wrap">
+                <button id="filter-toggle"
+                    type="button"
+                    class="journal-filter-btn">
+                    <span class="journal-filter-icon" aria-hidden="true">☰</span>
+                    <span>Filter</span>
+                </button>
 
-                    <div id="filter-panel" class="journal-filter-panel" aria-hidden="true">
-                        <div class="journal-filter-section">
-                            <p class="journal-filter-label">정렬</p>
-                            <button type="button" data-filter-sort="newest" class="journal-filter-option">최신순</button>
-                            <button type="button" data-filter-sort="oldest" class="journal-filter-option">오래된 순</button>
-                        </div>
-                        <div class="journal-filter-divider"></div>
-                        <div class="journal-filter-section">
-                            <button type="button" data-filter-tag class="journal-filter-option journal-filter-option-tag">태그로 찾기</button>
-                        </div>
+                <div id="filter-panel" class="journal-filter-panel" aria-hidden="true">
+                    <div class="journal-filter-section">
+                        <p class="journal-filter-label">정렬</p>
+                        <button type="button" data-filter-sort="newest" class="journal-filter-option">최신순</button>
+                        <button type="button" data-filter-sort="oldest" class="journal-filter-option">오래된 순</button>
                     </div>
-
-                    <div id="tag-panel" class="journal-tag-panel" aria-hidden="true">
-                        <p class="journal-filter-label">태그</p>
-                        <div id="tag-list" class="journal-tag-list"></div>
+                    <div class="journal-filter-divider"></div>
+                    <div class="journal-filter-section">
+                        <button type="button" data-filter-tag class="journal-filter-option journal-filter-option-tag">태그로 찾기</button>
                     </div>
                 </div>
 
-                <input type="text" id="list-search" class="journal-search-input" placeholder="Search" />
+                <div id="tag-panel" class="journal-tag-panel" aria-hidden="true">
+                    <p class="journal-filter-label">태그</p>
+                    <div id="tag-list" class="journal-tag-list"></div>
+                </div>
             </div>
+
+            <input type="text" id="list-search" class="journal-search-input" placeholder="Search" />
         </div>
-        <hr class="exp-divider journal-divider">
     </div>
+    
+    <hr class="journal-divider">
 
     <section class="journal-post-section">
-        <div class="exp-list-gap" id="post-list">
+        <div id="post-list" class="post-list-container">
             {{ range $index, $page := .Paginator.Pages }}
             <article class="post-entry"
                      data-title="{{ .Title | lower }}" 
