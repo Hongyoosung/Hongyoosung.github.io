@@ -17,6 +17,11 @@ translationKey: "project-gobt"
 
 본 프로젝트는 Unity 엔진을 활용해 BT의 직관성과 GOAP의 유연성을 결합한 계층적 AI 프레임워크를 목표로 합니다. 기존 BT 내에 GOAP와 Utility Theory에서 영감을 얻은 커스텀 알고리즘 노드를 통합하여 NPC AI의 정적 구조 한계를 해결했습니다. 상위 흐름은 BT로 제어하고 복잡한 상황 판단은 커스텀 노드에 위임하는 계층적 설계를 통해, 시스템 연산 효율성과 개발 편의성을 동시에 확보한 AI 시스템을 구현했습니다.
 
+{{< img src="/images/project2/main.png" 
+        alt="메인 아키텍처" 
+        class="max-w-2xl" 
+        caption="그림 1. 3계층 프레임워크 구조" >}}
+
 ---
 
 ## 기술 스택
@@ -38,8 +43,12 @@ translationKey: "project-gobt"
 
 
 {{< img-grid 
-    src1="/images/project2/statenode.png" cap1="그림 1. State Node 구조"
-    src2="/images/project2/statechain.png" cap2="그림 2. State Space Graph"
+    src1="/images/project2/statenode.png" cap1="그림 2. State Node 구조"
+    class1="w-3/4" 
+    
+    src2="/images/project2/stategraph.png" cap2="그림 3. State Space Graph"
+    
+    
     class="max-w-full" 
 >}}
 
@@ -58,7 +67,7 @@ $$U_{final} = \max(w_1 \cdot U_1, w_2 \cdot U_2, \dots, w_n \cdot U_n)$$
 {{< img src="/images/project2/graph.png" 
         alt="유틸리티 그래프" 
         class="max-w-3xl" 
-        caption="그림 3. 정규화와 미세 환경 변화 반응 그래프" >}}
+        caption="그림 4. 정규화와 미세 환경 변화 반응 그래프" >}}
 
 <br>
 
@@ -71,6 +80,14 @@ $$U_{final} = \max(w_1 \cdot U_1, w_2 \cdot U_2, \dots, w_n \cdot U_n)$$
 
 * **작업 비용 최소화**: 이 구조를 통해 아무리 복잡한 상태 그래프가 동적으로 생성되더라도, 시스템은 런타임에 현재 상태 변수를 각 행동 노드에 조립된 평가 에셋에 대입하여 유틸리티를 자동 산출합니다. 결과적으로 상태의 종류를 억지로 제한하지 않으면서도 개발 및 유지보수 비용(Authoring Cost)을 획기적으로 낮췄습니다.
 
+
+{{< img-grid-3
+    src1="/images/project2/unity1.png" cap1="그림 5. Behavior Designer 내에 배치된 커스텀 플래너 노드" class1="w-full"
+    src2="/images/project2/unity2.png" cap2="그림 6. 사전조건/사후효과가 정의된 액션 클래스의 인스펙터 창" class2="w-3/4"
+    src3="/images/project2/unity3.png" cap3="그림 7. 커스텀 플래너 노드에서 목표 상태와 평가 상태변수를 설정하는 인스펙터 창" class3="w-1/2"
+    class="max-w-full" 
+>}}
+
 ---
 
 ## 주요 문제 해결 과정
@@ -80,6 +97,15 @@ $$U_{final} = \max(w_1 \cdot U_1, w_2 \cdot U_2, \dots, w_n \cdot U_n)$$
 * **Problem**: 다중 에이전트 환경에서 게임 시작 시 모든 에이전트가 동시에 GPlanner를 통해 상태공간 그래프를 구축하며 심각한 프레임 드랍(Spike) 현상이 발생했습니다.
 * **Solution**: 단일 프레임 내에서 모든 노드 연산을 처리하던 동기 방식을 코루틴 기반의 시분할 처리(Time-slicing) 방식으로 전환했습니다. 한 프레임당 허용된 연산 시간을 초과할 경우 yield return을 통해 다음 프레임으로 작업을 분산했습니다.
 * **Result**: 에이전트 생성 및 초기화 시 발생하는 프레임 저하를 80% 이상 개선하여 다수 에이전트가 존재하는 환경에서도 안정적인 프레임 유지를 달성했습니다.
+
+{{< img-grid 
+    src1="/images/project2/before.png" cap1="그림 8. 기본 방식(블로킹 발생)"
+    src2="/images/project2/after.png" cap2="그림 9. 코루틴 시분할 방식"
+
+    class="max-w-full" 
+>}}
+
+
 
 <br>
 
@@ -103,6 +129,7 @@ $$U_{final} = \max(w_1 \cdot U_1, w_2 \cdot U_2, \dots, w_n \cdot U_n)$$
 ## 결과
 
 * [**Journal of Multimedia Information System (JMIS)** 2023년 10월호 4권 'GOBT: A Synergistic Approach to Game AI Using Goal-Oriented and Utility-Based Planning in Behavior Trees'](https://doi.org/10.33851/JMIS.2023.10.4.321) 제 1저자 투고 및 출판 완료.
-* **역할**: 
-    * 메인 프로그래머
-    * 논문 작성
+* **역할**: 메인 프로그래머, 논문 작성
+
+
+<br>

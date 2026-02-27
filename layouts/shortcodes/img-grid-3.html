@@ -1,0 +1,28 @@
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-8 items-start">
+    <figure class="flex flex-col items-center">
+        <img src="{{ .Get "src1" }}" 
+             alt="{{ .Get "alt1" | default "image 1" }}" 
+             class="{{ .Get "class" | default "w-full" }} {{ .Get "class1" }} rounded-lg shadow-md mb-2 modal-trigger cursor-pointer">
+        {{ with .Get "cap1" }}
+        <figcaption class="text-sm text-gray-500 italic font-sans text-center">{{ . }}</figcaption>
+        {{ end }}
+    </figure>
+
+    <figure class="flex flex-col items-center">
+        <img src="{{ .Get "src2" }}" 
+             alt="{{ .Get "alt2" | default "image 2" }}" 
+             class="{{ .Get "class" | default "w-full" }} {{ .Get "class2" }} rounded-lg shadow-md mb-2 modal-trigger cursor-pointer">
+        {{ with .Get "cap2" }}
+        <figcaption class="text-sm text-gray-500 italic font-sans text-center">{{ . }}</figcaption>
+        {{ end }}
+    </figure>
+
+    <figure class="flex flex-col items-center">
+        <img src="{{ .Get "src3" }}" 
+             alt="{{ .Get "alt3" | default "image 3" }}" 
+             class="{{ .Get "class" | default "w-full" }} {{ .Get "class3" }} rounded-lg shadow-md mb-2 modal-trigger cursor-pointer">
+        {{ with .Get "cap3" }}
+        <figcaption class="text-sm text-gray-500 italic font-sans text-center">{{ . }}</figcaption>
+        {{ end }}
+    </figure>
+</div>
