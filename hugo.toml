@@ -34,7 +34,7 @@ defaultContentLanguage = 'en'
         
         # 서브타이틀 (HTML/Tailwind 클래스 포함하여 디자인 유지)
         subtitle = """
-        <span class="subtitle-highlight">An engineer</span> specializing in the <br class="subtitle-br"/> integration of game mechanics with AI and blockchain technologies.
+        <span class="subtitle-highlight">An engineer</span> specializing in the <br class="subtitle-br"/> architectural innovation of game AI systems.
         """
         
         imageUrl = "https://github.com/Hongyoosung.png" # (디자인상 숨김 처리되지만 데이터 유지)
@@ -77,7 +77,7 @@ defaultContentLanguage = 'en'
         
         # 한국어 서브타이틀
         subtitle = """
-        <span class="subtitle-highlight">게임 메커니즘</span>과 <br class="subtitle-br"/> AI·블록체인 기술의 융합을 설계하는 엔지니어입니다.
+        <span class="subtitle-highlight">게임 메커니즘</span>의 AI 시스템 혁신을 설계하는 엔지니어입니다.
         """
         
         imageUrl = "https://github.com/Hongyoosung.png"
