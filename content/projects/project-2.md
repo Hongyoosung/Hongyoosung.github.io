@@ -84,6 +84,14 @@ $$U_{final} = \max(w_1 \cdot U_1, w_2 \cdot U_2, \dots, w_n \cdot U_n)$$
 * **Solution**: I transitioned from a synchronous approach (processing all nodes in a single frame) to a **Time-slicing** approach based on **Coroutines**. If calculations exceed the allocated time per frame, the process yields to the next frame.
 * **Result**: Improved frame drops during agent initialization by over **80%**, maintaining stable performance even in densely populated environments.
 
+
+{{< img-grid 
+    src1="/images/project2/before.png" cap1="Figure 8. Basic method (blocking occurs)"
+    src2="/images/project2/after.png" cap2="Figure 9. Coroutine time-sharing method"
+
+    class="max-w-full" 
+>}}
+
 ### 2. Resolving Graph Deadlocks (Oscillation)
 
 * **Problem**: Agents would occasionally fall into loops (oscillation) between specific actions or fail to reach goals due to cycling through identical states in dynamic environments.
