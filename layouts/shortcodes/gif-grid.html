@@ -1,0 +1,21 @@
+{{ $urls := split (.Get "urls") "," }}
+{{/* 비율(widths)을 가져오고, 쉼표를 공백으로 변환 (예: "1,2" -> "1fr 2fr") */}}
+{{ $widths := .Get "widths" | default "" }}
+{{ $gridStyle := "" }}
+
+{{ if $widths }}
+  {{/* 사용자가 widths="30%, 70%" 또는 widths="1, 2" 처럼 입력했을 때 처리 */}}
+  {{ $columns := replace $widths "," " " }}
+  {{ $gridStyle = printf "grid-template-columns: %s;" $columns }}
+{{ else }}
+  {{/* widths가 없으면 기존처럼 등분 (1fr 1fr ..) */}}
+  {{ $gridStyle = printf "grid-template-columns: repeat(%d, 1fr);" (len $urls) }}
+{{ end }}
+
+<div class="gif-grid-container" style="{{ $gridStyle | safeCSS }}">
+  {{ range $urls }}
+    <div class="gif-item">
+      <img src="{{ . | safeURL | strings.TrimSpace }}" alt="Project Demo" loading="lazy">
+    </div>
+  {{ end }}
+</div>

@@ -12,7 +12,6 @@
     z-index: 40;
     background-color: var(--color-bg-base);
     
-    /* 👇 네비게이션바 자체가 너무 내려오지 않도록 상하 여백을 줄였습니다 */
     padding-top: 1rem; 
     padding-bottom: 1rem;
     
@@ -35,7 +34,7 @@
     background-color: var(--color-line);
 }
 
-/* 👇 HTML에서 제거한 패딩 값을 CSS로 이관했습니다 */
+
 .nav-item {
     padding: 1rem 0.5rem; /* 버튼의 터치/클릭 영역 확보 */
     transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
@@ -67,13 +66,13 @@
     width: 50%;
 }
 
-/* 👇 여기서 구분선과 제목 사이의 간격을 조절합니다 */
+/* 구분선과 제목 사이의 간격을 조절합니다 */
 .project-main article.project-article {
     /* margin-top은 마진 병합 현상을 일으키므로 0으로 설정합니다 */
     margin-top: 0 !important; 
     
     /* 대신 padding-top을 사용하여 네비게이션바를 건드리지 않고 내부 간격만 벌립니다 */
-    padding-top: 4rem !important; /* 💡 이 값을 늘리거나 줄여서 원하시는 간격을 맞춰보세요! */
+    padding-top: 4rem !important; 
 }
 
 /* 이후 .project-header 부분은 그대로 유지합니다 */
@@ -124,4 +123,106 @@
 
 .nav-item:hover::after {
     width: 50%;
+}
+
+
+
+/* 메타 데이터(인원, 수행내용) */
+.project-meta-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 3.0rem;
+    margin-bottom: -1rem;
+}
+
+/* 기간 표시 */
+.project-duration {
+    font-size: 0.95rem;
+    color: var(--color-text-muted);
+    font-family: var(--font-cerif);
+    letter-spacing: 0.05em;
+}
+
+/* 인원 및 역할 행 */
+.project-info-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    font-size: 0.9rem;
+    color: var(--color-text-main);
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.info-divider {
+    width: 1px;
+    height: 12px;
+    background-color: var(--color-line);
+}
+
+/* 링크 영역 */
+.project-links {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 0.5rem;
+}
+
+.project-links a {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 1rem;
+    font-weight: 500;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    color: var(--color-text-main);
+    transition: color 0.3s ease;
+}
+
+.project-links a:hover {
+    color: var(--primary);
+}
+
+/* 아이콘 공통 스타일 */
+.icon {
+    width: 1.1rem;
+    height: 1.1rem;
+    stroke-width: 1.8;
+}
+
+
+
+.gif-grid-container {
+    display: grid;
+    gap: 1.5rem;
+    width: 100%;
+    margin: 2rem 0;
+    align-items: center; /* 높이가 다를 경우 중앙 정렬 */
+}
+
+/* 모바일에서는 무조건 1열 */
+@media (max-width: 767px) {
+    .gif-grid-container {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+.gif-item {
+    width: 100%; /* 부모 그리드 칸을 꽉 채움 */
+    background: none;
+    box-shadow: none;
+}
+
+.gif-item img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 8px; /* 이미지 자체에 약간의 라운드 권장 */
 }

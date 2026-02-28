@@ -1,123 +1,78 @@
 ---
-title: "Blockchain-Enabled Metaverse IoT Communication Platform"
-description: "Ensuring Data Integrity and Real-time Synchronization between Virtual Environments and Physical IoT Assets"
+title: "V: VR FPS Shooting Game"
+description: "A scalable VR FPS framework built with UE5, leveraging design patterns and component-based architecture for enhanced maintainability."
 weight: 3
-translationKey: "project-3"
----
+translationKey: "project-v"
 
-{{< project-links 
-    github="https://github.com/Hongyoosung/Metaverse_for_IoT/tree/main/Decentralized_MQTT" 
-    paper="https://kism.or.kr/file/memoir/13_4_8.pdf" 
->}}
+duration: "2024.05 ~ 2024.11"
+team_size: "3 people"
+role: "AI system programmer"
+github: "https://github.com/Hongyoosung/GOBT"
+youtube: "https://www.youtube.com/watch?v=Dl0W6wjeUj0"
+math: true
+---
 
 ---
 
 ## Overview
 
-This project focuses on developing a decentralized platform for secure and efficient data communication between metaverse environments and physical IoT devices. By integrating **Decentralized Identifier (DID)** based identity verification with the **MQTT protocol**, the system achieves robust data integrity and low-latency interaction. The platform leverages **Hyperledger Indy** to manage decentralized identities, ensuring trusted identification and verifiable credential management for all participating entities.
-
-
-
-{{< img src="/images/project3/overview.png" 
-        alt="System Overview Architecture" 
-        class="max-w-3xl" 
-        caption="Figure 1. High-level System Architecture" >}}
+This project is a **VR FPS shooting game** developed using Unreal Engine 5. Rather than simply implementing features, the focus was on adhering to Object-Oriented Programming (OOP) principles to reduce the coupling of complex combat systems. By actively utilizing **Observer, Facade, and Component patterns**, I established a stable damage system and AI decision-making structure capable of handling environments where dozens of allies and enemies coexist.
 
 ---
 
-## Technical Stack
+## Tech Stack
 
-* **Blockchain / DID Ledger**: Hyperledger Indy (Decentralized Identity Management, DID/VC Issuance & Verification)
-* **IoT Communication**: MQTT (Mosquitto Broker)
-* **Metaverse Engine**: Unity 3D
-* **Backend**: Node.js, Express.js
-* **Frontend**: React.js
-* **Database**: MongoDB
+* **Game Engine**: Unreal Engine 5 (UE5)
+* **AI Architecture**: Behavior Tree, AI Controller
+* **Design Patterns**: Observer, Facade, Component Pattern
+* **Platform**: Windows (VR Support)
+* **Language**: C++, Blueprints
 
 ---
 
 ## Key Features
 
-### 1. Decentralized Identity Management (DID/VC) via Hyperledger Indy
-**"Establishing User-Centric Identity Sovereignty and Device Ownership"**
-
-* **Self-Sovereign Identity (SSI)**: Developed a DID system based on Hyperledger Indy, allowing users to own and control their identities without reliance on a centralized authority.
-* **Trust-Based Interaction**: Utilized **Verifiable Credentials (VC)** to authenticate the ownership relationship between metaverse avatars and physical IoT devices, ensuring privacy-preserving data communication.
-
-{{< img src="/images/project3/vonnet.png" 
-        alt="VonNet DID Ledger" 
-        class="max-w-xl" 
-        caption="Figure 2. Verified Device DIDs and Public Keys on VonNet" >}}
-
----
-
-### 2. DPKI-Based IoT Data Integrity Framework
-* **Hierarchical Topic Design**: Designed a structured MQTT topic schema (`home/devices/{DID}/{Sensor_Name}`) to embed the device's Decentralized Identifier (DID) directly within the message routing path.
-* **Real-Time Integrity Verification**: The Unity client extracts the DID from incoming topics and performs real-time lookups of the corresponding Public Key on the blockchain to verify digital signatures.
-* **Secure Architecture**: Established a **Decentralized PKI (DPKI)** structure that eliminates Man-in-the-Middle (MITM) vulnerabilities and ensures the absolute reliability of data.
-
-{{< side-by-side src="/images/project3/sensor.png" caption="Figure 3. Sensors used in the implementation" >}}
-
-| Sensor Type | Topic Structure |
-| :--- | :--- |
-| **Ultrasonic Sensor** | `home/devices/{device_DID}/ultrasonic` |
-| **LED Module** | `home/devices/{device_DID}/led` |
-| **Temperature Sensor** | `home/devices/{device_DID}/tem` | 
-
-{{< /side-by-side >}}
-
----
-
-### 3. Custom Packet Protocol based on MQTT Standards
-* **Standard Compliance**: Adhered to the MQTT v3.1.1 specification (Fixed/Variable Header, Payload) to ensure full interoperability with existing broker infrastructures.
-* **Automated Source Provenance**: Positioned the DID within the Topic Name of the Variable Header, enabling immediate source identification before the data parsing stage.
-* **Security Packaging**: Structured the payload as `[Raw Data + Digital Signature]`, allowing the receiver to validate the authenticity of each individual message instantaneously.
-
-{{< img src="/images/project3/packet.png" 
-        alt="Message Packet Format" 
-        class="max-w-xl" 
-        caption="Figure 4. Proposed Message Packet Structure" >}}
-
----
-
-### 4. Immersive Metaverse Integration Interface
-**"Digital Twin-Based Intuitive IoT Control Environment"**
-
-* **Unity Engine Integration**: Achieved real-time synchronization and visualization of physical IoT device states within a 3D metaverse environment.
-* **Intuitive UI/UX**: Implemented avatar-based device control and data flow visualization, providing users with an immersive monitoring experience as if interacting with physical objects.
-
-{{< img src="/images/project3/unity.png" 
-        alt="Unity Metaverse Environment" 
-        class="max-w-md" 
-        caption="Figure 5. Real-time Monitoring in Unity Environment" >}}
-
----
-
-## Technical Problem Solving
-
-### 1. High-Performance Asynchronous Verification Pipeline
-* **Problem**: Frequent blockchain lookups (I/O) and cryptographic signature verification (CPU) per frame caused main-thread bottlenecks and significant **frame drops (hiccups)**.
-* **Solution**: Implemented a **Task-based Asynchronous Pattern (Async/Await)** to decouple the networking, data verification, and UI rendering threads.
-* **Result**: Successfully maintained a stable **60 FPS** environment by optimizing the security layer overhead to within **4.3ms** compared to raw MQTT.
+### 1. Pattern-Based Flexible Entity Management
+* **Event-Driven Design via Observer Pattern**: Handled health changes and death states without hard-coded references. When damage occurs, events are broadcasted to allow UI updates, animations, and sound effects to react independently.
+* **Interface Integration via Facade Pattern**: Encapsulated complex internal logics such as attacking, health checks, and team identification into a single interface. This allows external systems to access data easily without knowing the detailed implementation of the entities.
 
 {{< img-grid 
-    src1="/images/project3/case1.png" cap1="Figure 6. Before Optimization (Blocking)"
-    src2="/images/project3/case2.png" cap2="Figure 7. After Optimization (Async Pipeline)"
+    src1="/images/project-v/unit-uml.png" cap1="Fig 1. Unit Structure UML"
+    src2="/images/project-v/facade-logic.png" cap2="Fig 2. Facade Interface Flow"
     class="max-w-full" 
 >}}
 
-### 2. Event-Driven Hierarchical Topic Architecture
-* **Problem**: High coupling between code and devices led to difficulties in managing frequent device connections/disconnections and adding new device types at runtime.
-* **Solution**: Engineered a **hierarchical MQTT topic structure** (`home/devices/{DID}/{Sensor}`) to automate routing and utilized the **Pub/Sub pattern** to decouple the network module from in-game objects.
-* **Result**: Enabled seamless system scalability where new sensors can be added by simply deploying prefabs without modifying the core source code.
+### 2. Modular Component-Based Damage System
+* **Plug-and-Play Structure**: Decoupled damage processing logic into independent components. This allows the damage system to be easily ported to any object—such as players, NPCs, or destructible structures—simply by attaching the component.
+* **Projectile-Based Collision Detection**: Bound projectile collision events to calculate accurate hit points and called the `TakeDamage` function to perform reliable physical calculations.
 
-### 3. Security Validation
-* **Security**: Conducted Man-in-the-Middle (MITM) attack simulations, resulting in **100% detection and blocking** of tampered packets.
+### 3. Hierarchical Behavior Tree AI
+* **Tactical Decision Making**: Implemented decision-making logic for both allied and enemy AI using Behavior Trees (BT). Managed states hierarchically from target detection to range-based transitions.
+* **Dynamic Distance Control**: Designed organic tactical behavior where AI approaches while firing if the target is beyond `IdleRange`, and performs aiming and stationary fire once within range.
+
+{{< img src="/images/project-v/bt-graph.png" 
+        alt="Behavior Tree Graph" 
+        class="max-w-3xl" 
+        caption="Fig 3. Common Base Behavior Tree Structure" >}}
 
 ---
 
-## Publications & Awards
+## Technical Challenges & Solutions
 
-* **Lead Author**, "Integrity Assurance System in IoT Virtual Environment Platform: Via Hyperledger Indy and MQTT," *Journal of Korea Smart Media Society*, Vol. 13, No. 4, April 2024. [Link](https://kism.or.kr/file/memoir/13_4_8.pdf)
-* **Outstanding Paper Award**, "A Study on Digital Identification Technology for Decentralized Digital Ecosystems," *2023 Korea Computer Digital Contents Society (KCDCS) Fall Conference*.
-* **Bronze Award**, "Development of IoT Communication Technology for Trusted Decentralized Metaverse," *2023 Korea Computer Digital Contents Society (KCDCS) Fall Conference*.
+### 1. Resolving Tight Coupling Between Objects
+* **Issue**: Observed a phenomenon where modifying one unit's code caused cascading errors due to strong dependencies.
+* **Solution**: Introduced the **Facade pattern** to abstract core unit functions and utilized the **Component pattern** to build features modularly, removing direct dependencies between classes.
+* **Result**: Secured high scalability, allowing the addition of new units or special features without modifying existing code.
+
+### 2. Optimizing Large-Scale AI in VR
+* **Issue**: Needed to prevent performance degradation caused by multiple NPCs executing Behavior Trees simultaneously.
+* **Solution**: Optimized AI by adjusting the update cycles of sensing logic and managing AI Controller operations asynchronously. Implemented a distance-based tick system to differentiate update frequencies based on proximity to the player.
+
+---
+
+## Results
+
+* Exhibited and demonstrated at the **2024 Busan-Gyeongnam Game Exhibition (Build 051)**.
+* **Achievement**: Successfully proved logical integrity and frame stability in large-scale combat scenarios by organizing complex game logic through design patterns.
+
+<br>

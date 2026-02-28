@@ -3,19 +3,20 @@ title: "GOBT: Goal-Oriented Behavior Tree"
 description: "Behavior Tree의 구조적 직관성과 GOAP·Utility Theory의 동적 유연성을 결합한 하이브리드 AI 프레임워크"
 weight: 2
 translationKey: "project-gobt"
+
+duration: "2023.05 ~ 2024.02"
+team_size: "2명"
+role: "메인 프로그래머, 논문 작성"
+github: "https://github.com/Hongyoosung/GOBT"
+paper: "https://doi.org/10.33851/JMIS.2023.10.4.321"
+math: true
 ---
-
-
-{{< project-links 
-    github="https://github.com/Hongyoosung/GOBT" 
-    paper="https://doi.org/10.33851/JMIS.2023.10.4.321" 
->}}
 
 ---
 
 ## 개요
 
-본 프로젝트는 Unity 엔진 기반의 **계층적 AI 의사결정 시스템**입니다. 기존 Behavior Tree(BT)의 정적인 한계를 극복하기 위해, 상위 전략은 BT로 제어하고 하위의 구체적 실행 계획은 **GOAP(Goal-Oriented Action Planning)**와 **Utility Theory**를 결합한 커스텀 플래너에 위임하는 하이브리드 설계를 채택했습니다. 이를 통해 복잡한 NPC AI의 연산 효율성을 확보함과 동시에, 기획자가 직관적으로 AI의 성향을 조절할 수 있는 확장 가능한 구조를 구현했습니다.
+본 프로젝트는 Unity 엔진 기반의 **계층적 AI 의사결정 시스템**입니다. 기존 Behavior Tree(BT)의 정적인 한계를 극복하기 위해, 상위 전략은 BT로 제어하고 하위의 구체적 실행 계획은 **GOAP(Goal-Oriented Action Planning)** 와 **Utility Theory**를 결합한 커스텀 플래너에 위임하는 하이브리드 설계를 채택했습니다. 이를 통해 복잡한 NPC AI의 연산 효율성을 확보함과 동시에, 기획자가 직관적으로 AI의 성향을 조절할 수 있는 확장 가능한 구조를 구현했습니다.
 
 {{< img src="/images/project2/main.png" 
         alt="메인 아키텍처" 
@@ -42,7 +43,7 @@ translationKey: "project-gobt"
 
 
 {{< img-grid 
-    src1="/images/project2/statenode.png" cap1="그림 2. State Node 구조"
+    src1="/images/project2/statenode.png" cap1="그림 2. 행동 선택 과정. 에이전트는 선택된 행동의 After-effect를 Current State로 갖는다."
     class1="w-3/4" 
     
     src2="/images/project2/stategraph.png" cap2="그림 3. State Space Graph"

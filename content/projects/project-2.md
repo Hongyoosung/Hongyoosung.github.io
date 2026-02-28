@@ -3,12 +3,15 @@ title: "GOBT: Goal-Oriented Behavior Tree"
 description: "A hybrid decision-making framework combining the intuitiveness of Behavior Trees with the dynamic flexibility of GOAP and Utility Theory."
 weight: 2
 translationKey: "project-gobt"
----
 
-{{< project-links 
-    github="https://github.com/Hongyoosung/GOBT" 
-    paper="https://doi.org/10.33851/JMIS.2023.10.4.321" 
->}}
+duration: "2023.05 ~ 2024.02"
+team_size: "2 people"
+role: "Main programmer, paper writer"
+github: "https://github.com/Hongyoosung/GOBT"
+paper: "https://doi.org/10.33851/JMIS.2023.10.4.321"
+math: true
+
+---
 
 ---
 
@@ -42,7 +45,7 @@ This project aims to develop a hierarchical AI framework using the Unity engine 
 * **Utility-Based Forward Real-time Action Chaining**: To overcome the real-time responsiveness limitations of traditional GOAP (which uses backward planning), I implemented a **Forward Optimization** approach. This allows the system to recalculate weights in real-time based on environmental changes, enabling flexible goal adjustments and action execution.
 
 {{< img-grid 
-    src1="/images/project2/statenode.png" cap1="Figure 2. State Node Structure"
+    src1="/images/project2/statenode.png" cap1="Figure 2. Action selection process. The agent retains the aftereffect of the selected action as its current state."
     class1="w-3/4" 
     src2="/images/project2/stategraph.png" cap2="Figure 3. State Space Graph"
     class="max-w-full" 
