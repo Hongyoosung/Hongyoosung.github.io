@@ -4,7 +4,7 @@ description: "A scalable VR FPS framework built with UE5, leveraging design patt
 weight: 3
 translationKey: "project-v"
 
-duration: "2024.05 ~ 2024.11"
+duration: "2023.09 ~ 2024.05"
 team_size: "3 people"
 role: "AI system programmer"
 github: "https://github.com/Hongyoosung/GOBT"
@@ -17,6 +17,8 @@ math: true
 ## Overview
 
 This project is a **VR FPS shooting game** developed using Unreal Engine 5. Rather than simply implementing features, the focus was on adhering to Object-Oriented Programming (OOP) principles to reduce the coupling of complex combat systems. By actively utilizing **Observer, Facade, and Component patterns**, I established a stable damage system and AI decision-making structure capable of handling environments where dozens of allies and enemies coexist.
+
+{{< gif-grid urls="/gifs/project3/V1.gif, /gifs/project3/V2.gif" widths="57%, 43%" >}}
 
 ---
 
@@ -36,11 +38,18 @@ This project is a **VR FPS shooting game** developed using Unreal Engine 5. Rath
 * **Event-Driven Design via Observer Pattern**: Handled health changes and death states without hard-coded references. When damage occurs, events are broadcasted to allow UI updates, animations, and sound effects to react independently.
 * **Interface Integration via Facade Pattern**: Encapsulated complex internal logics such as attacking, health checks, and team identification into a single interface. This allows external systems to access data easily without knowing the detailed implementation of the entities.
 
+
+
 {{< img-grid 
-    src1="/images/project-v/unit-uml.png" cap1="Fig 1. Unit Structure UML"
-    src2="/images/project-v/facade-logic.png" cap2="Fig 2. Facade Interface Flow"
+    src1="/images/project3/damage_archi.png" cap1="Figure 1. Damage System UML"
     class="max-w-full" 
+
+    src2="/images/project3/damage_flow.png" cap2="Figure 2.  Damage System Flow"
+    class="max-w-full" 
+    
 >}}
+
+
 
 ### 2. Modular Component-Based Damage System
 * **Plug-and-Play Structure**: Decoupled damage processing logic into independent components. This allows the damage system to be easily ported to any object—such as players, NPCs, or destructible structures—simply by attaching the component.
@@ -50,9 +59,9 @@ This project is a **VR FPS shooting game** developed using Unreal Engine 5. Rath
 * **Tactical Decision Making**: Implemented decision-making logic for both allied and enemy AI using Behavior Trees (BT). Managed states hierarchically from target detection to range-based transitions.
 * **Dynamic Distance Control**: Designed organic tactical behavior where AI approaches while firing if the target is beyond `IdleRange`, and performs aiming and stationary fire once within range.
 
-{{< img src="/images/project-v/bt-graph.png" 
+{{< img src="/images/project3/bt.png" 
         alt="Behavior Tree Graph" 
-        class="max-w-3xl" 
+        class="max-w-2xl" 
         caption="Fig 3. Common Base Behavior Tree Structure" >}}
 
 ---

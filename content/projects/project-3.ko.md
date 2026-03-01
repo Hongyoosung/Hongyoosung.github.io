@@ -4,7 +4,7 @@ description: "디자인 패턴과 컴포넌트 기반 설계를 통해 확장성
 weight: 3
 translationKey: "project-v"
 
-duration: "2024.05 ~ 2024.11"
+duration: "2023.09 ~ 2024.05"
 team_size: "3 people"
 role: "AI 시스템 프로그래머"
 github: "https://github.com/Hongyoosung/GOBT"
@@ -41,10 +41,16 @@ math: true
 * **Facade 패턴을 통한 인터페이스 통합**: 공격, 체력 확인, 팀 식별 등 복잡한 내부 로직을 단일 인터페이스로 캡슐화했습니다. 외부 시스템은 개체의 상세 구현을 몰라도 상위 레이어에서 간편하게 데이터에 접근할 수 있습니다.
 
 {{< img-grid 
-    src1="/images/project-v/unit-uml.png" cap1="그림 1. Unit 구조 UML"
-    src2="/images/project-v/facade-logic.png" cap2="그림 2. Facade 인터페이스 흐름도"
+    src1="/images/project3/damage_archi.png" cap1="그림 1. Unit 구조 UML"
+    class1="w-3xl"
+
+    src2="/images/project3/damage_flow.png" cap2="그림 2. 데미지 인터페이스 흐름도"
+    class1="w-2xl"
+
     class="max-w-full" 
 >}}
+
+
 
 ### 2. 모듈형 컴포넌트 기반 데미지 시스템
 * **Plug-and-Play 구조**: 데미지 처리 로직을 독립적인 컴포넌트로 분리했습니다. 이를 통해 플레이어, NPC뿐만 아니라 파괴 가능한 구조물 등 어떤 오브젝트에도 해당 컴포넌트를 부착하는 것만으로 손쉽게 데미지 시스템을 이식할 수 있습니다.
@@ -54,9 +60,9 @@ math: true
 * **전술적 의사결정**: 아군과 적군 AI의 판단 로직을 BT로 구현했습니다. 타겟 감지부터 사거리 기반의 상태 전환까지 계층적으로 관리합니다.
 * **동적 거리 제어**: 적과의 거리가 `IdleRange`보다 멀 경우 공격하며 접근하고, 사거리 내에 들어오면 조준 및 고정 사격을 수행하는 유기적인 전술 행동을 보여줍니다.
 
-{{< img src="/images/project-v/bt-graph.png" 
+{{< img src="/images/project3/bt.png" 
         alt="Behavior Tree Graph" 
-        class="max-w-3xl" 
+        class="max-w-2xl" 
         caption="그림 3. 아군/적군 공용 베이스 행동 트리 구조" >}}
 
 ---
