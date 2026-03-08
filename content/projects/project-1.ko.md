@@ -21,6 +21,9 @@ math: true
 
 특히, Schola 플러그인을 브릿지로 활용하여 AWS 클라우드 기반의 Ray RLlib 대규모 병렬 학습 환경을 구축했습니다. 이를 통해 수십 개의 언리얼 엔진 인스턴스로부터 데이터를 동시 수집하고 정책을 업데이트하는 고성능 학습 파이프라인을 구현했습니다.
 
+
+{{< gif-grid urls="/gifs/project1/1.gif, /gifs/project1/3.gif" widths="50%, 50%" >}}
+
 ---
 
 ## 시스템 아키텍처 (System Architecture)
@@ -89,9 +92,9 @@ void UTacticalParameterActuator::TakeAction(const FBoxPoint& Action)
     }
 
     // 에이전트의 블랙보드 업데이트 및 내비게이션 경로 재탐색 트리거
-    if (MocAgent) {
-        MocAgent->UpdateTacticalWeights(Weights); 
-        MocAgent->PerformTacticalAction(); 
+    if (DeAgent) {
+        DeAgent->UpdateTacticalWeights(Weights); 
+        DeAgent->PerformTacticalAction(); 
     }
 }
 ```
@@ -105,7 +108,7 @@ void UTacticalParameterActuator::TakeAction(const FBoxPoint& Action)
 
 ### 2. 관측 공간 및 전략 조건부 보상 설계 (Strategy-Conditioned Reward Shaping)
 
-> **관측 공간**
+**관측 공간**
 
 | 데이터 구분 | 세부 항목 | | 설명 및 처리 방식 | 차원 |
 | --- | --- | --- | --- | --- |
@@ -119,7 +122,7 @@ void UTacticalParameterActuator::TakeAction(const FBoxPoint& Action)
 
 <br>
 
-> **보상 구조 개요**
+**보상 구조 개요**
 
 단일 보상 함수로 세 가지 역할을 동시에 학습시키면 그래디언트 간섭(Gradient Interference)이 발생합니다. 한 역할에 유리한 업데이트가 다른 역할의 정책을 손상시키기 때문입니다. 이를 해결하기 위해, 역할별로 완전히 독립된 정책 네트워크와 전술 목표에 특화된 조밀(Dense) + 희소(Sparse) 보상 함수 조합을 설계했습니다.
 
@@ -147,7 +150,7 @@ float UDERewardSubsystem::GetStrategyScale(
 
 ---
 
-**돌격 (Assault)**
+> **돌격: 거점의 확보**
 
 목표는 적 거점 접근과 점령 완료입니다. 적 거점까지의 거리 감소분에 비례한 접근 보상을 매 스텝 부여하고, 거점 반경 내 진입 시 추가 존재 보너스를 부여합니다. 점령이 완료되면 즉시 `PostCaptureMomentumDuration` 스텝 동안 모멘텀 보너스가 활성화되어, 점령 후 제자리에 머무는 대신 다음 거점으로 계속 전진하도록 유도합니다.
 
@@ -174,7 +177,7 @@ if (PositionChange < Settings->AssaultIdleMovementThreshold && !bInNonFriendlyZo
 
 ---
 
-**방어 (Defend)**
+> **방어: 거점의 유지**
 
 목표는 아군 거점 유지와 거점 내 적 격퇴입니다. 아군 거점 반경 내에 위치할 때 기본 존재 보상이 부여됩니다. 거점 내에서 적에게 데미지를 받으면 추가 내구도 보너스(`ZoneDurabilityBonus`)가 지급되어, 거점에서 물러나지 않고 버티는 행동을 강화합니다. 아군 거점이 없는 상황에서는 중립/적 거점 접근으로 목표가 전환됩니다.
 
@@ -205,7 +208,7 @@ else
 
 ---
 
-**지원 (Support)**
+> **지원: 아군의 유지**
 
 목표는 체력이 낮은 아군을 추적하고 힐링하며 후방을 유지하는 것입니다. 매 스텝 부상 아군 탐색을 수행하되, 잦은 타겟 전환으로 인한 진동 행동을 막기 위해 5스텝 캐시를 적용합니다. 캐시된 아군이 현재 가장 낮은 체력이 아니더라도 5스텝이 지나기 전까지는 교체하지 않습니다. 아군 뒤편에 위치하면 후방 포지셔닝 보너스를 받으며, 아군이 부상 중인 상황에서 직접 킬을 시도하면 역할 이탈 패널티가 부과됩니다.
 
@@ -295,7 +298,7 @@ Python 학습 스크립트(Ray RLlib, Schola 등 의존성 포함)를 Linux 컨�
 각 RLlib env-runner가 독립된 UE5 인스턴스에 연결되도록, 워커 인덱스 기반의 포트 자동 배정 로직을 구현했습니다.
 
 ```python
-# moc_v10_2_env.py — 워커별 포트 자동 배정
+# de_env.py — 워커별 포트 자동 배정
 def _resolve_port(self, **kwargs):
     """멀티 워커 RLlib 환경에서 포트를 자동으로 배정."""
     base_port = kwargs.get("base_port")
@@ -346,7 +349,7 @@ UCLASS(ClassGroup = (AI), meta = (BlueprintSpawnableComponent))
 class UDEScholaAgent : public UInferenceComponent
 {
     // Blueprint에서 에디터 단에서 모드를 전환할 수 있음
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MOC")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DE")
     EDEAgentMode CurrentMode = EDEAgentMode::Training;
     ...
 };
@@ -395,25 +398,6 @@ void ADECharacter::PerformTacticalAction()
 
 <br>
 
-#### 학습 환경 격리: `ADEScholaEnvironment`
-
-학습 모드에서는 `ADEScholaEnvironment`가 에이전트 등록 여부를 `bTrainingMode` 플래그로 제어합니다. 추론 모드로 전환하면 Schola Trainer 등록 전체가 스킵되고 Behavior Tree가 직접 루프를 담당합니다.
-
-```cpp
-// DEScholaEnvironment.cpp
-void ADEScholaEnvironment::RegisterAgents(TArray<APawn*>& OutTrainerControlledPawns)
-{
-    if (!bTrainingMode)
-    {
-        // 추론 모드: Trainer를 등록하지 않음. BT가 직접 에이전트를 구동함.
-        UE_LOG(LogTemp, Warning, TEXT("[ScholaEnv] Inference mode — skipping trainer registration"));
-        return;
-    }
-    // 학습 모드: 각 에이전트에 DETrainer를 배정하고 Schola 스텝 루프에 등록
-    ...
-}
-```
-
 
 
 ---
@@ -454,38 +438,13 @@ SCHOLA_AVAILABLE = True
 ```
 
 ---
-### Problem 2: 학습 환경 병렬화에 따른 환경 불안정 문제
 
-Windows 환경에서 Ray의 멀티 워커 아키텍처를 구동할 때 두 가지 문제가 발생했습니다. (1) 가중치 동기화 단계에서 Ray Learner 액터가 멈추는 현상, (2) 단일 UE5 인스턴스에 모든 워커가 연결을 시도하여 처리량이 병목되는 문제였습니다.
+### Problem 2: 멀티 에이전트 에피소드 경계에서의 학습 프리징(정지) 현상
 
-#### Goal
-UE5와의 안정적인 통신을 유지하면서, OS 의존성 없이 수평 확장 가능한 멀티 워커 학습 파이프라인 구축.
-
-#### Solution
-
-**Docker 컨테이너화**: Python 학습 스크립트와 Ray RLlib 의존성 전체를 Linux Docker 이미지로 패키징했습니다. Windows의 `spawn`/`fork` 프로세스 생성 방식이 Ray와 충돌하던 문제를 컨테이너 레이어에서 원천적으로 차단했습니다.
-
-**gRPC 포트 라우팅 최적화**: Schola의 연결 초기화 과정을 커스텀하여, 각 RLlib env-runner가 `base_port + worker_index` 공식으로 고유한 포트를 계산해 서로 다른 UE5 인스턴스에 접속하도록 했습니다.
-
-```python
-# moc_v10_2_env.py — Schola 연결 초기화
-connection = UnrealEditorConnection(url=host, port=port)
-self.schola_env = ScholaEnv(
-    connection,
-    auto_reset_type=AutoResetType.SAME_STEP
-)
-```
-
-각 워커가 계산한 `port`는 `_resolve_port()`에서 `base_port + worker_index`로 결정됩니다. 결과적으로 N개의 워커가 각자 독립된 UE5 인스턴스와 1:1로 통신하는 구조가 완성됩니다.
-
-**환경 변수 기반 오케스트레이션**: `NUM_SCHOLA_ENVS`, `NUM_WORKERS`, `NUM_ITERATIONS` 등을 환경 변수로 관리하여, 소스 코드 수정 없이 Docker Compose 설정만으로 학습 규모와 하이퍼파라미터를 동적으로 제어합니다.
-
-#### Result
-UE5 인스턴스와 Python 워커를 독립적으로 수평 확장할 수 있는 구조가 완성되었습니다. Docker 기반 파이프라인 도입으로 로컬 환경 의존성을 완전히 제거했으며, Docker Compose 파일 교체만으로 신속한 **하이퍼파라미터 스윕(Hyperparameter Sweep)**을 실행할 수 있게 되었습니다.
-
----
-
-### Problem 3: 멀티 에이전트 에피소드 경계에서의 학습 프리징(정지) 현상
+{{< img src="/images/project1/problem2_ko.png" 
+        alt="" 
+        class="max-w-3xl" 
+        caption="그림 5. 프리징 현상의 원인과 해결" >}}
 
 학습 도중 에피소드가 끝나는 경계 시점에서 시스템 전체가 멈추는 현상이 반복적으로 발생했습니다. 생존한 에이전트는 새로운 가중치 업데이트를 받지 못하고 정지했고, 이미 사망한 에이전트는 '사망 → 자동 부활 → 즉사' 사이클을 무한 반복하고 있었습니다.
 
@@ -501,16 +460,6 @@ Schola 측(`AutoResetType::SAME_STEP`)과 Python 측(RLlib) 사이에 에피소�
 
 결과적으로 사망한 에이전트는 Schola가 부활시키자마자 다시 사망하는 무한 루프에 빠지고, 그 루프가 Schola의 스텝 예산(step budget) 전체를 소비해버렸습니다. 생존한 에이전트들은 스텝 버짓이 고갈된 Schola의 멀티에이전트 동기화 장벽(step barrier)에 막혀 영원히 다음 액션을 받지 못하는 상태가 되었습니다.
 
-```
-[수정 전]
-생존 에이전트 │──────────── 대기 중 (프리징) ────────────────────────────>
-사망 에이전트 │사망→리셋→사망→리셋→사망→리셋→ (스텝 버짓 소진) ─────>
-                                          ↑ 모든 스텝을 여기서 낭비
-
-[수정 후]
-생존 에이전트 │─────────────── 정상 스텝 진행 ──────────── MaxStep → 종료
-사망 에이전트 │사망 → Running 유지 (DEMatchManager 팀 부활 대기) → MaxStep → 종료
-```
 
 #### Solution
 
@@ -566,4 +515,93 @@ if (!ControlledCharacter->IsAlive_Implementation())
 모든 에이전트(생존/사망 무관)가 `MaxEpisodeSteps`에서 동시에 에피소드를 종료하게 되었습니다. RLlib는 에피소드 경계가 깔끔하게 정렬된 단일 궤적 배치를 수신하여, 혼합 궤적 없이 안정적인 PPO 업데이트를 수행합니다.
 
 
+
+---
+
+
+### Problem 3: 학습 환경 병렬화에 따른 환경 불안정 문제
+
+Windows 환경에서 Ray의 멀티 워커 아키텍처를 구동할 때 두 가지 문제가 발생했습니다. (1) 가중치 동기화 단계에서 Ray Learner 액터가 멈추는 현상, (2) 단일 UE5 인스턴스에 모든 워커가 연결을 시도하여 처리량이 병목되는 문제였습니다.
+
+#### Goal
+UE5와의 안정적인 통신을 유지하면서, OS 의존성 없이 수평 확장 가능한 멀티 워커 학습 파이프라인 구축.
+
+#### Solution
+
+**Docker 컨테이너화**: Python 학습 스크립트와 Ray RLlib 의존성 전체를 Linux Docker 이미지로 패키징했습니다. Windows의 `spawn`/`fork` 프로세스 생성 방식이 Ray와 충돌하던 문제를 컨테이너 레이어에서 원천적으로 차단했습니다.
+
+**gRPC 포트 라우팅 최적화**: Schola의 연결 초기화 과정을 커스텀하여, 각 RLlib env-runner가 `base_port + worker_index` 공식으로 고유한 포트를 계산해 서로 다른 UE5 인스턴스에 접속하도록 했습니다.
+
+```python
+# de_env.py — Schola 연결 초기화
+connection = UnrealEditorConnection(url=host, port=port)
+self.schola_env = ScholaEnv(
+    connection,
+    auto_reset_type=AutoResetType.SAME_STEP
+)
+```
+
+각 워커가 계산한 `port`는 `_resolve_port()`에서 `base_port + worker_index`로 결정됩니다. 결과적으로 N개의 워커가 각자 독립된 UE5 인스턴스와 1:1로 통신하는 구조가 완성됩니다.
+
+**환경 변수 기반 오케스트레이션**: `NUM_SCHOLA_ENVS`, `NUM_WORKERS`, `NUM_ITERATIONS` 등을 환경 변수로 관리하여, 소스 코드 수정 없이 Docker Compose 설정만으로 학습 규모와 하이퍼파라미터를 동적으로 제어합니다.
+
+#### Result
+UE5 인스턴스와 Python 워커를 독립적으로 수평 확장할 수 있는 구조가 완성되었습니다. Docker 기반 파이프라인 도입으로 로컬 환경 의존성을 완전히 제거했으며, Docker Compose 파일 교체만으로 신속한 **하이퍼파라미터 스윕(Hyperparameter Sweep)**을 실행할 수 있게 되었습니다.
+
+
+
+
+---
+
 ## 결과 (Results)
+
+### 학습 곡선 분석 (Training Curve Analysis)
+
+본 프로젝트는 **셀프플레이(Self-Play)** 방식으로 학습을 진행했습니다. 고정된 규칙 기반 AI를 상대하는 것이 아니라, 양 팀이 서로의 전략에 반응하며 함께 진화하는 구조입니다. 이는 기술적으로 훨씬 높은 난이도를 요구하는데, 상대방이 고정된 목표(fixed target)가 아니라 끊임없이 변화하는 이동 목표(moving target)이기 때문입니다.
+
+학습 총 스텝은 **120만 스텝**이며, 약 **80만 스텝** 시점에서 최적 성능에 도달했습니다.
+
+{{< img src="/images/project1/reward.png"
+        alt="Reward"
+        class="max-w-full"
+        caption="Fig 2. 에피소드 평균 보상 (Episode Mean Reward)" >}}
+
+{{< img src="/images/project1/entropy.png"
+        alt="Entropy"
+        class="max-w-full"
+        caption="Fig 3. 정책 엔트로피 (Policy Entropy)" >}}
+
+{{< img src="/images/project1/vf_explained.png"
+        alt="VF Explained Variance"
+        class="max-w-full"
+        caption="Fig 4. 가치 함수 설명 분산 (VF Explained Variance)" >}}
+
+{{< img src="/images/project1/kl.png"
+        alt="KL Divergence"
+        class="max-w-full"
+        caption="Fig 5. KL 발산 (Approx. KL Divergence)" >}}
+
+{{< img src="/images/project1/policyloss.png"
+        alt="Policy Loss"
+        class="max-w-full"
+        caption="Fig 6. 정책 손실 (Policy Loss)" >}}
+
+
+#### 보상 그래프의 해석: 셀프플레이에서 보상이 증가하는 이유
+
+셀프플레이 제로섬 게임에서는 한 팀이 얻으면 다른 팀이 잃으므로, 단순 승패 보상만 사용했다면 평균 보상이 0으로 수렴해야 합니다. 그러나 본 그래프에서는 보상이 전반적으로 **우상향** 추세를 보입니다.
+
+이는 설계된 **밀도 보상(Dense Reward) 구조** 덕분으로, 단순 승패(희소 보상) 외에도 거점 점령, 아군 거점 방어, 힐링 효율, 전술 역할 준수 등 **에이전트의 전술적 성장을 유도하는 다양한 중간 보상**을 매 스텝마다 부여했습니다. 그 결과 양 팀이 서로를 상쇄하는 구조 속에서도, 두 팀 모두 거점을 더 효율적으로 점령하고 역할에 충실하게 행동하는 방향으로 공진화(co-evolution)하면서 전체 보상의 절대값이 상승하게 됩니다.
+
+<br>
+
+#### 최적 체크포인트 선택: 80만 스텝
+
+80만 스텝 이후 **전략 붕괴(Strategy Collapse)** 현상이 관찰되었습니다. 셀프플레이의 특성상 에이전트들이 수치적으로 가장 유리한 패턴만을 반복하게 되는 과최적화가 발생하여 전술적 대응 패턴이 다양하지 못하게 되었습니다.
+
+이에 대한 근거는 아래 두 지표를 통해 확인할 수 있었습니다.
+
+- **VF Explained Variance 하락:** 80만 스텝 이후 Explained Variance가 감소하기 시작합니다. 가치 함수가 고정된 상대의 패턴에 과적합(overfitting)되면서, 새로운 상황에 대한 가치 판단의 범용성이 낮아졌음을 알 수 있었습니다.
+- **Entropy 감소:** 정책의 엔트로피가 지속적으로 낮아지며 행동의 다양성이 줄어들었습니다. 다양한 전술적 대응보다 특정 패턴에 수렴하기 시작한 신호로 해석됩니다.
+
+따라서 전술적 대응 패턴이 가장 다양하고 범용성이 높았던 **80만 스텝 모델을 최종 모델로 선택**했습니다.
