@@ -45,6 +45,7 @@ math: true
 | **RL Framework** | Ray RLlib 2.7, PyTorch |
 | **UE5-Python Bridge** | Schola Plugin (gRPC-based) |
 | **Neural Network Inference** | ONNX Runtime via UE5 NNE (Neural Network Engine) |
+| **Ability System** | UE5 Gameplay Ability System (GAS) — GameplayAbility, GameplayEffect, GameplayTag, GameplayCue |
 | **Cloud & Infra** | AWS (EC2, EKS), Docker (Linux) |
 | **Communication** | gRPC (Schola protocol) |
 | **Monitoring** | TensorBoard |
@@ -328,7 +329,98 @@ NUM_ITERATIONS        = int(os.environ.get('NUM_ITERATIONS', 100))
 
 ---
 
-### 4. 듀얼 모드 아키텍처 (Dual-Mode Architecture)
+### 4. GAS 기반 전투 능력 시스템 (Gameplay Ability System Integration)
+
+전투 로직(공격·힐링)을 UE5 **Gameplay Ability System(GAS)** 으로 설계하여, AI 에이전트의 능력 실행·쿨다운·속성 관리를 표준화된 데이터 주도 파이프라인으로 통합했습니다.
+
+#### 핵심 설계 원칙
+
+**Gameplay Tag** 기반 조회(`TryActivateAbilitiesByTag`)로 Behavior Tree 태스크와 . 이를 통해 Behavior Tree 태스크가 구체적인 구현 클래스를 몰라도 능력을 트리거할 수 있어 능력 교체·확장이 코드 수정 없이 가능합니다.
+
+#### 속성 관리: `UDEAttributeSet`
+
+| 속성 | 종류 | 설명 |
+| --- | --- | --- |
+| `Health` / `MaxHealth` | Persistent (복제됨) | 에이전트 생존 상태 추적 |
+| `Armor` | Persistent (복제됨) | 피해 감산 계수 (1포인트 = 1% 감소) |
+| `Damage` / `Healing` | Meta (소모성) | GameplayEffect 적용 시 즉시 소비, 지속되지 않음 |
+
+`PostGameplayEffectExecute()`에서 `Damage` 메타 속성을 소비해 아머 감산(`1 - Armor * 0.01`) → 무적 태그 확인 → Health 클램핑 → 사망 시 `State.Dead` 태그 부착의 파이프라인이 원자적으로 처리됩니다.
+
+```cpp
+// DEAttributeSet.cpp — 피해 처리 파이프라인
+if (Data.EvaluatedData.Attribute == GetDamageAttribute())
+{
+    const float MitigationFactor = 1.0f - FMath::Clamp(GetArmor() * 0.01f, 0.0f, 0.9f);
+    float FinalDamage = GetDamage() * MitigationFactor;
+
+    // 무적 태그가 있으면 피해 무효
+    if (SourceASC && SourceASC->HasMatchingGameplayTag(DEGameplayTags::State_Invulnerable))
+        FinalDamage = 0.0f;
+
+    const float NewHealth = FMath::Clamp(GetHealth() - FinalDamage, 0.0f, GetMaxHealth());
+    SetHealth(NewHealth);
+
+    // 사망 처리: State.Dead 태그 부착
+    if (NewHealth <= 0.0f)
+        AbilitySystemComponent->AddLooseGameplayTag(DEGameplayTags::State_Dead);
+
+    SetDamage(0.0f); // 메타 속성 소비
+}
+```
+
+#### 공격 능력: `UDEGA_Attack`
+
+- **서버 전용 실행** (`NetExecutionPolicy::ServerOnly`): AI 전용 능력으로 클라이언트 예측 불필요
+- 활성화 시 `State.Dead` 태그 보유 여부를 차단 조건으로 검사
+- `FindNearestEnemy()`로 범위·시야 기반 자동 타겟 선택 후 프로젝타일 스폰
+- `AIController->SetFocus()`로 조준 방향을 애니메이션 블루프린트에 전달
+- 쿨다운은 `Cooldown.Attack` 태그 기반 `GE_AttackCooldown` 이펙트로 GAS 내에서 관리
+
+```cpp
+// DEGA_Attack.cpp — 능력 활성화 분기
+void UDEGA_Attack::ActivateAbility(...)
+{
+    if (!CommitAbility(Handle, ActorInfo, ActivationInfo, &FailureTags))
+    { EndAbility(...); return; }
+
+    AActor* Target = TargetActor ? TargetActor : FindNearestEnemy();
+    if (!IsTargetValid(Target))
+    { EndAbility(...); return; }
+
+    // AI 조준 방향 설정 → 애니메이션 에임오프셋 구동
+    if (AController* Ctrl = Character->GetController())
+        Ctrl->SetFocus(Target);
+
+    FireAtTarget(Target, ActorInfo);
+    EndAbility(...);
+}
+```
+
+#### 힐링 능력: `UDEGA_Heal`
+
+- `FindNearestInjuredAlly()`로 팀 내 최저 체력 아군을 자동 선택 (5스텝 캐시와 독립적으로 동작)
+- `SetByCaller` 매그니튜드(`Data.Healing` 태그)로 힐량을 런타임에 동적 지정
+- `CumulativeHealAmount` 누적값을 보상 서브시스템에 제공하여 지원 역할 밀도 보상으로 환류
+
+```cpp
+// DEGA_Heal.cpp — GameplayEffect를 통한 힐 적용
+FGameplayEffectSpecHandle SpecHandle =
+    AbilitySystemComponent->MakeOutgoingSpec(HealEffectClass, 1.0f, EffectContext);
+
+SpecHandle.Data->SetSetByCallerMagnitude(DEGameplayTags::Data_Healing, HealAmount);
+TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+```
+
+#### BT 태스크 연동
+
+`BTTask_DEAttackAbility` · `BTTask_DEHealAbility` 양쪽 모두 내부 구현이 아닌 **Gameplay Tag 조회**를 통해 능력을 활성화합니다. Behavior Tree는 능력 교체·파라미터 변경에 완전히 무관하며, 풀오토 공격은 `TickTask`에서 매 프레임 재활성화하는 방식으로 구현됩니다.
+
+
+
+---
+
+### 5. 듀얼 모드 아키텍처 (Dual-Mode Architecture)
 
 모든 주요 컴포넌트는 단일 UE5 바이너리 내에서 **학습 모드(Training)** 와 **추론 모드(Inference)** 를 동시에 지원하도록 설계했습니다. 학습이 끝난 ONNX 모델을 별도의 빌드 없이 동일한 UE5 환경에서 즉시 실행하고 검증할 수 있습니다.
 
@@ -393,10 +485,23 @@ void ADECharacter::PerformTacticalAction()
 |---|---|---|
 | **정책 소스** | Python RLlib (gRPC) | 로컬 ONNX 모델 (UE5 NNE) |
 | **EQS 실행** | C++에서 동기 직접 실행 | Blackboard → Behavior Tree 위임 |
+| **Behavior Tree (이동)** | 사용 안 함 (동기 경로로 대체) | `BTTask_DEMoveToEQSLocation` |
+| **Behavior Tree (전투)** | 사용 (인식 → Blackboard → 공격) | 사용 (동일) |
 | **에피소드 관리** | `ADEScholaEnvironment`가 제어 | 불필요 (게임 루프로 동작) |
 | **환경 리셋** | Schola 프로토콜 기반 | 없음 |
 
 <br>
+
+#### 설계 의도: 학습 모드에서 BT 이동 경로를 제외한 이유
+
+추론 모드에서 BT가 담당하는 이동 경로(`BTTask_DEMoveToEQSLocation`)는 학습 모드에서 의도적으로 사용하지 않습니다. Schola의 스텝 루프는 **"액션 수신 → 실행 → 관측+보상 수집"** 이 단일 틱 내에서 결정론적으로 완결되어야 합니다. BT의 EQS 태스크는 비동기로 동작하기 때문에, 액션을 받은 직후 수집되는 관측값이 아직 이동이 반영되지 않은 상태(`s'`가 실제로는 `s`인 상황)가 될 수 있습니다. 이는 정책이 학습하는 전이 튜플 `(s, a, s', r)`을 오염시켜 보상 신호의 정확성을 떨어뜨립니다.
+
+반면 동기 직접 실행 경로는 EQS 쿼리와 이동 명령이 같은 틱에 완료되므로 전이 튜플이 항상 일관됩니다. `BTTask_DEMoveToEQSLocation`은 기능적으로 동일한 EQS 쿼리를 비동기 래퍼로 감싼 것에 불과하므로, 학습 품질 손실 없이 동기 경로로 대체할 수 있습니다.
+
+전투 BT(인식 → Blackboard → `BTTask_DEAttackAbility`)는 Schola 스텝 클럭과 독립적인 이벤트 구동 방식이므로 두 모드 모두에서 동일하게 동작합니다.
+
+<br>
+
 
 
 
