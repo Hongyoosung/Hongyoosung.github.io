@@ -7,6 +7,8 @@
     justify-content: center;
     margin: 60px 0 40px;
     font-family: var(--font-serif);
+    opacity: 0;
+    animation: fadeUp 0.8s ease-out 0.4s forwards;
 }
 
 .pagination {
@@ -31,20 +33,26 @@
     min-width: 32px;
     height: 32px;
     padding: 0 8px;
-    color: #888888;
+
+    /* 2. 테마 기본 버튼 형태(배경/테두리) */
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+
+    /* 3. 미선택 페이지 색상 (라이트/다크 모드 공통으로 회색 톤) */
+    color: var(--color-text-muted) !important;
     text-decoration: none;
     transition: all 0.2s ease;
     font-size: 1rem;
     cursor: pointer;
-    border-radius: 4px;
 }
 
 .pagination-link:hover {
-    color: var(--color-text-title, #000000);
+    color: var(--color-text-title) !important;
 }
 
 .pagination-link.active {
-    color: var(--color-text-title, #000000);
+    color: var(--color-text-title) !important;
     font-weight: bold;
     pointer-events: none;
 }
@@ -53,12 +61,12 @@
 .pagination-link[aria-label="Previous"],
 .pagination-link[aria-label="Next"] {
     font-size: 1.1rem;
-    color: #888888;
+    color: var(--color-text-muted) !important;
 }
 
 .pagination-link[aria-label="Previous"]:hover,
 .pagination-link[aria-label="Next"]:hover {
-    color: var(--color-text-title, #000000);
+    color: var(--color-text-title) !important;
 }
 
 /* Responsive adjustment */
@@ -66,11 +74,11 @@
     .pagination-container {
         margin: 40px 0 30px;
     }
-    
+
     .pagination {
         gap: 8px;
     }
-    
+
     .pagination-link {
         min-width: 28px;
         height: 28px;

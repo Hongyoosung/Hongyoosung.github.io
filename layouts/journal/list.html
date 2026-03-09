@@ -38,7 +38,8 @@
 
     <section class="journal-post-section">
         <div id="post-list" class="post-list-container">
-            {{ range $index, $page := .Paginator.Pages }}
+            {{ $paginator := .Paginate .RegularPages 8 }}
+            {{ range $index, $page := $paginator.Pages }}
             <article class="post-entry" data-title="{{ .Title | lower }}"
                 data-tags="{{ if .Params.tags }}{{ delimit .Params.tags " " | lower }}{{ end }}"
                 data-summary="{{ .Summary | plainify | lower }}" data-date="{{ .Date.Format " 20060102150405" }}">
