@@ -1,6 +1,6 @@
 ---
-title: "Dynamic EQS: <br> RL 기반의 UE5 전략적  포지셔닝 최적화 시스템"
-description: "RL 모델을 통한 EQS 가중치 동적 최적화 및 Schola와 Ray RLlib을 활용한 AWS 클라우드 기반 병렬 강화학습 파이프라인 구축"
+title: "Dynamic EQS: <br> RL 모델을 통한 EQS 가중치 동적 최적화 시스템"
+description: "Schola와 Ray RLlib을 활용한 AWS 클라우드 기반 멀티 에이전트 병렬 강화학습 파이프라인 구축"
 
 weight: 1
 translationKey: "project-1"
@@ -15,11 +15,18 @@ math: true
 
 ## 개요 (Overview)
 
-본 프로젝트는 Unreal Engine 5 환경에서 5 vs 5 팀 기반 거점 점령전을 위한 전략적 포지셔닝 최적화를 목표로 합니다.
+본 프로젝트는 Unreal Engine 5 환경에서 강화학습 모델을 활용한 EQS(Environment Query system) 가중치
+ 업데이트를 지원하는 플러그인의 개발을 목표로 합니다.
 
-각 에이전트는 전략별로 분리된 강화학습(RL) 정책 네트워크와 **통합 EQS(Environment Query System)** 를 결합하여, 실시간 상황에 최적화된 공간 이동 파라미터를 추론합니다.
+본 프로젝트에서는 팀 기반 거점 점령전에서의 전략적 포지셔닝 최적화 환경을 대상으로 해당 플러그인을 활용하였습니다.
 
-특히, Schola 플러그인을 브릿지로 활용하여 AWS 클라우드 기반의 Ray RLlib 대규모 병렬 학습 환경을 구축했습니다. 이를 통해 수십 개의 언리얼 엔진 인스턴스로부터 데이터를 동시 수집하고 정책을 업데이트하는 고성능 학습 파이프라인을 구현했습니다.
+각 에이전트는 강화학습 정책 네트워크를 통해 실시간 상황에 따라 공간 이동 파라미터를 추론하여 현재 상황에서의 최적 위치를 결정할 수 있습니다.
+
+Schola 플러그인을 통해 Unreal Engine 5의 강화학습 환경과 외부 스크립트(Ray Rllib)와의 gRPC 기반 브릿지를 구성하였으며 Schola Layer 위에 EQS 가중치를 설정하고 정책 네트워크 출력과 연결하는 Dynamic EQS를 플러그인 형태로 구성하였습니다.
+
+훈련은 '1 UE Instance = 4 env'로 초기 4개 병렬 환경으로 수행되었으며
+
+브릿지로 활용하여 AWS 클라우드 기반의 Ray RLlib 대규모 병렬 학습 환경을 구축했습니다. 이를 통해 수십 개의 언리얼 엔진 인스턴스로부터 데이터를 동시 수집하고 정책을 업데이트하는 고성능 학습 파이프라인을 구현했습니다.
 
 
 {{< gif-grid urls="/gifs/project1/1.gif, /gifs/project1/3.gif" widths="50%, 50%" >}}
@@ -57,52 +64,100 @@ math: true
 ## 주요 기능 (Key Features)
 
 
-### 1. RL & EQS 통합 로직 (Actuator Transformation)
-강화학습 모델이 에이전트를 직접 움직이는 대신, 가중치(Weights) 를 출력하면 UE5의 환경 쿼리 시스템(EQS)이 이를 바탕으로 물리적 공간을 해석합니다.
+### 1. Dynamic-EQS Plugin
 
-RL 정책의 출력 공간은 Box([-1, 1]^6)이며, TacticalParameterActuator를 통해 다음 6개의 공간적 의미로 매핑됩니다.
+DynamicEQS는 Schola 플러그인을 기반으로 하는 **재사용 가능한 UE5 전용 RL-EQS 통합 레이어**입니다. 게임 프로젝트가 Schola의 저수준 gRPC/ONNX 처리를 직접 다루지 않고 EQS 특화 추상 클래스만 상속하면 됩니다.
 
-| 파라미터 | 설명 |
-| --- | --- |
-| **EnemyObjectiveProximity** | 적 거점 접근 선호도 |
-| **AllyObjectiveProximity** | 아군 거점 접근 선호도 |
-| **CoverDensity** | 지형지물 엄폐 선호도 |
-| **EnemyVisibility** | 적 가시성 (교전 혹은 회피) 선호도 |
-| **AllyProximity** | 아군과의 진형 유지 선호도 |
-| **CombatRange** | 최적의 무기 사거리 유지 선호도 |
+#### 플러그인 계층 구조
 
+```
+Schola::UInferenceComponent       ← gRPC/ONNX Think/Act 사이클
+    └── UDynamicEQSAgentComponent ← EQS 특화 래퍼 (AgentMode, ExternalParams)
+            └── UDEScholaAgent    ← 전술 전략 커맨드 수용
 
-**RL 정책의 출력 -> UE5 액추에이터 변환 로직**
+Schola::UBoxActuator              ← Action Tensor → TakeAction() 변환
+    └── UDynamicEQSActuatorBase   ← EQS 가중치 추출 책임 선언
+            └── UDETacticalParameterActuator ← 7-dim → FDEEQSWeightParameters
 
-```C++
-// Schola Actuator가 Python의 Action Tensor를 UE5 EQS 파라미터로 디코딩
-void UTacticalParameterActuator::TakeAction(const FBoxPoint& Action)
+Schola::UBoxObserver              ← 관찰 벡터 수집
+    └── UDynamicEQSObserverBase   ← 관찰 공간 선언
+            └── UDETacticalObserver ← 170-dim 엔티티 중심 관찰 구성
+```
+
+#### 런타임 데이터 흐름 (Training ↔ Inference 듀얼 모드)
+
+```mermaid
+sequenceDiagram
+    participant PY  as Python (RLlib PPO)
+    participant SCH as Schola (gRPC / ONNX)
+    participant ACT as UDETacticalParameterActuator
+    participant CHR as ADECharacter
+    participant EXE as UDEEQSExecutor
+    participant EQS as UE5 EQS
+
+    Note over PY,EQS: ① Think — 170-dim 관찰 수집 → 정책 추론
+    SCH-->>PY: obs[170] via gRPC (Training) / ONNX (Inference)
+    PY-->>SCH: action[7] — EQS 가중치 [-1, 1]
+
+    Note over PY,EQS: ② Act — Action 수신 및 EQS 실행
+    SCH->>ACT: TakeAction(FBoxPoint[7])
+    ACT->>ACT: ActionToEQSWeights() · ValidateEQSWeights()
+    ACT->>CHR: UpdateTacticalWeights() · PerformTacticalAction()
+
+    alt Training 모드 (동기)
+        CHR->>EXE: ExecuteSynchronousQuery(Weights)
+        EXE->>EQS: RunEQSQuery (blocking, 48 samples)
+        EQS-->>CHR: Best FVector → MoveTo()
+    else Inference 모드 (비동기 + BT)
+        CHR->>CHR: weights → Blackboard 기록
+        EXE->>EQS: RunEQSQuery (async, BT TickTask)
+        EQS-->>CHR: Best FVector → AIController::MoveTo()
+    end
+```
+
+#### EQS 가중치 주입 (ApplyWeightsToRequest)
+
+RL 정책의 `[-1, 1]` 출력을 `WeightScaleFactor(×2.0)`으로 스케일링해 UE5 EQS Named Parameter로 주입합니다.
+
+```cpp
+// DynamicEQSExecutor.cpp — 인덱스 기반 범용 주입 (플러그인 레이어)
+for (int32 i = 0; i < WeightArray.Num(); ++i)
 {
-    // Action.Values: RLlib에서 도출된 6차원 Float 배열 [-1.0, 1.0]
-    FEQSWeightParameters Weights;
-    Weights.EnemyObjectiveProximity = Action.Values[0];
-    Weights.AllyObjectiveProximity = Action.Values[1];
-    Weights.CoverDensity = Action.Values[2];
-    Weights.EnemyVisibility = Action.Values[3];
-    Weights.AllyProximity = Action.Values[4];
-    Weights.CombatRange = Action.Values[5];
-
-    // 가중치 유효성 검사 및 클램핑
-    if (!ValidateEQSWeights(Weights)) {
-        Weights.Clamp();
-    }
-
-    // 에이전트의 블랙보드 업데이트 및 내비게이션 경로 재탐색 트리거
-    if (DeAgent) {
-        DeAgent->UpdateTacticalWeights(Weights); 
-        DeAgent->PerformTacticalAction(); 
-    }
+    FName ParamName = (WeightParamNames.IsValidIndex(i) && !WeightParamNames[i].IsNone())
+        ? WeightParamNames[i]
+        : *FString::Printf(TEXT("Weight%d"), i);
+    Request.SetFloatParam(ParamName, WeightArray[i] * WeightScaleFactor);  // ×2.0
 }
 ```
 
-이러한 아키텍처로 RL은 '어떤 전술이 유리한가(가중치)'라는 추상적 의사결정에 집중할 수 있었고, 복잡한 3D 환경에서의 물리적 충돌 처리나 경로 탐색 비용을 획기적으로 낮췄습니다.
+```cpp
+// DEEQSExecutor.cpp — 7개 전술 파라미터 직접 주입 (게임 레이어)
+Request.SetFloatParam(TEXT("EnemyObjectiveProximity"), Weights.EnemyObjectiveProximity * WeightScale);
+Request.SetFloatParam(TEXT("AllyObjectiveProximity"),  Weights.AllyObjectiveProximity  * WeightScale);
+Request.SetFloatParam(TEXT("CoverDensity"),            Weights.CoverDensity            * WeightScale);
+Request.SetFloatParam(TEXT("EnemyVisibility"),         Weights.EnemyVisibility         * WeightScale);
+Request.SetFloatParam(TEXT("AllyProximity"),           Weights.AllyProximity           * WeightScale);
+Request.SetFloatParam(TEXT("CombatRange"),             Weights.CombatRange             * WeightScale);
+Request.SetFloatParam(TEXT("AssignedBaseProximity"),   Weights.AssignedBaseProximity   * WeightScale);
+```
 
+#### FInstancedStruct를 활용한 게임 로직 디커플링
 
+플러그인이 게임 전용 타입(`AssignedBaseIndex` 등)을 직접 멤버로 갖지 않도록, `FInstancedStruct`로 외부 파라미터를 불투명하게 보관합니다.
+
+```cpp
+// DynamicEQSAgentComponent.h — 플러그인은 FInstancedStruct만 알고 있음
+UPROPERTY(BlueprintReadWrite)
+FInstancedStruct ExternalParams;  // 어떤 USTRUCT도 저장 가능
+
+// DETacticalParameterActuator.cpp — 사용 시점에 게임 타입으로 캐스팅
+const FDEAgentExternalContext* Ctx =
+    AgentComponent->ExternalParams.GetPtr<FDEAgentExternalContext>();
+if (Ctx)
+    Weights.AssignedBaseProximity = ComputeBaseProximityWeight(Ctx->AssignedBaseIndex);
+```
+
+이 패턴 덕분에 플러그인은 게임 헤더를 전혀 포함하지 않으며, 다른 프로젝트에서 그대로 재사용할 수 있습니다.
 
 ---
 
@@ -111,41 +166,42 @@ void UTacticalParameterActuator::TakeAction(const FBoxPoint& Action)
 
 **관측 공간**
 
-| 데이터 구분 | 세부 항목 | | 설명 및 처리 방식 | 차원 |
-| --- | --- | --- | --- | --- |
-| **Self** | 위치, 체력, 속도 | 정규화된 맵 위치 및 에이전트의 현재 상태 | 7 |
-| **Allies** | 상대 위치, 체력 | 최대 4명. 거리/시야 정규화 | 16 |
-| **Enemies** | 적군 상대 위치, 시야 플래그 | 시권(Line of Sight) 내 적만 유효 좌표 제공 | | 20
-| **Map** | 5개 거점 소유권 | 아군(+1), 중립(0), 적군(-1) 상태 플래그 | 5 |
-| **Strategy** | 현재 부여된 전술 역할 | 돌격/방어/지원 |  One-hot 인코딩 벡터 | 3 |
-| **합계** | | | | 51 |
+`FDEObservationV2::ToFlatArray()`가 생성하는 170-dim 엔티티 중심(Entity-Centric) 벡터입니다. 아군·적·거점을 고정 크기 슬롯 토큰으로 인코딩하고, 패딩 마스크를 별도로 제공해 Python MultiheadAttention이 유효 엔티티만 처리하도록 합니다.
 
+```
+[Index]    [Dim]  [토큰]         [정규화]
+[0 : 3]     3    자신 위치       / (7500, 7500, 1000)
+[3 : 6]     3    자신 속도       / (600, 600, 600)
+[6 : 7]     1    자신 체력       raw [0,1]
+[7 :47]    40    아군 토큰 8×5   rel_pos/8000(3) + health(1) + alive(1)
+[47:87]    40    적 토큰   8×5   rel_pos/8000(3) + visible(1) + confidence(1)
+[87:143]   56    거점 토큰 8×7   rel_pos/15000(2) + rel_z/1000(1)
+                                 + ownership(1) + cap_progress(1)
+                                 + is_assigned(1) + strategic_val(1)
+[143:151]   8    아군 마스크     0=유효, 1=패딩
+[151:159]   8    적 마스크
+[159:167]   8    거점 마스크
+[167:170]   3    전략 원-핫      [assault, defend, support]
+════════  170    TOTAL
+```
+
+> **마스크 처리:** Python 정책의 `_safe_mask()`는 모든 슬롯이 패딩일 때 슬롯 0을 강제 언마스크하여 MultiheadAttention의 NaN을 방지합니다. 마스크 임계값은 `> 0.5` (float 비교)로, `0.0=유효 / 1.0=패딩` 의미론을 보존합니다.
 
 <br>
 
 **보상 구조 개요**
 
-단일 보상 함수로 세 가지 역할을 동시에 학습시키면 그래디언트 간섭(Gradient Interference)이 발생합니다. 한 역할에 유리한 업데이트가 다른 역할의 정책을 손상시키기 때문입니다. 이를 해결하기 위해, 역할별로 완전히 독립된 정책 네트워크와 전술 목표에 특화된 조밀(Dense) + 희소(Sparse) 보상 함수 조합을 설계했습니다.
+`DERewardSubsystem`은 **Phase 5 협력적 거점 점령** 보상 구조를 사용합니다. 에이전트가 단순히 같은 거점에 뭉치는 대신, 팀 전체가 서로 다른 거점을 분산 점령하도록 유도합니다.
 
-모든 전략에 공통으로 적용되는 베이스라인 보상 위에, 역할별 전술 목표에 맞춘 밀도 보상(Dense)이 매 스텝마다 계산됩니다. 킬/점령 등 이산 이벤트는 희소 보상(Sparse)으로 별도 누적되어 스텝 종료 시 함께 드레인됩니다.
+| 보상 항목 | 값 | 조건 |
+|---|---|---|
+| `BaseOccupationReward` | **+2.0**/step | 아군 혼자 중립 거점 근처 |
+| `CoOccupationPenalty` | **−0.5**/step | 동일 거점에 2명 이상 |
+| `BaseCaptureCreditReward` | **+5.0** | 거점 점령 완료 기여 |
+| `UndefendedBasePenalty` | **−1.0**/step | 방어되지 않은 아군 거점 |
+| `AssignedBaseReachReward` | **+1.0** | 배정 거점 최초 도달 |
 
-```cpp
-// DERewardSubsystem.cpp — 전략별 스케일 분기 구조
-float UDERewardSubsystem::GetStrategyScale(
-    EDEStrategyType Strategy,
-    float AssaultScale, float DefendScale, float SupportScale) const
-{
-    switch (Strategy)
-    {
-    case EDEStrategyType::Assault: return AssaultScale;
-    case EDEStrategyType::Defend:  return DefendScale;
-    case EDEStrategyType::Support: return SupportScale;
-    }
-}
-```
-
-킬·사망·점령 등 모든 이벤트 보상은 이 스케일을 통해 역할마다 다른 가중치로 적용됩니다. 예를 들어 킬 보상은 돌격에 높고 지원에 낮으며, 사망 패널티는 방어에 더 크게 부과됩니다.
-
+최종 보상은 `Σ(ComponentReward × PersonalityWeight) + StrategyBonus`로 합산되며, C++ `UDERewardData`와 Python `REWARD_CONFIG`의 수치를 항상 동기화해야 합니다.
 
 
 
@@ -156,24 +212,23 @@ float UDERewardSubsystem::GetStrategyScale(
 목표는 적 거점 접근과 점령 완료입니다. 적 거점까지의 거리 감소분에 비례한 접근 보상을 매 스텝 부여하고, 거점 반경 내 진입 시 추가 존재 보너스를 부여합니다. 점령이 완료되면 즉시 `PostCaptureMomentumDuration` 스텝 동안 모멘텀 보너스가 활성화되어, 점령 후 제자리에 머무는 대신 다음 거점으로 계속 전진하도록 유도합니다.
 
 ```cpp
-// 점령 완료 → 모멘텀 활성화
-if (NewCaptures > 0)
-    InOutState.PostCaptureMomentumStepsRemaining = Settings->AssaultReward.PostCaptureMomentumDuration;
-
-// 모멘텀 기간 중 이동 + 점령 거점에서 벗어난 경우 보너스 부여
-if (InOutState.PostCaptureMomentumStepsRemaining > 0)
+// DERewardCalculator.cpp — Assault 보상
+float Reward = 0.f;
+// 거점 반경 내 진입 보상
+if (DistToEnemyObjective < ObjectiveRadius)
+    Reward += RewardData->AssaultSettings.ObjectivePresenceBonus;
+// 점령 직후 모멘텀 보너스 (PostCaptureMomentumDuration 스텝 유지)
+if (MomentumStepsRemaining > 0)
 {
-    InOutState.PostCaptureMomentumStepsRemaining--;
-    if (PositionChange >= Settings->AssaultReward.PostCaptureMomentumMinMove &&
-        FVector::DistSquared(Current.Position, InOutState.LastCapturedPointLocation) > CaptureRadiusSq)
-    {
-        Reward += Settings->AssaultReward.PostCaptureMomentumBonus;
-    }
+    Reward += RewardData->AssaultSettings.PostCaptureMomentumBonus;
+    --MomentumStepsRemaining;
 }
-
-// 비전투 구역에서 정지 시 패널티
-if (PositionChange < Settings->AssaultIdleMovementThreshold && !bInNonFriendlyZone)
-    Reward -= IdlePenalty;
+// 거점 점령 완료 기여
+if (Context.bCapturedBase)
+{
+    Reward += RewardData->BaseCaptureCreditReward;
+    MomentumStepsRemaining = RewardData->AssaultSettings.PostCaptureMomentumDuration;
+}
 ```
 
 ---
@@ -183,28 +238,24 @@ if (PositionChange < Settings->AssaultIdleMovementThreshold && !bInNonFriendlyZo
 목표는 아군 거점 유지와 거점 내 적 격퇴입니다. 아군 거점 반경 내에 위치할 때 기본 존재 보상이 부여됩니다. 거점 내에서 적에게 데미지를 받으면 추가 내구도 보너스(`ZoneDurabilityBonus`)가 지급되어, 거점에서 물러나지 않고 버티는 행동을 강화합니다. 아군 거점이 없는 상황에서는 중립/적 거점 접근으로 목표가 전환됩니다.
 
 ```cpp
-// 거점 내 위치 시 기본 보상 + 체력·정지 보너스
-if (InOutState.bInFriendlyZone)
+// DERewardCalculator.cpp — Defend 보상
+float Reward = 0.f;
+if (bInsideFriendlyBase)
 {
-    Reward += Settings->DefendReward.ZonePresenceBonus;
-    if (PositionChange < Settings->DefendStationaryThreshold) Reward += Settings->DefendReward.PositionReward;
-    if (Current.Health > Settings->DefendHealthThreshold)     Reward += Settings->DefendReward.HealthBonus;
-
-    // 거점 내 적이 탐지된 경우 위협 대응 보너스
-    // (적이 거점 반경 내에 있을 때 내가 거점 안에 있으면 추가 보상)
-    Reward += Settings->DefendReward.ThreatResponseBonus; // 조건 충족 시
-
-    // 거점 내에서 데미지를 흡수한 경우 내구도 보너스
-    const float DamageTaken = Prev.Health - Current.Health;
-    if (DamageTaken > 0.0f)
-        Reward += Settings->DefendReward.ZoneDurabilityBonus * DamageTaken;
+    Reward += RewardData->DefendSettings.BasePresenceBonus;   // 거점 내 존재 보상
+    // 거점 안에서 피격 시 버티기 강화
+    if (Context.DamageTaken > 0.f)
+        Reward += RewardData->DefendSettings.ZoneDurabilityBonus;
 }
-// 거점 외부에 있는 경우 거리에 비례한 패널티
-else
+else if (!bHasFriendlyBase)
 {
-    const float DistPenalty = FMath::Min(CurrNearestFriendlyDist / 10000.0f, 1.0f) * 0.3f;
-    Reward -= DistPenalty;
+    // 아군 거점 없으면 중립/적 거점으로 목표 전환
+    if (DistToNeutralObjective < ObjectiveRadius)
+        Reward += RewardData->DefendSettings.NeutralObjectiveBonus;
 }
+// 방어되지 않은 아군 거점 패널티
+if (bUndefendedFriendlyBase)
+    Reward += RewardData->UndefendedBasePenalty;   // -1.0/step
 ```
 
 ---
@@ -214,30 +265,24 @@ else
 목표는 체력이 낮은 아군을 추적하고 힐링하며 후방을 유지하는 것입니다. 매 스텝 부상 아군 탐색을 수행하되, 잦은 타겟 전환으로 인한 진동 행동을 막기 위해 5스텝 캐시를 적용합니다. 캐시된 아군이 현재 가장 낮은 체력이 아니더라도 5스텝이 지나기 전까지는 교체하지 않습니다. 아군 뒤편에 위치하면 후방 포지셔닝 보너스를 받으며, 아군이 부상 중인 상황에서 직접 킬을 시도하면 역할 이탈 패널티가 부과됩니다.
 
 ```cpp
-// 5-step 캐시: 타겟 아군 교체를 억제하여 안정적 추적 유도
-bool bShouldReevalTarget =
-    (InOutState.CachedInjuredAllyIdx < 0) ||
-    (InOutState.InjuredAllyStalenessCounter >= 5) || // 5스텝마다 재평가
-    (/*캐시된 아군이 사망한 경우*/);
-
-if (bShouldReevalTarget)
+// DERewardCalculator.cpp — Support 보상
+// 5-스텝 캐시: 타겟 진동 방지
+if (SupportTargetCacheSteps <= 0 || !CachedHealTarget || !CachedHealTarget->IsAlive())
 {
-    // 생존 아군 중 체력이 가장 낮은 대상을 새 타겟으로 지정
-    InOutState.CachedInjuredAllyIdx = NewInjuredIdx;
-    InOutState.InjuredAllyStalenessCounter = 0;
+    CachedHealTarget    = FindLowestHealthAlly();
+    SupportTargetCacheSteps = 5;
 }
+--SupportTargetCacheSteps;
 
-// 타겟 아군에 접근할수록 매 스텝 보상 누적
-Reward += Settings->SupportReward.AllyApproachReward * FMath::Max(ApproachDelta, 0.0f);
-
-// 아군이 부상 중인데 킬을 시도한 경우 역할 이탈 패널티
-if (InOutState.bSparseKillFiredThisStep && bAllyInjured)
-    Reward -= Settings->SupportReward.RoleBreakPenalty;
-
-// 아군보다 적에서 먼 위치를 유지하는 경우 후방 포지셔닝 보너스
-if (NearestEnemyDist > NearestAllyToEnemyDist)
-    Reward += Settings->SupportReward.RearGuardBonus;
-```
+float Reward = 0.f;
+// 힐링 누적량에 비례한 보상 (보상 서브시스템으로 환류)
+Reward += Context.CumulativeHealAmount * RewardData->SupportSettings.HealRewardScale;
+// 아군 뒤편 후방 포지셔닝 보너스
+if (bBehindCachedAlly)
+    Reward += RewardData->SupportSettings.RearPositioningBonus;
+// 부상 아군 존재 시 킬 시도 → 역할 이탈 패널티
+if (CachedHealTarget && Context.bKilledEnemy)
+    Reward += RewardData->SupportSettings.RoleDivergencePenalty;  // 음수
 
 ---
 
@@ -659,54 +704,4 @@ UE5 인스턴스와 Python 워커를 독립적으로 수평 확장할 수 있는
 ---
 
 ## 결과 (Results)
-
-### 학습 곡선 분석 (Training Curve Analysis)
-
-본 프로젝트는 **셀프플레이(Self-Play)** 방식으로 학습을 진행했습니다. 고정된 규칙 기반 AI를 상대하는 것이 아니라, 양 팀이 서로의 전략에 반응하며 함께 진화하는 구조입니다. 이는 기술적으로 훨씬 높은 난이도를 요구하는데, 상대방이 고정된 목표(fixed target)가 아니라 끊임없이 변화하는 이동 목표(moving target)이기 때문입니다.
-
-학습 총 스텝은 **120만 스텝**이며, 약 **80만 스텝** 시점에서 최적 성능에 도달했습니다.
-
-{{< img src="/images/project1/reward.png"
-        alt="Reward"
-        class="max-w-full"
-        caption="Fig 2. 에피소드 평균 보상 (Episode Mean Reward)" >}}
-
-{{< img src="/images/project1/entropy.png"
-        alt="Entropy"
-        class="max-w-full"
-        caption="Fig 3. 정책 엔트로피 (Policy Entropy)" >}}
-
-{{< img src="/images/project1/vf_explained.png"
-        alt="VF Explained Variance"
-        class="max-w-full"
-        caption="Fig 4. 가치 함수 설명 분산 (VF Explained Variance)" >}}
-
-{{< img src="/images/project1/kl.png"
-        alt="KL Divergence"
-        class="max-w-full"
-        caption="Fig 5. KL 발산 (Approx. KL Divergence)" >}}
-
-{{< img src="/images/project1/policyloss.png"
-        alt="Policy Loss"
-        class="max-w-full"
-        caption="Fig 6. 정책 손실 (Policy Loss)" >}}
-
-
-#### 보상 그래프의 해석: 셀프플레이에서 보상이 증가하는 이유
-
-셀프플레이 제로섬 게임에서는 한 팀이 얻으면 다른 팀이 잃으므로, 단순 승패 보상만 사용했다면 평균 보상이 0으로 수렴해야 합니다. 그러나 본 그래프에서는 보상이 전반적으로 **우상향** 추세를 보입니다.
-
-이는 설계된 **밀도 보상(Dense Reward) 구조** 덕분으로, 단순 승패(희소 보상) 외에도 거점 점령, 아군 거점 방어, 힐링 효율, 전술 역할 준수 등 **에이전트의 전술적 성장을 유도하는 다양한 중간 보상**을 매 스텝마다 부여했습니다. 그 결과 양 팀이 서로를 상쇄하는 구조 속에서도, 두 팀 모두 거점을 더 효율적으로 점령하고 역할에 충실하게 행동하는 방향으로 공진화(co-evolution)하면서 전체 보상의 절대값이 상승하게 됩니다.
-
-<br>
-
-#### 최적 체크포인트 선택: 80만 스텝
-
-80만 스텝 이후 **전략 붕괴(Strategy Collapse)** 현상이 관찰되었습니다. 셀프플레이의 특성상 에이전트들이 수치적으로 가장 유리한 패턴만을 반복하게 되는 과최적화가 발생하여 전술적 대응 패턴이 다양하지 못하게 되었습니다.
-
-이에 대한 근거는 아래 두 지표를 통해 확인할 수 있었습니다.
-
-- **VF Explained Variance 하락:** 80만 스텝 이후 Explained Variance가 감소하기 시작합니다. 가치 함수가 고정된 상대의 패턴에 과적합(overfitting)되면서, 새로운 상황에 대한 가치 판단의 범용성이 낮아졌음을 알 수 있었습니다.
-- **Entropy 감소:** 정책의 엔트로피가 지속적으로 낮아지며 행동의 다양성이 줄어들었습니다. 다양한 전술적 대응보다 특정 패턴에 수렴하기 시작한 신호로 해석됩니다.
-
-따라서 전술적 대응 패턴이 가장 다양하고 범용성이 높았던 **80만 스텝 모델을 최종 모델로 선택**했습니다.
+본 프로젝트는 셀프플레이(Self-Play) 방식으로 학습을 진행했습니다. 고정된 규칙 기반 AI를 상대하는 것이 아니라, 양 팀이 서로의 전략에 반응하며 함께 진화하는 구조입니다. 이는 기술적으로 훨씬 높은 난이도를 요구하는데, 상대방이 고정된 목표(fixed target)가 아니라 끊임없이 변화하는 이동 목표(moving target)이기 때문입니다.
