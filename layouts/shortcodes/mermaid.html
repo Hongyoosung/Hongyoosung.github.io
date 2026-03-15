@@ -1,0 +1,11 @@
+<div class="mermaid">
+  {{ .Inner | safeHTML }}
+</div>
+
+{{ if not (.Page.Scratch.Get "mermaid_loaded") }}
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true });
+  </script>
+  {{ .Page.Scratch.Set "mermaid_loaded" true }}
+{{ end }}

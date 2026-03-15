@@ -86,7 +86,8 @@ Schola::UBoxObserver              ← 관찰 벡터 수집
 
 #### 런타임 데이터 흐름 (Training ↔ Inference 듀얼 모드)
 
-```mermaid
+
+{{< mermaid >}}
 sequenceDiagram
     participant PY  as Python (RLlib PPO)
     participant SCH as Schola (gRPC / ONNX)
@@ -113,7 +114,9 @@ sequenceDiagram
         EXE->>EQS: RunEQSQuery (async, BT TickTask)
         EQS-->>CHR: Best FVector → AIController::MoveTo()
     end
-```
+{{< /mermaid >}}
+
+
 
 #### EQS 가중치 주입 (ApplyWeightsToRequest)
 
@@ -554,25 +557,32 @@ void ADECharacter::PerformTacticalAction()
 
 ## 기술적 난제 및 해결 전략 (Problem Solving)
 
+<br>
 
 ### Problem 1: UE5 환경과 Rllib 환경의 통신 표준 프레임워크의 필요성
 
 기존 UE5에서 제공하는 강화학습 프레임워크인 **Learning Agent**는 UE5 로컬에서만 동작하기에 Python Ray Rllib의 분산 강화학습이라는 이점을 활용할 수 없었습니다.
 
+<br>
 
 #### Goal
 UE5와 Python(Ray RLlib) 간의 고성능 강화학습 파이프라인을 구축하기 위해 안정적인 통신 수단과 표준 포멧이 포함된 프레임워크의 확보.
 
+<br>
 
-#### Solution: Schola Plugin의 도입
+#### Solution
 
-AMD의 오픈소스 라이브러리 Schola를 프레임워크로 채택하였으며 아래와 같은 이점을 얻었습니다.
+AMD의 오픈소스 라이브러리 [**Schola**](https://github.com/GPUOpen-LibrariesAndSDKs/Schola)를 프레임워크로 채택하였으며 아래와 같은 이점을 얻었습니다.
+
+> #### Schola
+> The Schola project is an effort to build a toolkit/plugin for controlling Objects in Unreal with Reinforcement Learning. It provides tools to help the user create Environments, define Agents, connect to python based RL Frameworks (e.g. Gym, RLLib or Stable Baselines 3), and power NPCs with RL during games.
 
 * **표준 포멧 및 환경 구성**: Schola는 UE5에서 RL을 위한 관측(UBoxObserver)과 액션(UBoxActuator) 인터페이스를 제공하며 에이전트를 위한 전용 컨트롤러(AAbstractTrainer)와 Rllib와의 주요 통신 인터페이스(AStaticScholaEnvironment)를 통해 직관적인 RL 환경 구성을 가능하게 합니다.
 
 
 * **래핑 및 gRPC 통신 브릿지:** Schola는 UE5 내의 데이터를 Python의 gym.Env 형태로 래핑하고 gRPC 프로토콜 기반의 직렬화를 통해 저지연으로 Rllib 환경과 통신하는 API를 제공합니다.
 
+<br>
 
 #### Result
 오픈소스 라이브러리 Schola 프레임워크에서 제공하는 인터페이스를 통해 직접적인 래퍼 환경을 구축하지 않고도 UE5와 Python Ray Rllib의 통신을 성공적으로 완료하였습니다. 이를 통해 개발 효율을 대폭 향상시켰습니다.
@@ -589,17 +599,18 @@ SCHOLA_AVAILABLE = True
 
 ---
 
-### Problem 2: 멀티 에이전트 에피소드 경계에서의 학습 프리징(정지) 현상
+### Problem 2: 멀티 에이전트 강화학습 환경(Schola + RLlib)에서의 에이전트 개별 사망 처리 결함
 
-{{< img src="/images/project1/problem2_ko.png" 
+{{< img src="/images/project1/problem2.png" 
         alt="" 
-        class="max-w-3xl" 
+        class="max-w-full" 
         caption="그림 5. 프리징 현상의 원인과 해결" >}}
 
-학습 도중 에피소드가 끝나는 경계 시점에서 시스템 전체가 멈추는 현상이 반복적으로 발생했습니다. 생존한 에이전트는 새로운 가중치 업데이트를 받지 못하고 정지했고, 이미 사망한 에이전트는 '사망 → 자동 부활 → 즉사' 사이클을 무한 반복하고 있었습니다.
+* **에피소드 멈춤(Episode Freeze)**: 특정 에이전트가 먼저 사망할 경우, RLlib은 해당 에이전트의 액션을 전송하지 않지만 Unreal Engine Schola는 모든 에이전트의 액션을 기다리며 대기 상태에 빠지는 통신 불일치 발생했습니다.
 
-#### Goal
-에피소드 경계에서의 프리징 현상 해결 및 안정적인 멀티 에이전트 에피소드 종료 구현.
+* **부활 루프(Death-resurrection loop)**: SAME_STEP 모드에서 사망한 에이전트가 유효한 상태 없이 즉시 리셋되어 다시 사망하는 무한 루프 현상 발생했습니다.
+
+<br>
 
 #### 근본 원인 분석: 두 종료 시스템의 충돌
 
@@ -610,61 +621,48 @@ Schola 측(`AutoResetType::SAME_STEP`)과 Python 측(RLlib) 사이에 에피소�
 
 결과적으로 사망한 에이전트는 Schola가 부활시키자마자 다시 사망하는 무한 루프에 빠지고, 그 루프가 Schola의 스텝 예산(step budget) 전체를 소비해버렸습니다. 생존한 에이전트들은 스텝 버짓이 고갈된 Schola의 멀티에이전트 동기화 장벽(step barrier)에 막혀 영원히 다음 액션을 받지 못하는 상태가 되었습니다.
 
+<br>
 
-#### Solution
+#### Goal
+시차를 두고 발생하는 에이전트 사망(Staggered Death) 상황에서도 시스템 중단 없는 안정적인 학습 환경 구축
+* 에이전트별 사망 시점이 달라도 전체 에피소드가 정상적으로 종료(__all__=True)되도록 보장.
+* 사망한 에이전트의 관측값이나 보상이 학습 데이터에 오염(NaN 발생 등)을 일으키지 않도록 필터링 시스템 구현.
 
-**1. 사망을 에피소드 종료 조건에서 제외 (`ComputeStatus`)**
+<br>
 
-`ADETrainer::ComputeStatus()`에서, 에이전트 사망 시 `Running`을 반환하도록 변경했습니다. 이로써 Schola의 자동 리셋 루프가 차단됩니다.
 
-```cpp
-// DETrainer.cpp — ComputeStatus()
-EAgentTrainingStatus ADETrainer::ComputeStatus()
-{
-    // MaxEpisodeSteps 도달 시에만 에피소드를 종료
-    if (CurrentEpisodeSteps >= MaxEpisodeSteps)
-        return EAgentTrainingStatus::Truncated;
+#### Solution: Python(통신 계층)과 C++(엔진 계층)의 이중 레이어 수정
 
-    // 에이전트 사망은 에피소드 종료가 아님.
-    // DEMatchManager가 팀 단위로 리스폰을 처리할 때까지 Running 유지.
-    if (!ControlledCharacter->IsAlive_Implementation())
-        return EAgentTrainingStatus::Running;
 
-    // 매치 종료(시간 초과, 점수 도달)도 종료 조건
-    if (bMatchOver && !bHasNewReward)
-        return EAgentTrainingStatus::Truncated;
+#### Python (Schola Wrapper):
 
-    return EAgentTrainingStatus::Running;
-}
-```
+No-op Padding: 사망한 에이전트의 빈자리에 무효 액션(noop)을 삽입하여 Unreal이 항상 전체 에이전트의 액션을 수신하도록 보정.
 
-**2. 사망한 에이전트의 스텝 배리어 참여 (`Tick` dead-agent drain)**
+Data Filtering: Unreal로부터 받은 응답 중, 이미 사망한 에이전트의 관측값/보상/정보를 필터링하여 RLlib에 전달.
 
-Schola의 멀티에이전트 스텝 배리어는 **모든** 에이전트가 액션을 소비해야 다음 스텝으로 진행됩니다. 사망한 에이전트가 액션 소비를 건너뛰면 배리어가 영원히 해제되지 않습니다.
+<br>
 
-사망한 에이전트도 `Tick()`에서 Schola가 보내는 액션을 소비(`ConsumeNewWeights`)하고, 그 횟수를 `CurrentEpisodeSteps`에 반영하도록 했습니다.
+**C++ (Unreal Plugin):**
 
-```cpp
-// DETrainer.cpp — Tick() 사망 에이전트 처리
-if (!ControlledCharacter->IsAlive_Implementation())
-{
-    // 사망 중에도 Schola의 액션을 소비하여 스텝 배리어를 해제
-    if (ControlledCharacter->ConsumeNewWeights())
-    {
-        bHasNewReward = true;
-        // 사망 에이전트도 MaxEpisodeSteps를 향해 스텝 카운트 진행.
-        // 이 처리가 없으면 사망 에이전트는 MaxEpisodeSteps에 도달하지 못하고,
-        // ComputeStatus()는 영원히 Running을 반환한다.
-        CurrentEpisodeSteps++;
-    }
-    return;
-}
-```
+Dead Agent Snapshot: Step() 실행 전 사망한 에이전트 상태를 기록하고, 실행 후 터미널 플래그(Terminal Flags)를 재복구하여 상태 덮어쓰기 및 부활 루프 방지.
+
+Action Filter: 사망한 에이전트의 액션이 물리 엔진 및 로직에 영향을 주지 않도록 제외 처리.
+
+<br>
 
 #### Result
-모든 에이전트(생존/사망 무관)가 `MaxEpisodeSteps`에서 동시에 에피소드를 종료하게 되었습니다. RLlib는 에피소드 경계가 깔끔하게 정렬된 단일 궤적 배치를 수신하여, 혼합 궤적 없이 안정적인 PPO 업데이트를 수행합니다.
+* 단위 테스트 통과: 총 10종의 Standalone 테스트(No-op 생성, 패딩 프로토콜 등) 100% 통과.
 
+* 학습 안정성 확보: 실제 Unreal 통합 환경에서 에피소드 정지 현상 해결 및 정상적인 에피소드 리셋 주기 확인.
 
+* 데이터 무결성: 보상 체계에서의 NaN 발생 및 Trajectory 누수 차단 확인.
+
+* 관련 문제 Schola OpenSource에 PR 완료.
+
+{{< img src="/images/project1/pr.png" 
+        alt="" 
+        class="max-w-3xl" 
+        caption="그림 6. Pull Request" >}}
 
 ---
 
@@ -705,3 +703,15 @@ UE5 인스턴스와 Python 워커를 독립적으로 수평 확장할 수 있는
 
 ## 결과 (Results)
 본 프로젝트는 셀프플레이(Self-Play) 방식으로 학습을 진행했습니다. 고정된 규칙 기반 AI를 상대하는 것이 아니라, 양 팀이 서로의 전략에 반응하며 함께 진화하는 구조입니다. 이는 기술적으로 훨씬 높은 난이도를 요구하는데, 상대방이 고정된 목표(fixed target)가 아니라 끊임없이 변화하는 이동 목표(moving target)이기 때문입니다.
+
+
+
+{{< img src="/images/project1/reward.png" 
+        alt="" 
+        class="max-w-4xl" 
+        caption="그림 7. Reward" >}}
+
+{{< img src="/images/project1/klenvf.png" 
+        alt="" 
+        class="max-w-4xl" 
+        caption="그림 8. Kl, Entorpy, VF explained" >}}

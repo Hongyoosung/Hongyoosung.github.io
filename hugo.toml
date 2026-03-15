@@ -6,7 +6,6 @@ defaultContentLanguage = 'en'
 [pagination]
   pagerSize = 10
 
-
 # -------------------------------------------------------------------------
 # Core Params
 # -------------------------------------------------------------------------
@@ -23,6 +22,8 @@ defaultContentLanguage = 'en'
     
     # 로고 설정 (좌측 상단, 홈으로 가기 위함)
     label = { text = "Yoosung Hong", icon = "", iconHeight = 35 }
+
+    mermaid = true
 
 # -------------------------------------------------------------------------
 # [English] - Default
