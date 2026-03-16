@@ -22,11 +22,9 @@ math: true
 
 각 에이전트는 강화학습 정책 네트워크를 통해 실시간 상황에 따라 공간 이동 파라미터를 추론하여 현재 상황에서의 최적 위치를 결정할 수 있습니다.
 
-Schola 플러그인을 통해 Unreal Engine 5의 강화학습 환경과 외부 스크립트(Ray Rllib)와의 gRPC 기반 브릿지를 구성하였으며 Schola Layer 위에 EQS 가중치를 설정하고 정책 네트워크 출력과 연결하는 Dynamic EQS를 플러그인 형태로 구성하였습니다.
+Schola 플러그인을 통해 Unreal Engine 5의 강화학습 환경과 외부 스크립트(Ray Rllib)와의 gRPC 기반 브릿지를 구성하였으며 Schola Layer 위에 EQS 가중치를 설정하고 정책 네트워크 출력과 연결하는 Dynamic EQS를 플러그인 형태로 구현하였습니다.
 
-훈련은 '1 UE Instance = 4 env'로 초기 4개 병렬 환경으로 수행되었으며
-
-브릿지로 활용하여 AWS 클라우드 기반의 Ray RLlib 대규모 병렬 학습 환경을 구축했습니다. 이를 통해 수십 개의 언리얼 엔진 인스턴스로부터 데이터를 동시 수집하고 정책을 업데이트하는 고성능 학습 파이프라인을 구현했습니다.
+훈련은 초기 하나의 UE 인스턴스에 4개의 병렬 환경으로 수행하였으며 이후 AWS 클라우드 기반의 대규모 병렬 학습 환경을 구축했습니다. 이를 통해 수십 개의 언리얼 엔진 인스턴스로부터 데이터를 동시 수집하고 정책을 업데이트하는 고성능 학습 파이프라인을 구현했습니다.
 
 
 {{< gif-grid urls="/gifs/project1/1.gif, /gifs/project1/3.gif" widths="50%, 50%" >}}
@@ -70,79 +68,24 @@ DynamicEQS는 Schola 플러그인을 기반으로 하는 **재사용 가능한 U
 
 #### 플러그인 계층 구조
 
-```
-Schola::UInferenceComponent       ← gRPC/ONNX Think/Act 사이클
-    └── UDynamicEQSAgentComponent ← EQS 특화 래퍼 (AgentMode, ExternalParams)
-            └── UDEScholaAgent    ← 전술 전략 커맨드 수용
+{{< img src="/images/project1/pluginarchi.png" 
+        alt="" 
+        class="max-w-full" 
+        caption="Fig 2. 플러그인 계층 구조" >}}
 
-Schola::UBoxActuator              ← Action Tensor → TakeAction() 변환
-    └── UDynamicEQSActuatorBase   ← EQS 가중치 추출 책임 선언
-            └── UDETacticalParameterActuator ← 7-dim → FDEEQSWeightParameters
-
-Schola::UBoxObserver              ← 관찰 벡터 수집
-    └── UDynamicEQSObserverBase   ← 관찰 공간 선언
-            └── UDETacticalObserver ← 170-dim 엔티티 중심 관찰 구성
-```
-
-#### 런타임 데이터 흐름 (Training ↔ Inference 듀얼 모드)
+#### 런타임 데이터 흐름
 
 
-{{< mermaid >}}
-sequenceDiagram
-    participant PY  as Python (RLlib PPO)
-    participant SCH as Schola (gRPC / ONNX)
-    participant ACT as UDETacticalParameterActuator
-    participant CHR as ADECharacter
-    participant EXE as UDEEQSExecutor
-    participant EQS as UE5 EQS
-
-    Note over PY,EQS: ① Think — 170-dim 관찰 수집 → 정책 추론
-    SCH-->>PY: obs[170] via gRPC (Training) / ONNX (Inference)
-    PY-->>SCH: action[7] — EQS 가중치 [-1, 1]
-
-    Note over PY,EQS: ② Act — Action 수신 및 EQS 실행
-    SCH->>ACT: TakeAction(FBoxPoint[7])
-    ACT->>ACT: ActionToEQSWeights() · ValidateEQSWeights()
-    ACT->>CHR: UpdateTacticalWeights() · PerformTacticalAction()
-
-    alt Training 모드 (동기)
-        CHR->>EXE: ExecuteSynchronousQuery(Weights)
-        EXE->>EQS: RunEQSQuery (blocking, 48 samples)
-        EQS-->>CHR: Best FVector → MoveTo()
-    else Inference 모드 (비동기 + BT)
-        CHR->>CHR: weights → Blackboard 기록
-        EXE->>EQS: RunEQSQuery (async, BT TickTask)
-        EQS-->>CHR: Best FVector → AIController::MoveTo()
-    end
-{{< /mermaid >}}
+{{< img src="/images/project1/runtimedataflow.png" 
+        alt="" 
+        class="max-w-full" 
+        caption="Fig 3. 런타임 데이터 플로우" >}}
 
 
 
 #### EQS 가중치 주입 (ApplyWeightsToRequest)
 
-RL 정책의 `[-1, 1]` 출력을 `WeightScaleFactor(×2.0)`으로 스케일링해 UE5 EQS Named Parameter로 주입합니다.
 
-```cpp
-// DynamicEQSExecutor.cpp — 인덱스 기반 범용 주입 (플러그인 레이어)
-for (int32 i = 0; i < WeightArray.Num(); ++i)
-{
-    FName ParamName = (WeightParamNames.IsValidIndex(i) && !WeightParamNames[i].IsNone())
-        ? WeightParamNames[i]
-        : *FString::Printf(TEXT("Weight%d"), i);
-    Request.SetFloatParam(ParamName, WeightArray[i] * WeightScaleFactor);  // ×2.0
-}
-```
-
-```cpp
-// DEEQSExecutor.cpp — 7개 전술 파라미터 직접 주입 (게임 레이어)
-Request.SetFloatParam(TEXT("EnemyObjectiveProximity"), Weights.EnemyObjectiveProximity * WeightScale);
-Request.SetFloatParam(TEXT("AllyObjectiveProximity"),  Weights.AllyObjectiveProximity  * WeightScale);
-Request.SetFloatParam(TEXT("CoverDensity"),            Weights.CoverDensity            * WeightScale);
-Request.SetFloatParam(TEXT("EnemyVisibility"),         Weights.EnemyVisibility         * WeightScale);
-Request.SetFloatParam(TEXT("AllyProximity"),           Weights.AllyProximity           * WeightScale);
-Request.SetFloatParam(TEXT("CombatRange"),             Weights.CombatRange             * WeightScale);
-Request.SetFloatParam(TEXT("AssignedBaseProximity"),   Weights.AssignedBaseProximity   * WeightScale);
-```
 
 #### FInstancedStruct를 활용한 게임 로직 디커플링
 
@@ -171,42 +114,31 @@ if (Ctx)
 
 `FDEObservationV2::ToFlatArray()`가 생성하는 170-dim 엔티티 중심(Entity-Centric) 벡터입니다. 아군·적·거점을 고정 크기 슬롯 토큰으로 인코딩하고, 패딩 마스크를 별도로 제공해 Python MultiheadAttention이 유효 엔티티만 처리하도록 합니다.
 
-```
-[Index]    [Dim]  [토큰]         [정규화]
-[0 : 3]     3    자신 위치       / (7500, 7500, 1000)
-[3 : 6]     3    자신 속도       / (600, 600, 600)
-[6 : 7]     1    자신 체력       raw [0,1]
-[7 :47]    40    아군 토큰 8×5   rel_pos/8000(3) + health(1) + alive(1)
-[47:87]    40    적 토큰   8×5   rel_pos/8000(3) + visible(1) + confidence(1)
-[87:143]   56    거점 토큰 8×7   rel_pos/15000(2) + rel_z/1000(1)
-                                 + ownership(1) + cap_progress(1)
-                                 + is_assigned(1) + strategic_val(1)
-[143:151]   8    아군 마스크     0=유효, 1=패딩
-[151:159]   8    적 마스크
-[159:167]   8    거점 마스크
-[167:170]   3    전략 원-핫      [assault, defend, support]
-════════  170    TOTAL
-```
+
+### **에이전트 입력 상태(State) 구성표**
+
+| Index | Dim | 토큰 내용 | 정규화 및 상세 설명 |
+| --- | --- | --- | --- |
+| **[0 : 3]** | 3 | 자신 위치 | / (7500, 7500, 1000) |
+| **[3 : 6]** | 3 | 자신 속도 | / (600, 600, 600) |
+| **[6 : 7]** | 1 | 자신 체력 | raw [0, 1] |
+| **[7 : 47]** | 40 | 아군 토큰 (8×5) | 상대 위치/8000(3) + 체력(1) + 생존 여부(1) |
+| **[47 : 87]** | 40 | 적 토큰 (8×5) | 상대 위치/8000(3) + 시야 확보(1) + 신뢰도(1) |
+| **[87 : 143]** | 56 | 거점 토큰 (8×7) | 상대 위치/15000(2) + 높이/1000(1) + 점유(1) + 점령 진행도(1) + 할당 여부(1) + 전략적 가치(1) |
+| **[143 : 151]** | 8 | 아군 마스크 | 0=유효, 1=패딩 |
+| **[151 : 159]** | 8 | 적 마스크 | 0=유효, 1=패딩 |
+| **[159 : 167]** | 8 | 거점 마스크 | 0=유효, 1=패딩 |
+| **[167 : 170]** | 3 | 전략 원-핫 | [assault, defend, support] |
+| **TOTAL** | **170** |  |  |
+
+---
 
 > **마스크 처리:** Python 정책의 `_safe_mask()`는 모든 슬롯이 패딩일 때 슬롯 0을 강제 언마스크하여 MultiheadAttention의 NaN을 방지합니다. 마스크 임계값은 `> 0.5` (float 비교)로, `0.0=유효 / 1.0=패딩` 의미론을 보존합니다.
 
 <br>
 
+
 **보상 구조 개요**
-
-`DERewardSubsystem`은 **Phase 5 협력적 거점 점령** 보상 구조를 사용합니다. 에이전트가 단순히 같은 거점에 뭉치는 대신, 팀 전체가 서로 다른 거점을 분산 점령하도록 유도합니다.
-
-| 보상 항목 | 값 | 조건 |
-|---|---|---|
-| `BaseOccupationReward` | **+2.0**/step | 아군 혼자 중립 거점 근처 |
-| `CoOccupationPenalty` | **−0.5**/step | 동일 거점에 2명 이상 |
-| `BaseCaptureCreditReward` | **+5.0** | 거점 점령 완료 기여 |
-| `UndefendedBasePenalty` | **−1.0**/step | 방어되지 않은 아군 거점 |
-| `AssignedBaseReachReward` | **+1.0** | 배정 거점 최초 도달 |
-
-최종 보상은 `Σ(ComponentReward × PersonalityWeight) + StrategyBonus`로 합산되며, C++ `UDERewardData`와 Python `REWARD_CONFIG`의 수치를 항상 동기화해야 합니다.
-
-
 
 ---
 
@@ -214,52 +146,11 @@ if (Ctx)
 
 목표는 적 거점 접근과 점령 완료입니다. 적 거점까지의 거리 감소분에 비례한 접근 보상을 매 스텝 부여하고, 거점 반경 내 진입 시 추가 존재 보너스를 부여합니다. 점령이 완료되면 즉시 `PostCaptureMomentumDuration` 스텝 동안 모멘텀 보너스가 활성화되어, 점령 후 제자리에 머무는 대신 다음 거점으로 계속 전진하도록 유도합니다.
 
-```cpp
-// DERewardCalculator.cpp — Assault 보상
-float Reward = 0.f;
-// 거점 반경 내 진입 보상
-if (DistToEnemyObjective < ObjectiveRadius)
-    Reward += RewardData->AssaultSettings.ObjectivePresenceBonus;
-// 점령 직후 모멘텀 보너스 (PostCaptureMomentumDuration 스텝 유지)
-if (MomentumStepsRemaining > 0)
-{
-    Reward += RewardData->AssaultSettings.PostCaptureMomentumBonus;
-    --MomentumStepsRemaining;
-}
-// 거점 점령 완료 기여
-if (Context.bCapturedBase)
-{
-    Reward += RewardData->BaseCaptureCreditReward;
-    MomentumStepsRemaining = RewardData->AssaultSettings.PostCaptureMomentumDuration;
-}
-```
-
 ---
 
 > **방어: 거점의 유지**
 
 목표는 아군 거점 유지와 거점 내 적 격퇴입니다. 아군 거점 반경 내에 위치할 때 기본 존재 보상이 부여됩니다. 거점 내에서 적에게 데미지를 받으면 추가 내구도 보너스(`ZoneDurabilityBonus`)가 지급되어, 거점에서 물러나지 않고 버티는 행동을 강화합니다. 아군 거점이 없는 상황에서는 중립/적 거점 접근으로 목표가 전환됩니다.
-
-```cpp
-// DERewardCalculator.cpp — Defend 보상
-float Reward = 0.f;
-if (bInsideFriendlyBase)
-{
-    Reward += RewardData->DefendSettings.BasePresenceBonus;   // 거점 내 존재 보상
-    // 거점 안에서 피격 시 버티기 강화
-    if (Context.DamageTaken > 0.f)
-        Reward += RewardData->DefendSettings.ZoneDurabilityBonus;
-}
-else if (!bHasFriendlyBase)
-{
-    // 아군 거점 없으면 중립/적 거점으로 목표 전환
-    if (DistToNeutralObjective < ObjectiveRadius)
-        Reward += RewardData->DefendSettings.NeutralObjectiveBonus;
-}
-// 방어되지 않은 아군 거점 패널티
-if (bUndefendedFriendlyBase)
-    Reward += RewardData->UndefendedBasePenalty;   // -1.0/step
-```
 
 ---
 
@@ -267,68 +158,7 @@ if (bUndefendedFriendlyBase)
 
 목표는 체력이 낮은 아군을 추적하고 힐링하며 후방을 유지하는 것입니다. 매 스텝 부상 아군 탐색을 수행하되, 잦은 타겟 전환으로 인한 진동 행동을 막기 위해 5스텝 캐시를 적용합니다. 캐시된 아군이 현재 가장 낮은 체력이 아니더라도 5스텝이 지나기 전까지는 교체하지 않습니다. 아군 뒤편에 위치하면 후방 포지셔닝 보너스를 받으며, 아군이 부상 중인 상황에서 직접 킬을 시도하면 역할 이탈 패널티가 부과됩니다.
 
-```cpp
-// DERewardCalculator.cpp — Support 보상
-// 5-스텝 캐시: 타겟 진동 방지
-if (SupportTargetCacheSteps <= 0 || !CachedHealTarget || !CachedHealTarget->IsAlive())
-{
-    CachedHealTarget    = FindLowestHealthAlly();
-    SupportTargetCacheSteps = 5;
-}
---SupportTargetCacheSteps;
 
-float Reward = 0.f;
-// 힐링 누적량에 비례한 보상 (보상 서브시스템으로 환류)
-Reward += Context.CumulativeHealAmount * RewardData->SupportSettings.HealRewardScale;
-// 아군 뒤편 후방 포지셔닝 보너스
-if (bBehindCachedAlly)
-    Reward += RewardData->SupportSettings.RearPositioningBonus;
-// 부상 아군 존재 시 킬 시도 → 역할 이탈 패널티
-if (CachedHealTarget && Context.bKilledEnemy)
-    Reward += RewardData->SupportSettings.RoleDivergencePenalty;  // 음수
-
----
-
-**독립 정책 네트워크와 전략 균형 리플레이 버퍼**
-
-공유 인코더 + 멀티헤드 구조에서는 Support 헤드가 학습 초기에 붕괴하는 그래디언트 간섭 문제가 반복됐습니다. 이를 해결하기 위해 전략별 완전 독립 단일 헤드 정책으로 전환했습니다.
-
-```python
-# phase1_policy_training_v10_2.py — 전략별 독립 정책 등록
-config = config.multi_agent(
-    policies={
-        "assault_policy": PolicySpec(),   # 독립 인코더 + 단일 헤드
-        "defend_policy":  PolicySpec(),
-        "support_policy": PolicySpec(),
-    },
-    policy_mapping_fn=_strategy_policy_mapping_fn,  # 에이전트 전략 → 정책 라우팅
-)
-```
-
-세 전략이 동시에 존재하는 학습 환경에서 한 전략 데이터가 과다 수집되어 편향이 생기는 것을 막기 위해, 전략별로 독립된 서브 버퍼를 두고 샘플링 시 33/33/33% 균등 분배를 강제하는 `StrategyBalancedReplayBuffer`를 구현했습니다.
-
-```python
-class StrategyBalancedReplayBuffer:
-    def __init__(self, capacity: int = 100000):
-        # 전략별(Assault/Defend/Support) 독립 서브 버퍼
-        self.buffers = {
-            strategy: deque(maxlen=capacity // 3)
-            for strategy in range(3)
-        }
-
-    def sample(self, batch_size: int) -> List[Transition]:
-        """각 전략 버퍼에서 균등하게 샘플링 (33/33/33%)."""
-        samples_per_strategy = batch_size // 3
-        batch = []
-        for strategy in range(3):
-            buffer = self.buffers[strategy]
-            indices = np.random.choice(len(buffer), samples_per_strategy, replace=False)
-            batch.extend([buffer[i] for i in indices])
-        np.random.shuffle(batch)
-        return batch
-```
-
-관측 공간에 아군의 전략 분포(팀 구성비)도 포함하여, 에이전트가 팀 내 전략 조합을 인식하고 협동 행동을 발견할 수 있도록 유도했습니다.
 
 ---
 
@@ -460,7 +290,7 @@ SpecHandle.Data->SetSetByCallerMagnitude(DEGameplayTags::Data_Healing, HealAmoun
 TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 ```
 
-#### BT 태스크 연동
+#### Gameplay Tag & BT 태스크 연동
 
 `BTTask_DEAttackAbility` · `BTTask_DEHealAbility` 양쪽 모두 내부 구현이 아닌 **Gameplay Tag 조회**를 통해 능력을 활성화합니다. Behavior Tree는 능력 교체·파라미터 변경에 완전히 무관하며, 풀오토 공격은 `TickTask`에서 매 프레임 재활성화하는 방식으로 구현됩니다.
 
@@ -476,82 +306,11 @@ TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 
 에이전트 컴포넌트 `UDEScholaAgent`가 두 모드를 하나의 인터페이스로 추상화합니다. `CurrentMode` 프로퍼티 하나로 행동 파이프라인 전체가 분기됩니다.
 
-```cpp
-// DEScholaAgent.h
-UENUM(BlueprintType)
-enum class EDEAgentMode : uint8
-{
-    Training    UMETA(DisplayName = "Training Mode (Python RLlib)"),
-    Inference   UMETA(DisplayName = "Inference Mode (Local ONNX)")
-};
-
-UCLASS(ClassGroup = (AI), meta = (BlueprintSpawnableComponent))
-class UDEScholaAgent : public UInferenceComponent
-{
-    // Blueprint에서 에디터 단에서 모드를 전환할 수 있음
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DE")
-    EDEAgentMode CurrentMode = EDEAgentMode::Training;
-    ...
-};
-```
 
 #### 모드별 실행 분기: `PerformTacticalAction()`
 
-EQS 가중치가 결정된 뒤, 실제 이동 명령을 어떻게 처리하는지가 두 모드의 핵심 차이입니다.
-
-```cpp
-// DECharacter.cpp — 모드에 따라 EQS 실행 경로가 분기됨
-void ADECharacter::PerformTacticalAction()
-{
-    bool bIsTraining = ScholaAgent &&
-                       ScholaAgent->CurrentMode == EDEAgentMode::Training;
-
-    if (BB && !bIsTraining)
-    {
-        // 추론 모드: 가중치를 Blackboard에 기록하고, Behavior Tree가 EQS를 실행
-        BB->SetValueAsFloat(TEXT("Weight_EnemyObj"),  CurrentEQSWeights.EnemyObjectiveProximity);
-        BB->SetValueAsFloat(TEXT("Weight_AllyObj"),   CurrentEQSWeights.AllyObjectiveProximity);
-        BB->SetValueAsFloat(TEXT("Weight_Cover"),     CurrentEQSWeights.CoverDensity);
-        BB->SetValueAsFloat(TEXT("Weight_EnemyVis"),  CurrentEQSWeights.EnemyVisibility);
-        BB->SetValueAsFloat(TEXT("Weight_AllyProx"),  CurrentEQSWeights.AllyProximity);
-        BB->SetValueAsFloat(TEXT("Weight_Range"),     CurrentEQSWeights.CombatRange);
-        return;
-    }
-
-    // 학습 모드: EQS를 동기적으로 직접 실행하고 즉시 이동 명령 발행
-    AICtrl->StopMovement();
-    TOptional<FVector> Result = EQSExecutor->ExecuteSynchronousQuery(CurrentEQSWeights);
-    ...
-}
-```
 
 <br>
-
-**학습 모드, 추론 모드 비교 테이블**
-
-| 구분 | 학습 모드 | 추론 모드 |
-|---|---|---|
-| **정책 소스** | Python RLlib (gRPC) | 로컬 ONNX 모델 (UE5 NNE) |
-| **EQS 실행** | C++에서 동기 직접 실행 | Blackboard → Behavior Tree 위임 |
-| **Behavior Tree (이동)** | 사용 안 함 (동기 경로로 대체) | `BTTask_DEMoveToEQSLocation` |
-| **Behavior Tree (전투)** | 사용 (인식 → Blackboard → 공격) | 사용 (동일) |
-| **에피소드 관리** | `ADEScholaEnvironment`가 제어 | 불필요 (게임 루프로 동작) |
-| **환경 리셋** | Schola 프로토콜 기반 | 없음 |
-
-<br>
-
-#### 설계 의도: 학습 모드에서 BT 이동 경로를 제외한 이유
-
-추론 모드에서 BT가 담당하는 이동 경로(`BTTask_DEMoveToEQSLocation`)는 학습 모드에서 의도적으로 사용하지 않습니다. Schola의 스텝 루프는 **"액션 수신 → 실행 → 관측+보상 수집"** 이 단일 틱 내에서 결정론적으로 완결되어야 합니다. BT의 EQS 태스크는 비동기로 동작하기 때문에, 액션을 받은 직후 수집되는 관측값이 아직 이동이 반영되지 않은 상태(`s'`가 실제로는 `s`인 상황)가 될 수 있습니다. 이는 정책이 학습하는 전이 튜플 `(s, a, s', r)`을 오염시켜 보상 신호의 정확성을 떨어뜨립니다.
-
-반면 동기 직접 실행 경로는 EQS 쿼리와 이동 명령이 같은 틱에 완료되므로 전이 튜플이 항상 일관됩니다. `BTTask_DEMoveToEQSLocation`은 기능적으로 동일한 EQS 쿼리를 비동기 래퍼로 감싼 것에 불과하므로, 학습 품질 손실 없이 동기 경로로 대체할 수 있습니다.
-
-전투 BT(인식 → Blackboard → `BTTask_DEAttackAbility`)는 Schola 스텝 클럭과 독립적인 이벤트 구동 방식이므로 두 모드 모두에서 동일하게 동작합니다.
-
-<br>
-
-
-
 
 ---
 
