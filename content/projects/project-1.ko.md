@@ -20,14 +20,6 @@ math: true
 
 본 프로젝트에서는 팀 기반 거점 점령전에서의 전략적 포지셔닝 최적화 환경을 대상으로 해당 플러그인을 활용하였습니다.
 
-각 에이전트는 강화학습 정책 네트워크를 통해 실시간 상황에 따라 공간 이동 파라미터를 추론하여 현재 상황에서의 최적 위치를 결정할 수 있습니다.
-
-Schola 플러그인을 통해 Unreal Engine 5의 강화학습 환경과 외부 스크립트(Ray Rllib)와의 gRPC 기반 브릿지를 구성하였으며 Schola Layer 위에 EQS 가중치를 설정하고 정책 네트워크 출력과 연결하는 Dynamic EQS를 플러그인 형태로 구현하였습니다.
-
-훈련은 초기 하나의 UE 인스턴스에 4개의 병렬 환경으로 수행하였으며 이후 AWS 클라우드 기반의 대규모 병렬 학습 환경을 구축했습니다. 이를 통해 수십 개의 언리얼 엔진 인스턴스로부터 데이터를 동시 수집하고 정책을 업데이트하는 고성능 학습 파이프라인을 구현했습니다.
-
-
-{{< gif-grid urls="/gifs/project1/1.gif, /gifs/project1/3.gif" widths="50%, 50%" >}}
 
 ---
 
@@ -38,6 +30,30 @@ Schola 플러그인을 통해 Unreal Engine 5의 강화학습 환경과 외부 �
         alt="" 
         class="max-w-full" 
         caption="Fig 1. 시스템 아키텍처 및 계층적 포지셔닝 워크플로우" >}}
+        
+
+---
+
+## 학습 환경 (Training Environment)
+
+**5 vs 5 팀 기반 거점 점령전**으로, 맵 상에 5개의 거점(Capture Point)이 배치됩니다.
+
+- **승리 조건:** 더 많은 거점을 점령하고 유지하여 목표 점수를 먼저 달성하는 팀이 승리합니다.
+- **부활 규칙:** 개별 사망이 아닌 **팀 전멸(Team Wipe)** 시 해당 팀 전체가 리스폰됩니다. 부활 대기 시간(`RespawnDelay`) 동안 대기 후 팀 스폰 지점 근처에 동시 재배치됩니다.
+- **전략 역할:** 각 에이전트는 매 에피소드마다 **Assault / Defend / Support** 전략을 부여받으며, 해당 전략에 최적화된 포지셔닝 행동을 학습합니다.
+- **에피소드 길이:** 고정 스텝 수 기반으로 종료됩니다.
+- **셀프플레이:** 양 팀이 동일한 정책을 공유하며 서로의 전략에 반응하는 Self-Play 방식으로 학습합니다.
+
+각 에이전트는 강화학습 정책 네트워크를 통해 실시간 상황에 따라 공간 이동 파라미터를 추론하여 현재 상황에서의 최적 위치를 결정할 수 있습니다.
+
+Schola 플러그인을 통해 Unreal Engine 5의 강화학습 환경과 외부 스크립트(Ray Rllib)와의 gRPC 기반 브릿지를 구성하였으며 Schola Layer 위에 EQS 가중치를 설정하고 정책 네트워크 출력과 연결하는 Dynamic EQS를 플러그인 형태로 구현하였습니다.
+
+훈련은 초기 하나의 UE 인스턴스에 4개의 병렬 환경으로 수행하였으며 이후 AWS 클라우드 기반의 대규모 병렬 학습 환경을 구축했습니다. 이를 통해 수십 개의 언리얼 엔진 인스턴스로부터 데이터를 동시 수집하고 정책을 업데이트하는 고성능 학습 파이프라인을 구현했습니다.
+
+
+{{< gif-grid urls="/gifs/project1/1.gif, /gifs/project1/3.gif" widths="50%, 50%" >}}
+
+
 
 
 ---
@@ -64,28 +80,51 @@ Schola 플러그인을 통해 Unreal Engine 5의 강화학습 환경과 외부 �
 
 ### 1. Dynamic-EQS Plugin
 
-DynamicEQS는 Schola 플러그인을 기반으로 하는 **재사용 가능한 UE5 전용 RL-EQS 통합 레이어**입니다. 게임 프로젝트가 Schola의 저수준 gRPC/ONNX 처리를 직접 다루지 않고 EQS 특화 추상 클래스만 상속하면 됩니다.
+**DynamicEQS**는 Schola 플러그인을 기반으로 하는 **재사용 가능한 UE5 전용 RL-EQS 통합 레이어**입니다. DynamicEQS를 사용하는 게임 프로젝트는 Schola의 저수준 gRPC/ONNX 처리를 직접 다루지 않고 EQS 특화 추상 클래스만 상속하면 됩니다.
 
-#### 플러그인 계층 구조
+DynamicEQS의 주요 클래스는 4가지로, **환경**, **에이전트**, **액션**, **관찰**을 담당합니다. Schola와 게임 프로젝트의 미들 계층에서 EQS 가중치를 설정하고 정책 네트워크와 매핑해주는 역할을 합니다.
+
 
 {{< img src="/images/project1/pluginarchi.png" 
         alt="" 
         class="max-w-full" 
         caption="Fig 2. 플러그인 계층 구조" >}}
 
-#### 런타임 데이터 흐름
 
-
-{{< img src="/images/project1/runtimedataflow.png" 
-        alt="" 
-        class="max-w-full" 
-        caption="Fig 3. 런타임 데이터 플로우" >}}
-
-
+---
 
 #### EQS 가중치 주입 (ApplyWeightsToRequest)
 
+정책 네트워크의 출력(7-dim Box action)이 실제 EQS 쿼리 파라미터로 주입되는 전체 흐름은 다음과 같습니다.
 
+**에디터 설정**
+
+1. `BP_Agent`(ADECharacter)에 `UDynamicEQSExecutor` 컴포넌트를 추가합니다.
+2. `WeightParamNames` 배열에 EQS Query의 각 테스트에서 사용하는 파라미터 이름을 순서대로 입력합니다 (예: `EnemyObjectiveProximity`, `AllyObjectiveProximity`, …).
+3. `UDEScholaAgent` 컴포넌트에서 `Actuator`로 `UDETacticalParameterActuator`를 지정합니다.
+
+
+{{< img src="/images/project1/flow2.png" 
+        alt="" 
+        class="max-w-full" 
+        caption="Fig 3. 학습/추론 런타임 데이터 플로우" >}}
+
+
+```cpp
+// DynamicEQSExecutor.cpp — EQS 파라미터 주입
+void UDynamicEQSExecutor::ApplyWeightsToRequest(FEnvQueryRequest& Request) const
+{
+    for (int32 i = 0; i < Weights.Num(); ++i)
+    {
+        const FName ParamName = (WeightParamNames.IsValidIndex(i) && !WeightParamNames[i].IsNone())
+            ? WeightParamNames[i]
+            : FName(*FString::Printf(TEXT("Weight%d"), i));
+        Request.SetFloatParam(ParamName, Weights[i]);
+    }
+}
+```
+
+---
 
 #### FInstancedStruct를 활용한 게임 로직 디커플링
 
@@ -114,8 +153,9 @@ if (Ctx)
 
 `FDEObservationV2::ToFlatArray()`가 생성하는 170-dim 엔티티 중심(Entity-Centric) 벡터입니다. 아군·적·거점을 고정 크기 슬롯 토큰으로 인코딩하고, 패딩 마스크를 별도로 제공해 Python MultiheadAttention이 유효 엔티티만 처리하도록 합니다.
 
+<div style="margin-top: 40px;"></div>
 
-### **에이전트 입력 상태(State) 구성표**
+#### **에이전트 입력 상태(State) 구성표**
 
 | Index | Dim | 토큰 내용 | 정규화 및 상세 설명 |
 | --- | --- | --- | --- |
@@ -131,20 +171,31 @@ if (Ctx)
 | **[167 : 170]** | 3 | 전략 원-핫 | [assault, defend, support] |
 | **TOTAL** | **170** |  |  |
 
----
 
 > **마스크 처리:** Python 정책의 `_safe_mask()`는 모든 슬롯이 패딩일 때 슬롯 0을 강제 언마스크하여 MultiheadAttention의 NaN을 방지합니다. 마스크 임계값은 `> 0.5` (float 비교)로, `0.0=유효 / 1.0=패딩` 의미론을 보존합니다.
 
-<br>
-
-
-**보상 구조 개요**
-
 ---
+
+#### 보상 구조 개요
+
 
 > **돌격: 거점의 확보**
 
 목표는 적 거점 접근과 점령 완료입니다. 적 거점까지의 거리 감소분에 비례한 접근 보상을 매 스텝 부여하고, 거점 반경 내 진입 시 추가 존재 보너스를 부여합니다. 점령이 완료되면 즉시 `PostCaptureMomentumDuration` 스텝 동안 모멘텀 보너스가 활성화되어, 점령 후 제자리에 머무는 대신 다음 거점으로 계속 전진하도록 유도합니다.
+
+```cpp
+# Assault reward (per step)
+reward = 0
+if distance_to_target_base decreased:
+    reward += approach_reward * delta_distance
+if agent inside target_base radius:
+    reward += zone_presence_bonus
+if base just captured:
+    activate momentum_bonus for PostCaptureMomentumDuration steps
+    reward += capture_bonus
+if momentum active:
+    reward += momentum_bonus  # encourages moving to next base
+```
 
 ---
 
@@ -152,11 +203,42 @@ if (Ctx)
 
 목표는 아군 거점 유지와 거점 내 적 격퇴입니다. 아군 거점 반경 내에 위치할 때 기본 존재 보상이 부여됩니다. 거점 내에서 적에게 데미지를 받으면 추가 내구도 보너스(`ZoneDurabilityBonus`)가 지급되어, 거점에서 물러나지 않고 버티는 행동을 강화합니다. 아군 거점이 없는 상황에서는 중립/적 거점 접근으로 목표가 전환됩니다.
 
+```cpp
+# Defend reward (per step)
+reward = 0
+if agent inside friendly_base radius:
+    reward += zone_presence_bonus
+    if agent took damage this step:
+        reward += zone_durability_bonus   # reward staying under fire
+if no friendly base exists:
+    if distance_to_neutral_or_enemy_base decreased:
+        reward += approach_reward * delta_distance  # fallback objective
+```
+
 ---
 
 > **지원: 아군의 유지**
 
 목표는 체력이 낮은 아군을 추적하고 힐링하며 후방을 유지하는 것입니다. 매 스텝 부상 아군 탐색을 수행하되, 잦은 타겟 전환으로 인한 진동 행동을 막기 위해 5스텝 캐시를 적용합니다. 캐시된 아군이 현재 가장 낮은 체력이 아니더라도 5스텝이 지나기 전까지는 교체하지 않습니다. 아군 뒤편에 위치하면 후방 포지셔닝 보너스를 받으며, 아군이 부상 중인 상황에서 직접 킬을 시도하면 역할 이탈 패널티가 부과됩니다.
+
+```cpp
+# Support reward (per step)
+reward = 0
+if staleness_counter >= 5 or no cached_target:
+    cached_target = ally with lowest health
+    staleness_counter = 0
+else:
+    staleness_counter++
+
+if distance_to_cached_target decreased:
+    reward += approach_reward * delta_distance
+if heal applied to ally:
+    reward += heal_reward * heal_amount
+if agent positioned behind cached_target (rear arc):
+    reward += rear_positioning_bonus
+if cached_target.health < threshold and agent attempted kill:
+    reward -= role_deviation_penalty
+```
 
 
 
@@ -191,6 +273,8 @@ def _resolve_port(self, **kwargs):
 
 RLlib이 여러 env-runner를 생성할 때, 각 워커는 `base_port + worker_index` 방식으로 고유한 포트를 할당받아 서로 다른 UE5 인스턴스에 독립적으로 연결됩니다.
 
+---
+
 #### 환경 변수 기반 오케스트레이션
 
 학습 규모와 하이퍼파라미터를 소스 코드 수정 없이 Docker Compose 설정만으로 제어합니다.
@@ -207,6 +291,22 @@ NUM_ITERATIONS        = int(os.environ.get('NUM_ITERATIONS', 100))
 
 ---
 
+#### 학습 모니터링 (TensorBoard)
+
+Ray RLlib이 각 이터레이션의 보상, 정책 손실, KL 발산, Entropy 등을 자동으로 TensorBoard에 기록합니다.
+
+{{< img src="/images/project1/reward.png"
+        alt=""
+        class="max-w-3xl"
+        caption="Fig 7. Reward" >}}
+
+{{< img src="/images/project1/klenvf.png"
+        alt=""
+        class="max-w-3xl"
+        caption="Fig 8. KL, Entropy, VF Explained" >}}
+
+---
+
 ### 4. GAS 기반 전투 능력 시스템 (Gameplay Ability System Integration)
 
 전투 로직(공격·힐링)을 UE5 **Gameplay Ability System(GAS)** 으로 설계하여, AI 에이전트의 능력 실행·쿨다운·속성 관리를 표준화된 데이터 주도 파이프라인으로 통합했습니다.
@@ -214,6 +314,8 @@ NUM_ITERATIONS        = int(os.environ.get('NUM_ITERATIONS', 100))
 #### 핵심 설계 원칙
 
 **Gameplay Tag** 기반 조회(`TryActivateAbilitiesByTag`)로 Behavior Tree 태스크와 . 이를 통해 Behavior Tree 태스크가 구체적인 구현 클래스를 몰라도 능력을 트리거할 수 있어 능력 교체·확장이 코드 수정 없이 가능합니다.
+
+<div style="margin-top: 40px;"></div>
 
 #### 속성 관리: `UDEAttributeSet`
 
@@ -247,6 +349,8 @@ if (Data.EvaluatedData.Attribute == GetDamageAttribute())
 }
 ```
 
+---
+
 #### 공격 능력: `UDEGA_Attack`
 
 - **서버 전용 실행** (`NetExecutionPolicy::ServerOnly`): AI 전용 능력으로 클라이언트 예측 불필요
@@ -275,6 +379,8 @@ void UDEGA_Attack::ActivateAbility(...)
 }
 ```
 
+---
+
 #### 힐링 능력: `UDEGA_Heal`
 
 - `FindNearestInjuredAlly()`로 팀 내 최저 체력 아군을 자동 선택 (5스텝 캐시와 독립적으로 동작)
@@ -290,11 +396,16 @@ SpecHandle.Data->SetSetByCallerMagnitude(DEGameplayTags::Data_Healing, HealAmoun
 TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 ```
 
+---
+
 #### Gameplay Tag & BT 태스크 연동
 
 `BTTask_DEAttackAbility` · `BTTask_DEHealAbility` 양쪽 모두 내부 구현이 아닌 **Gameplay Tag 조회**를 통해 능력을 활성화합니다. Behavior Tree는 능력 교체·파라미터 변경에 완전히 무관하며, 풀오토 공격은 `TickTask`에서 매 프레임 재활성화하는 방식으로 구현됩니다.
 
-
+{{< img src="/images/project1/bt.png"
+        alt=""
+        class="max-w-3xl"
+        caption="Fig 9. Behavior Tree" >}}
 
 ---
 
@@ -302,32 +413,85 @@ TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 
 모든 주요 컴포넌트는 단일 UE5 바이너리 내에서 **학습 모드(Training)** 와 **추론 모드(Inference)** 를 동시에 지원하도록 설계했습니다. 학습이 끝난 ONNX 모델을 별도의 빌드 없이 동일한 UE5 환경에서 즉시 실행하고 검증할 수 있습니다.
 
-#### 핵심 설계: `UDEScholaAgent`
+#### 핵심 설계: `UDynamicEQSAgentComponent`
 
-에이전트 컴포넌트 `UDEScholaAgent`가 두 모드를 하나의 인터페이스로 추상화합니다. `CurrentMode` 프로퍼티 하나로 행동 파이프라인 전체가 분기됩니다.
+에이전트 컴포넌트 `UDynamicEQSAgentComponent`가 두 모드를 하나의 인터페이스로 추상화합니다. `AgentMode` 프로퍼티 하나로 행동 파이프라인 전체가 분기됩니다.
 
+<div style="margin-top: 40px;"></div>
 
-#### 모드별 실행 분기: `PerformTacticalAction()`
+#### 모드 비교
 
+| 항목 | Training Mode | Inference Mode |
+|---|---|---|
+| **정책 실행 주체** | Python RLlib (gRPC) | UE5 내장 ONNX (NNE) |
+| **스테퍼** | `GymConnector` (Schola 통신 루프) | `USimpleStepper` (TickComponent) |
+| **EQS 실행** | `EQS Executor` | `EQS Executor` |
+| **보상 계산** | `UDERewardSubsystem` 매 스텝 | 없음 |
+| **에피소드 관리** | Schola `AutoResetType::SAME_STEP` | 레벨 재시작 |
 
-<br>
+<div style="margin-top: 40px;"></div>
+
+#### 모드별 실행 분기: `BeginPlay` & `PerformTacticalAction()`
+
+```cpp
+// DynamicEQSAgentComponent.cpp — BeginPlay에서 모드 분기
+void UDynamicEQSAgentComponent::BeginPlay()
+{
+    Super::BeginPlay();
+    if (AgentMode == EDynamicEQSAgentMode::Inference)
+    {
+        // ONNX 정책 초기화 후 SimpleStepper 생성
+        Stepper = NewObject<USimpleStepper>(this);
+        Stepper->Init({this}, InferencePolicyObject);
+    }
+    // Training 모드: Schola GymConnector가 외부에서 Observe/Act 호출
+}
+
+// DynamicEQSAgentComponent.cpp — TickComponent (Inference only)
+void UDynamicEQSAgentComponent::TickComponent(...)
+{
+    Super::TickComponent(...);
+    if (AgentMode == EDynamicEQSAgentMode::Inference && Stepper)
+        Stepper->Step();  // Observe → ONNX Infer → Act
+}
+```
+
+```cpp
+// ADECharacter::PerformTacticalAction() — EQS 실행 방식 분기
+void ADECharacter::PerformTacticalAction()
+{
+    if (ScholaAgent->AgentMode == EDynamicEQSAgentMode::Training)
+    {
+        // Training: 동기 EQS (Schola 스텝 버짓 내에서 즉시 완료)
+        FVector BestLoc;
+        EQSExecutor->ExecuteQuerySynchronous(CurrentEQSWeights, BestLoc);
+        AIController->MoveToLocation(BestLoc);
+    }
+    else
+    {
+        // Inference: Blackboard 경유 비동기 EQS → BTTask_DEMoveToEQSLocation
+        EQSExecutor->ExecuteQuery(CurrentEQSWeights,
+            [this](FVector BestLoc){ WriteWeightsToBB(BestLoc); });
+    }
+}
+```
+
 
 ---
 
 ## 기술적 난제 및 해결 전략 (Problem Solving)
 
-<br>
 
 ### Problem 1: UE5 환경과 Rllib 환경의 통신 표준 프레임워크의 필요성
 
 기존 UE5에서 제공하는 강화학습 프레임워크인 **Learning Agent**는 UE5 로컬에서만 동작하기에 Python Ray Rllib의 분산 강화학습이라는 이점을 활용할 수 없었습니다.
 
-<br>
+<div style="margin-top: 40px;"></div>
 
 #### Goal
 UE5와 Python(Ray RLlib) 간의 고성능 강화학습 파이프라인을 구축하기 위해 안정적인 통신 수단과 표준 포멧이 포함된 프레임워크의 확보.
 
-<br>
+<div style="margin-top: 40px;"></div>
 
 #### Solution
 
@@ -341,7 +505,7 @@ AMD의 오픈소스 라이브러리 [**Schola**](https://github.com/GPUOpen-Libr
 
 * **래핑 및 gRPC 통신 브릿지:** Schola는 UE5 내의 데이터를 Python의 gym.Env 형태로 래핑하고 gRPC 프로토콜 기반의 직렬화를 통해 저지연으로 Rllib 환경과 통신하는 API를 제공합니다.
 
-<br>
+<div style="margin-top: 40px;"></div>
 
 #### Result
 오픈소스 라이브러리 Schola 프레임워크에서 제공하는 인터페이스를 통해 직접적인 래퍼 환경을 구축하지 않고도 UE5와 Python Ray Rllib의 통신을 성공적으로 완료하였습니다. 이를 통해 개발 효율을 대폭 향상시켰습니다.
@@ -369,7 +533,7 @@ SCHOLA_AVAILABLE = True
 
 * **부활 루프(Death-resurrection loop)**: SAME_STEP 모드에서 사망한 에이전트가 유효한 상태 없이 즉시 리셋되어 다시 사망하는 무한 루프 현상 발생했습니다.
 
-<br>
+<div style="margin-top: 40px;"></div>
 
 #### 근본 원인 분석: 두 종료 시스템의 충돌
 
@@ -380,15 +544,14 @@ Schola 측(`AutoResetType::SAME_STEP`)과 Python 측(RLlib) 사이에 에피소�
 
 결과적으로 사망한 에이전트는 Schola가 부활시키자마자 다시 사망하는 무한 루프에 빠지고, 그 루프가 Schola의 스텝 예산(step budget) 전체를 소비해버렸습니다. 생존한 에이전트들은 스텝 버짓이 고갈된 Schola의 멀티에이전트 동기화 장벽(step barrier)에 막혀 영원히 다음 액션을 받지 못하는 상태가 되었습니다.
 
-<br>
+<div style="margin-top: 40px;"></div>
 
 #### Goal
 시차를 두고 발생하는 에이전트 사망(Staggered Death) 상황에서도 시스템 중단 없는 안정적인 학습 환경 구축
 * 에이전트별 사망 시점이 달라도 전체 에피소드가 정상적으로 종료(__all__=True)되도록 보장.
 * 사망한 에이전트의 관측값이나 보상이 학습 데이터에 오염(NaN 발생 등)을 일으키지 않도록 필터링 시스템 구현.
 
-<br>
-
+<div style="margin-top: 40px;"></div>
 
 #### Solution: Python(통신 계층)과 C++(엔진 계층)의 이중 레이어 수정
 
@@ -399,7 +562,7 @@ No-op Padding: 사망한 에이전트의 빈자리에 무효 액션(noop)을 삽
 
 Data Filtering: Unreal로부터 받은 응답 중, 이미 사망한 에이전트의 관측값/보상/정보를 필터링하여 RLlib에 전달.
 
-<br>
+<div style="margin-top: 40px;"></div>
 
 **C++ (Unreal Plugin):**
 
@@ -407,7 +570,7 @@ Dead Agent Snapshot: Step() 실행 전 사망한 에이전트 상태를 기록�
 
 Action Filter: 사망한 에이전트의 액션이 물리 엔진 및 로직에 영향을 주지 않도록 제외 처리.
 
-<br>
+<div style="margin-top: 40px;"></div>
 
 #### Result
 * 단위 테스트 통과: 총 10종의 Standalone 테스트(No-op 생성, 패딩 프로토콜 등) 100% 통과.
@@ -430,8 +593,12 @@ Action Filter: 사망한 에이전트의 액션이 물리 엔진 및 로직에 �
 
 Windows 환경에서 Ray의 멀티 워커 아키텍처를 구동할 때 두 가지 문제가 발생했습니다. (1) 가중치 동기화 단계에서 Ray Learner 액터가 멈추는 현상, (2) 단일 UE5 인스턴스에 모든 워커가 연결을 시도하여 처리량이 병목되는 문제였습니다.
 
+<div style="margin-top: 40px;"></div>
+
 #### Goal
 UE5와의 안정적인 통신을 유지하면서, OS 의존성 없이 수평 확장 가능한 멀티 워커 학습 파이프라인 구축.
+
+<div style="margin-top: 40px;"></div>
 
 #### Solution
 
@@ -452,8 +619,11 @@ self.schola_env = ScholaEnv(
 
 **환경 변수 기반 오케스트레이션**: `NUM_SCHOLA_ENVS`, `NUM_WORKERS`, `NUM_ITERATIONS` 등을 환경 변수로 관리하여, 소스 코드 수정 없이 Docker Compose 설정만으로 학습 규모와 하이퍼파라미터를 동적으로 제어합니다.
 
+<div style="margin-top: 40px;"></div>
+
 #### Result
-UE5 인스턴스와 Python 워커를 독립적으로 수평 확장할 수 있는 구조가 완성되었습니다. Docker 기반 파이프라인 도입으로 로컬 환경 의존성을 완전히 제거했으며, Docker Compose 파일 교체만으로 신속한 **하이퍼파라미터 스윕(Hyperparameter Sweep)**을 실행할 수 있게 되었습니다.
+
+UE5 인스턴스와 Python 워커를 독립적으로 수평 확장할 수 있는 구조가 완성되었습니다. Docker 기반 파이프라인 도입으로 로컬 환경 의존성을 완전히 제거했으며, Docker Compose 파일 교체만으로 신속한 **하이퍼파라미터 스윕(Hyperparameter Sweep)** 을 실행할 수 있게 되었습니다.
 
 
 
@@ -461,16 +631,3 @@ UE5 인스턴스와 Python 워커를 독립적으로 수평 확장할 수 있는
 ---
 
 ## 결과 (Results)
-본 프로젝트는 셀프플레이(Self-Play) 방식으로 학습을 진행했습니다. 고정된 규칙 기반 AI를 상대하는 것이 아니라, 양 팀이 서로의 전략에 반응하며 함께 진화하는 구조입니다. 이는 기술적으로 훨씬 높은 난이도를 요구하는데, 상대방이 고정된 목표(fixed target)가 아니라 끊임없이 변화하는 이동 목표(moving target)이기 때문입니다.
-
-
-
-{{< img src="/images/project1/reward.png" 
-        alt="" 
-        class="max-w-4xl" 
-        caption="그림 7. Reward" >}}
-
-{{< img src="/images/project1/klenvf.png" 
-        alt="" 
-        class="max-w-4xl" 
-        caption="그림 8. Kl, Entorpy, VF explained" >}}
