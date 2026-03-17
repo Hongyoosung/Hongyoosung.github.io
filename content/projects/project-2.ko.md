@@ -23,7 +23,7 @@ math: true
 {{< img src="/images/project2/main.png" 
         alt="메인 아키텍처" 
         class="max-w-2xl" 
-        caption="그림 1. 3계층 프레임워크 구조" >}}
+        caption="Fig 1. 3계층 프레임워크 구조" >}}
 
 ---
 
@@ -50,10 +50,10 @@ math: true
 
 
 {{< img-grid 
-    src1="/images/project2/statenode.png" cap1="그림 2. 액션 선택 과정. 에이전트는 선택된 행동의 After-effect를 Current State로 갖는다."
+    src1="/images/project2/statenode.png" cap1="Fig 2. 액션 선택 과정. 에이전트는 선택된 행동의 After-effect를 Current State로 갖는다."
     class1="w-3/4" 
     
-    src2="/images/project2/stategraph.png" cap2="그림 3. State Space Graph"
+    src2="/images/project2/stategraph.png" cap2="Fig 3. State Space Graph"
     
     
     class="max-w-full" 
@@ -101,7 +101,7 @@ $$U_{final} = \max(w_1 \cdot U_1, w_2 \cdot U_2, \dots, w_n \cdot U_n)$$
 {{< img src="/images/project2/graph.png" 
         alt="유틸리티 그래프" 
         class="max-w-3xl" 
-        caption="그림 4. 정규화와 미세 환경 변화 반응 그래프" >}}
+        caption="Fig 4. 정규화와 미세 환경 변화 반응 그래프" >}}
 
 <br>
 
@@ -128,9 +128,9 @@ public abstract class GOBTEvaluatorSO : ScriptableObject
 
 
 {{< img-grid-3
-    src1="/images/project2/unity1.png" cap1="그림 5. Behavior Designer 내에 배치된 커스텀 플래너 노드" class1="w-full"
-    src2="/images/project2/action.png" cap2="그림 6. 사전조건/사후효과가 정의된 액션 클래스의 인스펙터 창" class2="w-3/4"
-    src3="/images/project2/planner.png" cap3="그림 7. 커스텀 플래너 노드에서 목표 상태와 평가 상태변수를 설정하는 인스펙터 창" class3="w-1/2"
+    src1="/images/project2/unity1.png" cap1="Fig 5. Behavior Designer 내에 배치된 커스텀 플래너 노드" class1="w-full"
+    src2="/images/project2/action.png" cap2="Fig 6. 사전조건/사후효과가 정의된 액션 클래스의 인스펙터 창" class2="w-3/4"
+    src3="/images/project2/planner.png" cap3="Fig 7. 커스텀 플래너 노드에서 목표 상태와 평가 상태변수를 설정하는 인스펙터 창" class3="w-1/2"
     class="max-w-full" 
 >}}
 
@@ -173,8 +173,8 @@ public IEnumerator PlanCoroutine(PlanRequest request)
 ```
 
 {{< img-grid 
-    src1="/images/project2/before.png" cap1="그림 8. 기본 방식(블로킹 발생)"
-    src2="/images/project2/after.png" cap2="그림 9. 코루틴 시분할 방식"
+    src1="/images/project2/before.png" cap1="Fig 8. 기본 방식(블로킹 발생)"
+    src2="/images/project2/after.png" cap2="Fig 9. 코루틴 시분할 방식"
 
     class="max-w-full" 
 >}}

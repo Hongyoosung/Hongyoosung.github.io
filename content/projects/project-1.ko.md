@@ -55,7 +55,6 @@ Schola 플러그인을 통해 Unreal Engine 5의 강화학습 환경과 외부 �
 
 
 
-
 ---
 
 ## 기술 스택 (Tech Stack)
@@ -90,6 +89,10 @@ DynamicEQS의 주요 클래스는 4가지로, **환경**, **에이전트**, **�
         class="max-w-full" 
         caption="Fig 2. 플러그인 계층 구조" >}}
 
+{{< img src="/images/project1/flow2.png" 
+        alt="" 
+        class="max-w-full" 
+        caption="Fig 3. 학습/추론 런타임 데이터 플로우" >}}
 
 ---
 
@@ -104,10 +107,18 @@ DynamicEQS의 주요 클래스는 4가지로, **환경**, **에이전트**, **�
 3. `UDEScholaAgent` 컴포넌트에서 `Actuator`로 `UDETacticalParameterActuator`를 지정합니다.
 
 
-{{< img src="/images/project1/flow2.png" 
-        alt="" 
-        class="max-w-full" 
-        caption="Fig 3. 학습/추론 런타임 데이터 플로우" >}}
+{{< img-grid-scaler
+    src1="/images/project1/eqs1.png" 
+    cap1="Fig 3. DynamicEQSExecutor 컴포넌트"
+    class1="w-full" 
+    
+    src2="/images/project1/eqs2.png" 
+    cap2="Fig 4. EQS 에셋 구성"
+    class2="w-3/4" 
+>}}
+
+
+
 
 
 ```cpp
@@ -400,7 +411,7 @@ TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 
 #### Gameplay Tag & BT 태스크 연동
 
-`BTTask_DEAttackAbility` · `BTTask_DEHealAbility` 양쪽 모두 내부 구현이 아닌 **Gameplay Tag 조회**를 통해 능력을 활성화합니다. Behavior Tree는 능력 교체·파라미터 변경에 완전히 무관하며, 풀오토 공격은 `TickTask`에서 매 프레임 재활성화하는 방식으로 구현됩니다.
+`BTTask_DEAttackAbility` · `BTTask_DEHealAbility` 양쪽 모두 내부 구현이 아닌 **Gameplay Tag 조회**를 통해 능력을 활성화합니다. Behavior Tree는 능력 교체·파라미터 변경에 완전히 무관합니다.
 
 {{< img src="/images/project1/bt.png"
         alt=""
@@ -527,7 +538,7 @@ SCHOLA_AVAILABLE = True
 {{< img src="/images/project1/problem2.png" 
         alt="" 
         class="max-w-full" 
-        caption="그림 5. 프리징 현상의 원인과 해결" >}}
+        caption="Fig 5. 프리징 현상의 원인과 해결" >}}
 
 * **에피소드 멈춤(Episode Freeze)**: 특정 에이전트가 먼저 사망할 경우, RLlib은 해당 에이전트의 액션을 전송하지 않지만 Unreal Engine Schola는 모든 에이전트의 액션을 기다리며 대기 상태에 빠지는 통신 불일치 발생했습니다.
 
@@ -584,7 +595,7 @@ Action Filter: 사망한 에이전트의 액션이 물리 엔진 및 로직에 �
 {{< img src="/images/project1/pr.png" 
         alt="" 
         class="max-w-3xl" 
-        caption="그림 6. Pull Request" >}}
+        caption="Fig 6. Pull Request" >}}
 
 ---
 

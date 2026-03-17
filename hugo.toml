@@ -124,3 +124,10 @@ defaultContentLanguage = 'en'
         [markup.goldmark.extensions.passthrough.delimiters]
           block = [['$$', '$$']]
           inline = [['$', '$']]
+
+
+[imaging]
+  # 품질을 90~100 사이로 설정 (100은 무손실에 가깝지만 용량이 커집니다)
+  quality = 90
+  # 리사이징 시 사용할 알고리즘 (Box보다 Lanczos나 CatmullRom이 화질이 좋습니다)
+  resampleFilter = "Lanczos"

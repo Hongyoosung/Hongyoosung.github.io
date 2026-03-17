@@ -42,10 +42,10 @@ math: true
 * **Facade 패턴을 통한 인터페이스 통합**: 공격, 체력 확인, 팀 식별 등 복잡한 내부 로직을 단일 인터페이스로 캡슐화했습니다. 외부 시스템은 개체의 상세 구현을 몰라도 상위 레이어에서 간편하게 데이터에 접근할 수 있습니다.
 
 {{< img-grid 
-    src1="/images/project3/damage_archi.png" cap1="그림 1. Unit 구조 UML"
+    src1="/images/project3/damage_archi.png" cap1="Fig 1. Unit 구조 UML"
     class1="w-3xl"
 
-    src2="/images/project3/damage_flow.png" cap2="그림 2. 데미지 인터페이스 흐름도"
+    src2="/images/project3/damage_flow.png" cap2="Fig 2. 데미지 인터페이스 흐름도"
     class1="w-2xl"
 
     class="max-w-full" 
@@ -64,7 +64,7 @@ math: true
 {{< img src="/images/project3/bt.png" 
         alt="Behavior Tree Graph" 
         class="max-w-2xl" 
-        caption="그림 3. 아군/적군 공용 베이스 행동 트리 구조" >}}
+        caption="Fig 3. 아군/적군 공용 베이스 행동 트리 구조" >}}
 
 ---
 

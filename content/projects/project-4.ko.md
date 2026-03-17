@@ -22,7 +22,7 @@ math: true
 {{< img src="/images/project3/overview.png" 
         alt="개요 이미지" 
         class="max-w-3xl" 
-        caption="그림 1. 아키텍처 다이어그램" >}}
+        caption="Fig 1. 아키텍처 다이어그램" >}}
 
 ---
 ## 기술 스택 (Tech Stack)
@@ -55,7 +55,7 @@ math: true
 {{< img src="/images/project4/vonnet.png" 
         alt="본넷 이미지" 
         class="max-w-xl" 
-        caption="그림 2. VonNet에서 확인된 디바이스의 DID와 공개키" >}}
+        caption="Fig 2. VonNet에서 확인된 디바이스의 DID와 공개키" >}}
 
 
 ---
@@ -67,7 +67,7 @@ math: true
 
 * **보안 아키텍처**: 데이터 전송 구간 내 위변조를 원천 차단하는 DPKI(Decentralized PKI) 구조를 통해 데이터의 신뢰성을 확보했습니다.
 
-{{< side-by-side src="/images/project4/sensor.png" caption="그림 3. 실험에 사용된 센서" >}}
+{{< side-by-side src="/images/project4/sensor.png" caption="Fig 3. 실험에 사용된 센서" >}}
 
 | 센서 종류 | 토픽 |
 | :--- | :---: |
@@ -89,7 +89,7 @@ math: true
 {{< img src="/images/project4/packet.png" 
         alt="패킷 이미지" 
         class="max-w-xl" 
-        caption="그림 4. 사용된 메시지 포멧" >}}
+        caption="Fig 4. 사용된 메시지 포멧" >}}
 
 
 ---
@@ -105,7 +105,7 @@ math: true
 {{< img src="/images/project4/unity.png" 
         alt="유니티 이미지" 
         class="max-w-md" 
-        caption="그림 5. 유니티 환경" >}}
+        caption="Fig 5. 유니티 환경" >}}
 
 ---
 
@@ -118,10 +118,10 @@ math: true
 * **Result**: 보안 레이어 추가 후에도 순수 MQTT 대비 추가 지연 시간을 4.3ms 이내로 최적화하며 60 FPS 환경 사수.
 
 {{< img-grid 
-    src1="/images/project4/case1.png" cap1="그림 6. 최적화 전(블로킹 발생)"
+    src1="/images/project4/case1.png" cap1="Fig 6. 최적화 전(블로킹 발생)"
     class1="w-2/4" 
 
-    src2="/images/project4/case2.png" cap2="그림 7. 최적화 후(비동기 처리)"
+    src2="/images/project4/case2.png" cap2="Fig 7. 최적화 후(비동기 처리)"
     class1="w-3/4" 
 
     class="max-w-full" 

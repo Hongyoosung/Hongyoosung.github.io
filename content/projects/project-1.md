@@ -1,13 +1,8 @@
 ---
-
 title: "Dynamic EQS: 
-
-
-
  Dynamic Optimization System for EQS Weights via RL Models"
 description: "Building an AWS Cloud-based Multi-Agent Parallel Reinforcement Learning Pipeline using Schola and Ray RLlib"
-
-## weight: 1
+weight: 1
 translationKey: "project-1"
 duration: "2025.08 ~ 2026.03"
 team_size: "1 Person"
