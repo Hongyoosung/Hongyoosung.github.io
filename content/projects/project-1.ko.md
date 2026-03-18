@@ -11,7 +11,7 @@ github: "https://github.com/yoosunghong/GOBTv2.0"
 math: true
 ---
 
----
+<hr style="border: 0; height: 1px; background: #b3b3b3;">
 
 ## 개요 (Overview)
 
@@ -21,7 +21,7 @@ math: true
 본 프로젝트에서는 팀 기반 거점 점령전에서의 전략적 포지셔닝 최적화 환경을 대상으로 해당 플러그인을 활용하였습니다.
 
 
----
+<hr style="border: 0; height: 1px; background: #b3b3b3;">
 
 ## 시스템 아키텍처 (System Architecture)
 
@@ -32,7 +32,7 @@ math: true
         caption="Fig 1. 시스템 아키텍처 및 계층적 포지셔닝 워크플로우" >}}
         
 
----
+<hr style="border: 0; height: 1px; background: #b3b3b3;">
 
 ## 학습 환경 (Training Environment)
 
@@ -55,7 +55,7 @@ Schola 플러그인을 통해 Unreal Engine 5의 강화학습 환경과 외부 �
 
 
 
----
+<hr style="border: 0; height: 1px; background: #b3b3b3;">
 
 ## 기술 스택 (Tech Stack)
 
@@ -71,7 +71,7 @@ Schola 플러그인을 통해 Unreal Engine 5의 강화학습 환경과 외부 �
 | **Monitoring** | TensorBoard |
 
 
----
+<hr style="border: 0; height: 1px; background: #b3b3b3;">
 
 
 ## 주요 기능 (Key Features)
@@ -96,7 +96,9 @@ DynamicEQS의 주요 클래스는 4가지로, **환경**, **에이전트**, **�
 
 ---
 
-#### EQS 가중치 주입 (ApplyWeightsToRequest)
+<div style="margin-top: 40px;"></div>
+
+<font size="4">**EQS 가중치 주입**</font>
 
 정책 네트워크의 출력(7-dim Box action)이 실제 EQS 쿼리 파라미터로 주입되는 전체 흐름은 다음과 같습니다.
 
@@ -137,7 +139,9 @@ void UDynamicEQSExecutor::ApplyWeightsToRequest(FEnvQueryRequest& Request) const
 
 ---
 
-#### FInstancedStruct를 활용한 게임 로직 디커플링
+<div style="margin-top: 40px;"></div>
+
+<font size="4">**FInstancedStruct를 활용한 게임 로직 디커플링**</font>
 
 플러그인이 게임 전용 타입(`AssignedBaseIndex` 등)을 직접 멤버로 갖지 않도록, `FInstancedStruct`로 외부 파라미터를 불투명하게 보관합니다.
 
@@ -155,12 +159,16 @@ if (Ctx)
 
 이 패턴 덕분에 플러그인은 게임 헤더를 전혀 포함하지 않으며, 다른 프로젝트에서 그대로 재사용할 수 있습니다.
 
----
+<hr style="border: 0; height: 1px; background: #b3b3b3;">
 
 
 ### 2. 관측 공간 및 전략 조건부 보상 설계 (Strategy-Conditioned Reward Shaping)
 
-**관측 공간**
+
+<div style="margin-top: 40px;"></div>
+
+<font size="4">**관측 공간**</font>
+
 
 `FDEObservationV2::ToFlatArray()`가 생성하는 170-dim 엔티티 중심(Entity-Centric) 벡터입니다. 아군·적·거점을 고정 크기 슬롯 토큰으로 인코딩하고, 패딩 마스크를 별도로 제공해 Python MultiheadAttention이 유효 엔티티만 처리하도록 합니다.
 
@@ -187,7 +195,10 @@ if (Ctx)
 
 ---
 
-#### 보상 구조 개요
+
+<div style="margin-top: 40px;"></div>
+
+<font size="4">**보상 구조 개요**</font>
 
 
 > **돌격: 거점의 확보**
@@ -253,7 +264,7 @@ if cached_target.health < threshold and agent attempted kill:
 
 
 
----
+<hr style="border: 0; height: 1px; background: #b3b3b3;">
 
 
 
@@ -261,11 +272,17 @@ if cached_target.health < threshold and agent attempted kill:
 
 대규모 병렬 강화학습을 안정적으로 구동하기 위해, Python 학습 환경 전체를 Linux Docker 컨테이너로 패키징하고 AWS EC2 위에서 여러 UE5 인스턴스와 동시에 연결되는 파이프라인을 구축했습니다.
 
-#### 컨테이너화 전략
+<div style="margin-top: 40px;"></div>
+
+<font size="4">**컨테이너화 전략**</font>
+
 
 Python 학습 스크립트(Ray RLlib, Schola 등 의존성 포함)를 Linux 컨테이너 이미지로 빌드합니다. Windows 환경에서 Ray의 멀티프로세스 생성 방식(`spawn`/`fork`)이 충돌하던 문제를 Linux 컨테이너로 전환하면서 원천적으로 해결했습니다. 패키징된 UE5 빌드는 별도 Linux 인스턴스에서 실행되며 컨테이너와 gRPC로 통신합니다.
 
-#### 동적 포트 라우팅
+
+<div style="margin-top: 40px;"></div>
+
+<font size="4">**동적 포트 라우팅**</font>
 
 각 RLlib env-runner가 독립된 UE5 인스턴스에 연결되도록, 워커 인덱스 기반의 포트 자동 배정 로직을 구현했습니다.
 
@@ -286,7 +303,9 @@ RLlib이 여러 env-runner를 생성할 때, 각 워커는 `base_port + worker_i
 
 ---
 
-#### 환경 변수 기반 오케스트레이션
+<div style="margin-top: 40px;"></div>
+
+<font size="4">**환경 변수 기반 오케스트레이션**</font>
 
 학습 규모와 하이퍼파라미터를 소스 코드 수정 없이 Docker Compose 설정만으로 제어합니다.
 
@@ -302,33 +321,78 @@ NUM_ITERATIONS        = int(os.environ.get('NUM_ITERATIONS', 100))
 
 ---
 
-#### 학습 모니터링 (TensorBoard)
+<div style="margin-top: 40px;"></div>
 
-Ray RLlib이 각 이터레이션의 보상, 정책 손실, KL 발산, Entropy 등을 자동으로 TensorBoard에 기록합니다.
+<font size="4">**학습 모니터링 (TensorBoard)**</font>
+
+본 프로젝트는 PPO(Proximal Policy Optimization) 알고리즘을 활용한 셀프플레이(Self-play) 기반 강화학습 모델의 훈련 결과입니다. 총 2.4M(240만) 타임스텝에 걸쳐 학습을 진행하였으며, 에이전트가 탐험(Exploration)과 활용(Exploitation)의 균형을 유지하며 최적의 정책(Policy)으로 안정적으로 수렴하는 성공적인 훈련 궤적을 달성했습니다.
 
 {{< img src="/images/project1/reward.png"
         alt=""
         class="max-w-3xl"
-        caption="Fig 7. Reward" >}}
+        caption="Fig 7. reward" >}}
 
-{{< img src="/images/project1/klenvf.png"
+{{< img src="/images/project1/value.png"
         alt=""
         class="max-w-3xl"
-        caption="Fig 8. KL, Entropy, VF Explained" >}}
+        caption="Fig 8. vf explained, entropy, kl" >}}
 
----
+{{< img src="/images/project1/loss.png"
+        alt=""
+        class="max-w-3xl"
+        caption="Fig 9. loss" >}}
+
+
+<div style="margin-top: 40px;"></div>
+
+<font size="4">**핵심 성과 지표 (KPI) 분석**</font>
+
+* **견고한 보상 획득 및 수렴 (Reward Metrics)**: 에피소드 평균 보상(reward/episode_reward_mean)이 학습 초기 부근에서 우상향한 후 평탄화(Plateau) 단계에 진입했습니다. 특히 최소 보상(reward/episode_reward_min) 지표 역시 동반 상승하여 우연한 요행이 아닌, 최악의 시나리오에서도 높은 성능을 보장하는 정책을 학습했음을 방증합니다.
+
+* **신뢰 영역 기반의 정책 안정성 (Policy Stability)**: kl/value가 낮고 안정적이어서 정책이 급격히 변하지 않고 제어되고 있음을 보여줍니다. 동시에 entropy/value가 서서히 감소하는 궤적을 보여 에이전트가 학습 초기 다양한 전략을 탐험하다가 점진적으로 최선의 행동에 대한 확신을 가지고 최적화 과정을 거쳤음을 알 수 있습니다.
+
+<div style="margin-top: 40px;"></div>
+
+<font size="4">**가치 네트워크(Critic) 성능 및 손실 지표에 대한 고찰**</font>
+
+* **높은 상태 가치 예측력**: vf/explained_var 지표가 0.87이라는 수치를 기록하며 Critic 네트워크의 성능이 안정적으로 유지되었습니다. 에이전트가 현재 직면한 상태(State)의 유불리와 미래 기대 보상을 정확하게 예측하고 있음을 보여줍니다.
+
+* **보상 스케일에 따른 가치 손실(Value Loss) 해석**: 학습 중 losses/vf_loss가 우상향하는 추세를 보이나, 에피소드 평균 보상의 절대적인 스케일이 크게 증가함에 따라(0 → 60,000), 가치 네트워크가 예측해야 하는 타겟 값의 범위가 넓어져 발생하는 현상으로 관측됩니다. 
+
+거점 점령 등 주요 희소 보상(Sparse Reward)이 환경에 미치는 영향력을 보존하기 위해 Reward Clamping을 제거하였는데, 이로 인해 단일 이벤트의 높은 보상 값이 가치 함수(Value Function)의 회귀 목표치(Target)를 밀어 올리면서 절대적인 오차 규모가 함께 커진 것으로 분석됩니다.
+
+그럼에도 앞서 언급한 vf/explained_var 지표를 통해 Critic 네트워크는 커진 스케일 하에서도 제 역할을 완벽히 수행하고 있음을 검증했습니다.
+
+<div style="margin-top: 40px;"></div>
+
+<font size="4">**훈련 조기 종료 (Early Stopping) 및 자원 최적화 결정**</font>
+
+학습 모델이 약 2.4M 스텝에 도달한 시점에서, 다음의 판단 하에 훈련을 종료했습니다.
+
+* **학습률 스케줄러 소진**: 선형 감소(Linear Decay) 방식의 스케줄러를 적용한 결과, 현재 스텝에서 학습률(lr/value)이 0에 도달했습니다.
+
+* **성능 임계점 도달**: reward 지표가 완만한 수렴 곡선을 그리며 최대치에 도달했습니다.
+
+
+
+<hr style="border: 0; height: 1px; background: #b3b3b3;">
+
+
 
 ### 4. GAS 기반 전투 능력 시스템 (Gameplay Ability System Integration)
 
 전투 로직(공격·힐링)을 UE5 **Gameplay Ability System(GAS)** 으로 설계하여, AI 에이전트의 능력 실행·쿨다운·속성 관리를 표준화된 데이터 주도 파이프라인으로 통합했습니다.
 
-#### 핵심 설계 원칙
+<div style="margin-top: 40px;"></div>
+
+<font size="4">**핵심 설계 원칙**</font>
+
 
 **Gameplay Tag** 기반 조회(`TryActivateAbilitiesByTag`)로 Behavior Tree 태스크와 . 이를 통해 Behavior Tree 태스크가 구체적인 구현 클래스를 몰라도 능력을 트리거할 수 있어 능력 교체·확장이 코드 수정 없이 가능합니다.
 
 <div style="margin-top: 40px;"></div>
 
-#### 속성 관리: `UDEAttributeSet`
+<font size="4">**속성 관리: `UDEAttributeSet`**</font>
 
 | 속성 | 종류 | 설명 |
 | --- | --- | --- |
@@ -362,7 +426,7 @@ if (Data.EvaluatedData.Attribute == GetDamageAttribute())
 
 ---
 
-#### 공격 능력: `UDEGA_Attack`
+<font size="4">**공격 능력: `UDEGA_Attack`**</font>
 
 - **서버 전용 실행** (`NetExecutionPolicy::ServerOnly`): AI 전용 능력으로 클라이언트 예측 불필요
 - 활성화 시 `State.Dead` 태그 보유 여부를 차단 조건으로 검사
@@ -392,7 +456,7 @@ void UDEGA_Attack::ActivateAbility(...)
 
 ---
 
-#### 힐링 능력: `UDEGA_Heal`
+<font size="4">**힐링 능력: `UDEGA_Heal`**</font>
 
 - `FindNearestInjuredAlly()`로 팀 내 최저 체력 아군을 자동 선택 (5스텝 캐시와 독립적으로 동작)
 - `SetByCaller` 매그니튜드(`Data.Healing` 태그)로 힐량을 런타임에 동적 지정
@@ -409,7 +473,7 @@ TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 
 ---
 
-#### Gameplay Tag & BT 태스크 연동
+<font size="4">**Gameplay Tag & BT 태스크 연동**</font>
 
 `BTTask_DEAttackAbility` · `BTTask_DEHealAbility` 양쪽 모두 내부 구현이 아닌 **Gameplay Tag 조회**를 통해 능력을 활성화합니다. Behavior Tree는 능력 교체·파라미터 변경에 완전히 무관합니다.
 
@@ -418,19 +482,28 @@ TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
         class="max-w-3xl"
         caption="Fig 9. Behavior Tree" >}}
 
----
+
+
+<hr style="border: 0; height: 1px; background: #b3b3b3;">
+
+
 
 ### 5. 듀얼 모드 아키텍처 (Dual-Mode Architecture)
 
 모든 주요 컴포넌트는 단일 UE5 바이너리 내에서 **학습 모드(Training)** 와 **추론 모드(Inference)** 를 동시에 지원하도록 설계했습니다. 학습이 끝난 ONNX 모델을 별도의 빌드 없이 동일한 UE5 환경에서 즉시 실행하고 검증할 수 있습니다.
 
-#### 핵심 설계: `UDynamicEQSAgentComponent`
+<div style="margin-top: 40px;"></div>
+
+<font size="4">**핵심 설계: `UDynamicEQSAgentComponent`**</font>
+
 
 에이전트 컴포넌트 `UDynamicEQSAgentComponent`가 두 모드를 하나의 인터페이스로 추상화합니다. `AgentMode` 프로퍼티 하나로 행동 파이프라인 전체가 분기됩니다.
 
+
 <div style="margin-top: 40px;"></div>
 
-#### 모드 비교
+<font size="4">**#### 모드 비교**</font>
+
 
 | 항목 | Training Mode | Inference Mode |
 |---|---|---|
@@ -440,9 +513,11 @@ TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 | **보상 계산** | `UDERewardSubsystem` 매 스텝 | 없음 |
 | **에피소드 관리** | Schola `AutoResetType::SAME_STEP` | 레벨 재시작 |
 
+
 <div style="margin-top: 40px;"></div>
 
-#### 모드별 실행 분기: `BeginPlay` & `PerformTacticalAction()`
+<font size="4">**모드별 실행 분기: `BeginPlay` & `PerformTacticalAction()`**</font>
+
 
 ```cpp
 // DynamicEQSAgentComponent.cpp — BeginPlay에서 모드 분기
@@ -487,66 +562,29 @@ void ADECharacter::PerformTacticalAction()
 }
 ```
 
+<div style="margin-top: 60px;"></div>
 
----
+<hr style="border: 0; height: 1px; background: #b3b3b3;">
 
 ## 기술적 난제 및 해결 전략 (Problem Solving)
 
 
-### Problem 1: UE5 환경과 Rllib 환경의 통신 표준 프레임워크의 필요성
-
-기존 UE5에서 제공하는 강화학습 프레임워크인 **Learning Agent**는 UE5 로컬에서만 동작하기에 Python Ray Rllib의 분산 강화학습이라는 이점을 활용할 수 없었습니다.
-
-<div style="margin-top: 40px;"></div>
-
-#### Goal
-UE5와 Python(Ray RLlib) 간의 고성능 강화학습 파이프라인을 구축하기 위해 안정적인 통신 수단과 표준 포멧이 포함된 프레임워크의 확보.
-
-<div style="margin-top: 40px;"></div>
-
-#### Solution
-
-AMD의 오픈소스 라이브러리 [**Schola**](https://github.com/GPUOpen-LibrariesAndSDKs/Schola)를 프레임워크로 채택하였으며 아래와 같은 이점을 얻었습니다.
-
-> #### Schola
-> The Schola project is an effort to build a toolkit/plugin for controlling Objects in Unreal with Reinforcement Learning. It provides tools to help the user create Environments, define Agents, connect to python based RL Frameworks (e.g. Gym, RLLib or Stable Baselines 3), and power NPCs with RL during games.
-
-* **표준 포멧 및 환경 구성**: Schola는 UE5에서 RL을 위한 관측(UBoxObserver)과 액션(UBoxActuator) 인터페이스를 제공하며 에이전트를 위한 전용 컨트롤러(AAbstractTrainer)와 Rllib와의 주요 통신 인터페이스(AStaticScholaEnvironment)를 통해 직관적인 RL 환경 구성을 가능하게 합니다.
-
-
-* **래핑 및 gRPC 통신 브릿지:** Schola는 UE5 내의 데이터를 Python의 gym.Env 형태로 래핑하고 gRPC 프로토콜 기반의 직렬화를 통해 저지연으로 Rllib 환경과 통신하는 API를 제공합니다.
-
-<div style="margin-top: 40px;"></div>
-
-#### Result
-오픈소스 라이브러리 Schola 프레임워크에서 제공하는 인터페이스를 통해 직접적인 래퍼 환경을 구축하지 않고도 UE5와 Python Ray Rllib의 통신을 성공적으로 완료하였습니다. 이를 통해 개발 효율을 대폭 향상시켰습니다.
-
-
-```python
-from ray.rllib.env.multi_agent_env import MultiAgentEnv
-RLLIB_AVAILABLE = True
-
-from schola.core.env import ScholaEnv, AutoResetType
-from schola.core.unreal_connections.editor_connection import UnrealEditorConnection
-SCHOLA_AVAILABLE = True
-```
-
----
-
-### Problem 2: 멀티 에이전트 강화학습 환경(Schola + RLlib)에서의 에이전트 개별 사망 처리 결함
+### Problem 1: 멀티 에이전트 강화학습 환경(Schola + RLlib)에서의 에이전트 개별 사망 처리 결함
 
 {{< img src="/images/project1/problem2.png" 
         alt="" 
         class="max-w-full" 
         caption="Fig 5. 프리징 현상의 원인과 해결" >}}
 
-* **에피소드 멈춤(Episode Freeze)**: 특정 에이전트가 먼저 사망할 경우, RLlib은 해당 에이전트의 액션을 전송하지 않지만 Unreal Engine Schola는 모든 에이전트의 액션을 기다리며 대기 상태에 빠지는 통신 불일치 발생했습니다.
+**에피소드 멈춤(Episode Freeze)**: 특정 에이전트가 먼저 사망할 경우, RLlib은 해당 에이전트의 액션을 전송하지 않지만 Unreal Engine Schola는 모든 에이전트의 액션을 기다리며 대기 상태에 빠지는 통신 불일치 발생했습니다.
 
-* **부활 루프(Death-resurrection loop)**: SAME_STEP 모드에서 사망한 에이전트가 유효한 상태 없이 즉시 리셋되어 다시 사망하는 무한 루프 현상 발생했습니다.
+**부활 루프(Death-resurrection loop)**: SAME_STEP 모드에서 사망한 에이전트가 유효한 상태 없이 즉시 리셋되어 다시 사망하는 무한 루프 현상 발생했습니다.
 
-<div style="margin-top: 40px;"></div>
 
-#### 근본 원인 분석: 두 종료 시스템의 충돌
+
+---
+
+<font size="4">**근본 원인 분석: 두 종료 시스템의 충돌**</font>
 
 Schola 측(`AutoResetType::SAME_STEP`)과 Python 측(RLlib) 사이에 에피소드 종료 신호가 서로 모순되는 상태였습니다.
 
@@ -555,35 +593,33 @@ Schola 측(`AutoResetType::SAME_STEP`)과 Python 측(RLlib) 사이에 에피소�
 
 결과적으로 사망한 에이전트는 Schola가 부활시키자마자 다시 사망하는 무한 루프에 빠지고, 그 루프가 Schola의 스텝 예산(step budget) 전체를 소비해버렸습니다. 생존한 에이전트들은 스텝 버짓이 고갈된 Schola의 멀티에이전트 동기화 장벽(step barrier)에 막혀 영원히 다음 액션을 받지 못하는 상태가 되었습니다.
 
-<div style="margin-top: 40px;"></div>
+---
 
-#### Goal
+<font size="4">**Goal**</font>
+
 시차를 두고 발생하는 에이전트 사망(Staggered Death) 상황에서도 시스템 중단 없는 안정적인 학습 환경 구축
 * 에이전트별 사망 시점이 달라도 전체 에피소드가 정상적으로 종료(__all__=True)되도록 보장.
 * 사망한 에이전트의 관측값이나 보상이 학습 데이터에 오염(NaN 발생 등)을 일으키지 않도록 필터링 시스템 구현.
 
-<div style="margin-top: 40px;"></div>
+---
 
-#### Solution: Python(통신 계층)과 C++(엔진 계층)의 이중 레이어 수정
+<font size="4">**Solution**</font>
+
+**Python(통신 계층)과 C++(엔진 계층)의 이중 레이어 수정**
+
+Python (Schola Wrapper):
+* No-op Padding: 사망한 에이전트의 빈자리에 무효 액션(noop)을 삽입하여 Unreal이 항상 전체 에이전트의 액션을 수신하도록 보정.
+* Data Filtering: Unreal로부터 받은 응답 중, 이미 사망한 에이전트의 관측값/보상/정보를 필터링하여 RLlib에 전달.
 
 
-#### Python (Schola Wrapper):
+C++ (Unreal Plugin):
+* Dead Agent Snapshot: Step() 실행 전 사망한 에이전트 상태를 기록하고, 실행 후 터미널 플래그(Terminal Flags)를 재복구하여 상태 덮어쓰기 및 부활 루프 방지.
+* Action Filter: 사망한 에이전트의 액션이 물리 엔진 및 로직에 영향을 주지 않도록 제외 처리.
 
-No-op Padding: 사망한 에이전트의 빈자리에 무효 액션(noop)을 삽입하여 Unreal이 항상 전체 에이전트의 액션을 수신하도록 보정.
+---
 
-Data Filtering: Unreal로부터 받은 응답 중, 이미 사망한 에이전트의 관측값/보상/정보를 필터링하여 RLlib에 전달.
+<font size="4">**Result**</font>
 
-<div style="margin-top: 40px;"></div>
-
-**C++ (Unreal Plugin):**
-
-Dead Agent Snapshot: Step() 실행 전 사망한 에이전트 상태를 기록하고, 실행 후 터미널 플래그(Terminal Flags)를 재복구하여 상태 덮어쓰기 및 부활 루프 방지.
-
-Action Filter: 사망한 에이전트의 액션이 물리 엔진 및 로직에 영향을 주지 않도록 제외 처리.
-
-<div style="margin-top: 40px;"></div>
-
-#### Result
 * 단위 테스트 통과: 총 10종의 Standalone 테스트(No-op 생성, 패딩 프로토콜 등) 100% 통과.
 
 * 학습 안정성 확보: 실제 Unreal 통합 환경에서 에피소드 정지 현상 해결 및 정상적인 에피소드 리셋 주기 확인.
@@ -597,21 +633,23 @@ Action Filter: 사망한 에이전트의 액션이 물리 엔진 및 로직에 �
         class="max-w-3xl" 
         caption="Fig 6. Pull Request" >}}
 
----
+
+<hr style="border: 0; height: 1px; background: #b3b3b3;">
 
 
-### Problem 3: 학습 환경 병렬화에 따른 환경 불안정 문제
+### Problem 2: 학습 환경 병렬화에 따른 환경 불안정 문제
 
 Windows 환경에서 Ray의 멀티 워커 아키텍처를 구동할 때 두 가지 문제가 발생했습니다. (1) 가중치 동기화 단계에서 Ray Learner 액터가 멈추는 현상, (2) 단일 UE5 인스턴스에 모든 워커가 연결을 시도하여 처리량이 병목되는 문제였습니다.
 
-<div style="margin-top: 40px;"></div>
+---
 
-#### Goal
+<font size="4">**Goal**</font>
+
 UE5와의 안정적인 통신을 유지하면서, OS 의존성 없이 수평 확장 가능한 멀티 워커 학습 파이프라인 구축.
 
-<div style="margin-top: 40px;"></div>
+---
 
-#### Solution
+<font size="4">**Solution**</font>
 
 **Docker 컨테이너화**: Python 학습 스크립트와 Ray RLlib 의존성 전체를 Linux Docker 이미지로 패키징했습니다. Windows의 `spawn`/`fork` 프로세스 생성 방식이 Ray와 충돌하던 문제를 컨테이너 레이어에서 원천적으로 차단했습니다.
 
@@ -630,15 +668,99 @@ self.schola_env = ScholaEnv(
 
 **환경 변수 기반 오케스트레이션**: `NUM_SCHOLA_ENVS`, `NUM_WORKERS`, `NUM_ITERATIONS` 등을 환경 변수로 관리하여, 소스 코드 수정 없이 Docker Compose 설정만으로 학습 규모와 하이퍼파라미터를 동적으로 제어합니다.
 
-<div style="margin-top: 40px;"></div>
+---
 
-#### Result
+<font size="4">**Result**</font>
 
 UE5 인스턴스와 Python 워커를 독립적으로 수평 확장할 수 있는 구조가 완성되었습니다. Docker 기반 파이프라인 도입으로 로컬 환경 의존성을 완전히 제거했으며, Docker Compose 파일 교체만으로 신속한 **하이퍼파라미터 스윕(Hyperparameter Sweep)** 을 실행할 수 있게 되었습니다.
 
 
+<hr style="border: 0; height: 1px; background: #b3b3b3;">
+
+
+### Problem 3: 스텝 속도와 에이전트 이동 간의 타이밍 불일치
+
+학습 환경에서 `AGymConnectorManager`의 `Tick()`이 매 프레임(60Hz+) `Connector->Step()`을 호출하여, EQS 이동이 완료되기 전에 다음 스텝이 실행되는 문제가 발생했습니다. 에이전트가 목적지에 도달하기 전에 새로운 EQS 목표 위치가 덮어써지면서 이동이 취소되어 목표 지점에 도달하지 못한 채 관측이 수집되면서 학습 데이터의 품질이 저하되었습니다.
+
+---
+
+<font size="4">**Goal**</font>
+
+스텝 주기를 에이전트의 EQS 기반 이동 완료 시간에 맞게 조율하여, 에이전트가 목적지까지 실제로 이동한 후 관측이 수집되도록 보장합니다.
+
+---
+
+<font size="4">**Solution**</font>
+
+**`AGymConnectorManager`를 오버라이드 대상으로 선택한 근거**
+
+Schola의 학습 루프 진입점 구조는 다음과 같습니다.
+
+```
+AGymConnectorManager::Tick()
+    └─ UAbstractGymConnector::Step()          ← 1회 학습 스텝
+           ├─ ResolveEnvironmentStateUpdate()  ← Python에서 액션 수신 (gRPC, ~10ms 블로킹)
+           ├─ HandleStep() / HandleReset()     ← 환경에 액션 적용
+           └─ SubmitState()                    ← 관측·보상 Python으로 전송
+```
+
+`UAbstractGymConnector::Step()`은 Python과의 전체 한 사이클을 원자적으로 처리하며, 내부에서 `ResolveEnvironmentStateUpdate()`가 gRPC 응답을 블로킹 대기합니다. 따라서 **스텝 호출 빈도를 제어하는 유일한 지점**은 `Step()`을 직접 호출하는 `AGymConnectorManager::Tick()`입니다. 커넥터 내부 구현을 수정하지 않고 오직 `Tick()` 오버라이드만으로 스텝 속도를 외부에서 제어할 수 있다고 생각했습니다.
+
+---
+
+**`ADEGymConnectorManager` 구현**
+
+`AGymConnectorManager`를 상속하는 커스텀 클래스 `ADEGymConnectorManager`를 작성하고, `AGymConnectorManager::Tick()` 대신 `AActor::Tick()`를 직접 호출하여 `Connector->Step()` 호출 빈도를 `StepInterval` 변수로 제어합니다.
+
+```cpp
+// DEGymConnectorManager.h — 에디터에서 스텝 간격 조정 가능
+UPROPERTY(EditAnywhere, Category = "Schola|Throttling",
+    meta = (ClampMin = "0.01", ClampMax = "10.0"))
+float StepInterval = 0.3f;  // 초 단위, 기본 2Hz
+```
+
+```cpp
+// DEGymConnectorManager.cpp — Tick 스로틀링 구현
+void ADEGymConnectorManager::Tick(float DeltaTime)
+{
+    // AGymConnectorManager::Tick 우회 — 직접 매 프레임 Step 호출 방지
+    AActor::Tick(DeltaTime);
+
+    if (!Connector) return;
+
+    // 연결 대기 단계: Step은 내부적으로 CheckForStart()만 실행, 블로킹 없음
+    if (Connector->IsNotStarted())
+    {
+        Connector->Step();
+        return;
+    }
+
+    // 실행 단계: StepInterval마다 1회 Step 호출
+    if (Connector->IsRunning())
+    {
+        // 에디터 백그라운드 전환 후 DeltaTime 급등으로 인한 버스트 스텝 방지
+        const float ClampedDelta = FMath::Min(DeltaTime, StepInterval);
+        StepAccumulator += ClampedDelta;
+        if (StepAccumulator >= StepInterval)
+        {
+            StepAccumulator = 0.0f;
+            Connector->Step();
+        }
+    }
+}
+```
+
+에디터 내 `BP_GymConnectorManager`의 부모 클래스를 `ADEGymConnectorManager`로 변경하는 것만으로 적용이 완료됩니다. `StepInterval`을 에디터 디테일 패널에서 값을 직접 조정할 수 있어 재빌드 없이 타이밍을 튜닝할 수 있습니다.
+
+<div style="margin-top: 40px;"></div>
+
+
+<font size="4">**Result**</font>
+
+`StepInterval = 0.3s` 기준으로 에이전트가 EQS 목적지에 완전히 도달한 뒤 다음 관측이 수집되어 학습 데이터 품질이 개선되었습니다. 에디터 백그라운드 전환 시 발생하던 `DeltaTime` 급등에 의한 버스트 스텝 역시 `FMath::Min(DeltaTime, StepInterval)` 클램핑으로 차단되었습니다. `StepInterval` 단일 변수로 학습 속도와 이동 완료율 사이의 트레이드오프를 재빌드 없이 조절할 수 있는 구조가 완성되었습니다.
 
 
 ---
 
 ## 결과 (Results)
+
