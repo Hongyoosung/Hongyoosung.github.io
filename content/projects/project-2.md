@@ -24,10 +24,29 @@ This project aims to develop a hierarchical AI framework using the Unity engine 
 
 
 
-{{< img src="/images/project2/main.png" 
-        alt="Main Architecture" 
-        class="max-w-2xl" 
-        caption="Figure 1. 3-Layer Framework Structure" >}}
+{{< side-by-side src="/images/project2/main.png" caption="Figure 1. 3-Layer Framework Structure" width="md:w-1/2" align="left">}}
+
+#### Layer 1: Behavior Tree
+
+It is responsible for high-level decision-making (strategy). It can enter lower-level decision branches through the custom node, the Planner Node.
+
+<div style="margin-top: 40px;"></div>
+
+#### Layer 2: Planner Node
+
+It is responsible for low-level decision-making (tactics). Internally, it consists of a state graph, and each state contains an action that can be executed.
+
+The graph contains a starting state and a target state, and the Planner Node provides a chain of actions to reach the target state.
+
+<div style="margin-top: 40px;"></div>
+
+#### Layer 3: Utility Calculator
+
+It is responsible for environmental reactions and state transitions. If contention occurs during a state transition, it converts the current game environment into a normalized utility value, applies it to the competing state, and transitions to the state that returns the higher value.
+
+
+
+{{< /side-by-side >}}
 
 ---
 
@@ -47,7 +66,8 @@ This project aims to develop a hierarchical AI framework using the Unity engine 
 
 * **Enum Bitmask-Based World State Representation**: Agent states and environmental data are encoded as **Enum-based Bitmasks**, where each bit flag represents a discrete world condition (e.g., `HasWeapon`, `EnemyInRange`, `LowHealth`). This allows precondition and effect matching to be reduced to fast bitwise `AND`/`OR`/`XOR` operations, eliminating string comparisons and dictionary lookups at runtime. The `WorldState` struct is an immutable value type, so comparisons produce zero heap allocation.
 
-```csharp
+
+{{< code lang="csharp" label="Agnet&World State" width="96%" height="400px" align="right" >}}
 [Flags]
 public enum WorldStateFlags : uint
 {
@@ -73,9 +93,10 @@ public readonly struct WorldState
     public bool Satisfies(WorldStateFlags goal)  => (Flags & goal) == goal;
     public uint Key => (uint)Flags; // O(1) key for visited-set / cache lookups
 }
-```
+{{< /code >}}
 
-* **Pre/Post-condition Based Action Search**: The system dynamically transitions states by analyzing the agent's current world state (as a bitmask) against each action's precondition mask. By adopting a **Data-driven** structure—where only **Pre-conditions** and **After-effects** are specified per action—the system automatically constructs the optimal graph to reach the goal without hardcoded transitions.
+
+* **Pre/Post-condition Based State Search**: The system dynamically transitions states by analyzing the agent's current world state (as a bitmask) against each action's precondition mask. By adopting a **Data-driven** structure—where only **Pre-conditions** and **After-effects** are specified per action—the system automatically constructs the optimal graph to reach the goal without hardcoded transitions.
 * **Utility-Based Forward Real-time Action Chaining**: To overcome the real-time responsiveness limitations of traditional GOAP (which uses backward planning), I implemented a **Forward Optimization** approach. Starting from the current state, the planner evaluates all immediately applicable actions and chains them greedily by utility score. This allows the system to recalculate weights in real-time based on environmental changes, enabling flexible goal adjustments and action execution.
 
 {{< img-grid 

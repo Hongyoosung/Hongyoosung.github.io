@@ -1,6 +1,6 @@
 ---
 title: "블록체인 기반 메타버스 IoT 통신 플랫폼"
-description: "가상환경-실제 디바이스 간 데이터 무결성 보장 및 실시간 최적화"
+description: "가상환경-IoT 디바이스 간 데이터 무결성 보장 및 실시간 최적화"
 weight: 4
 translationKey: "project-4"
 
@@ -67,7 +67,7 @@ math: true
 
 * **보안 아키텍처**: 데이터 전송 구간 내 위변조를 원천 차단하는 DPKI(Decentralized PKI) 구조를 통해 데이터의 신뢰성을 확보했습니다.
 
-{{< side-by-side src="/images/project4/sensor.png" caption="Fig 3. 실험에 사용된 센서" >}}
+{{< side-by-side src="/images/project4/sensor.png" caption="Fig 3. 실험에 사용된 센서" align="right" >}}
 
 | 센서 종류 | 토픽 |
 | :--- | :---: |

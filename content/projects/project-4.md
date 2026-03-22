@@ -1,6 +1,6 @@
 ---
 title: "Blockchain-Enabled Metaverse IoT Communication Platform"
-description: "Ensuring Data Integrity and Real-time Synchronization between Virtual Environments and Physical IoT Assets"
+description: "Ensuring Data Integrity and Real-time Synchronization between Virtual Environments and Physical IoT Devices"
 weight: 4
 translationKey: "project-4"
 
@@ -62,7 +62,7 @@ This project focuses on developing a decentralized platform for secure and effic
 * **Real-Time Integrity Verification**: The Unity client extracts the DID from incoming topics and performs real-time lookups of the corresponding Public Key on the blockchain to verify digital signatures.
 * **Secure Architecture**: Established a **Decentralized PKI (DPKI)** structure that eliminates Man-in-the-Middle (MITM) vulnerabilities and ensures the absolute reliability of data.
 
-{{< side-by-side src="/images/project4/sensor.png" caption="Figure 3. Sensors used in the implementation" >}}
+{{< side-by-side src="/images/project4/sensor.png" caption="Figure 3. Sensors used in the implementation" align="right">}}
 
 | Sensor Type | Topic Structure |
 | :--- | :--- |
