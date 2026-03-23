@@ -25,6 +25,8 @@ defaultContentLanguage = 'en'
 
     mermaid = true
 
+    assets = { disableFingerprinting = true }
+
 # -------------------------------------------------------------------------
 # [English] - Default
 # -------------------------------------------------------------------------
