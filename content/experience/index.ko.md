@@ -41,6 +41,10 @@ certifications:
     issuer: "Amazon Web Services"
     date: "2026. 01. 25"
     url: "https://www.credly.com/badges/08322275-9f83-4f94-b641-ea0b559945e4/linked_in?t=t9f9h4"
+  - title: "지식재산능력시험(IPAT)"
+    issuer: "한국발명진흥회"
+    date: "2024. 06. 07"
+    image: "/images/experience/cer4.png"
 
 educations:
   - title: "언리얼 프로그래밍 Part 2 - 언리얼 게임 프레임웍의 이해"

@@ -41,7 +41,10 @@ certifications:
     issuer: "Amazon Web Services"
     date: "2026. 01. 25"
     url: "https://www.credly.com/badges/08322275-9f83-4f94-b641-ea0b559945e4/linked_in?t=t9f9h4"
-
+  - title: "Intellectual Property Ability Test(IPAT)"
+    issuer: "Korea Invention Promotion Association(KIPA)"
+    date: "2024. 06. 07"
+    image: "/images/experience/cer4.png"
 
 educations:
   - title: "Unreal Programming Part 2 - Understanding the Unreal Game Framework"
