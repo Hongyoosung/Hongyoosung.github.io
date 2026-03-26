@@ -20,6 +20,8 @@ math: true
 
 본 프로젝트에서는 팀 기반 거점 점령전에서의 전략적 포지셔닝 최적화 환경을 대상으로 해당 플러그인을 활용하였습니다.
 
+{{< gif-grid urls="/gifs/project1/1.gif, /gifs/project1/3.gif" widths="50%, 50%" >}}
+
 
 <hr style="border: 0; height: 1px; background: #b3b3b3;">
 
@@ -32,30 +34,9 @@ math: true
         caption="Fig 1. 시스템 아키텍처 및 계층적 포지셔닝 워크플로우" >}}
 
 
-<hr style="border: 0; height: 1px; background: #b3b3b3;">
-
-## 학습 환경 (Training Environment)
-
-**5 vs 5 팀 기반 거점 점령전**으로, 맵 상에 5개의 거점(Capture Point)이 배치됩니다.
-
-- **승리 조건:** 더 많은 거점을 점령하고 유지하여 목표 점수를 먼저 달성하는 팀이 승리합니다.
-- **부활 규칙:** 개별 사망이 아닌 **팀 전멸(Team Wipe)** 시 해당 팀 전체가 리스폰됩니다. 부활 대기 시간(`RespawnDelay`) 동안 대기 후 팀 스폰 지점 근처에 동시 재배치됩니다.
-- **클래스 역할:** 각 에이전트는 매 에피소드마다 **Strike / Vanguard / Support** 클래스를 부여받으며, 해당 클래스에 최적화된 포지셔닝 행동을 학습합니다.
-- **에피소드 길이:** 고정 스텝 수 기반으로 종료됩니다.
-- **셀프플레이:** 양 팀이 동일한 정책을 공유하며 서로의 전략에 반응하는 Self-Play 방식으로 학습합니다.
-
-각 에이전트는 강화학습 정책 네트워크를 통해 실시간 상황에 따라 공간 이동 파라미터를 추론하여 현재 상황에서의 최적 위치를 결정할 수 있습니다.
-
-공격(Attack)과 치유(Heal) 어빌리티는 **우선순위 점수(Priority Scoring)** 기반 타겟 선정 정책을 사용합니다. Attack은 `거리 × 0.3 + 낮은 체력 × 0.4 + 클래스 우선순위 × 0.3` 점수로 가장 위협적이거나 취약한 적을 공격하고(Support 클래스 우선), Heal은 `낮은 체력 × 0.7 + 거리 × 0.3` 점수로 가장 위급한 아군을 치유합니다. 이를 통해 어빌리티 행동이 RL 포지셔닝 정책과 자연스럽게 연계됩니다.
-
 Schola 플러그인을 통해 Unreal Engine 5의 강화학습 환경과 외부 스크립트(Ray Rllib)와의 gRPC 기반 브릿지를 구성하였으며 Schola Layer 위에 EQS 가중치를 설정하고 정책 네트워크 출력과 연결하는 Dynamic EQS를 플러그인 형태로 구현하였습니다.
 
-훈련은 초기 하나의 UE 인스턴스에 4개의 병렬 환경으로 수행하였으며 이후 AWS 클라우드 기반의 대규모 병렬 학습 환경을 구축했습니다. 이를 통해 수십 개의 언리얼 엔진 인스턴스로부터 데이터를 동시 수집하고 정책을 업데이트하는 고성능 학습 파이프라인을 구현했습니다.
-
-
-{{< gif-grid urls="/gifs/project1/1.gif, /gifs/project1/3.gif" widths="50%, 50%" >}}
-
-
+훈련은 초기 하나의 UE 인스턴스에 8개의 병렬 환경으로 수행하였으며 이후 AWS 클라우드 기반의 대규모 병렬 학습 환경을 구축했습니다. 이를 통해 수십 개의 언리얼 엔진 인스턴스로부터 데이터를 동시 수집하고 정책을 업데이트하는 고성능 학습 파이프라인을 구현했습니다.
 
 <hr style="border: 0; height: 1px; background: #b3b3b3;">
 
@@ -73,7 +54,52 @@ Schola 플러그인을 통해 Unreal Engine 5의 강화학습 환경과 외부 �
 | **Monitoring** | TensorBoard |
 
 
+
+
+
 <hr style="border: 0; height: 1px; background: #b3b3b3;">
+
+## 훈련 환경 (Training Environment)
+
+**5 vs 5 팀 기반 거점 점령전**으로, 맵 상에 5개의 거점(Capture Point)이 배치됩니다.
+
+- **승리 조건:** 더 많은 거점을 점령하고 유지하여 목표 점수를 먼저 달성하는 팀이 승리합니다.
+- **클래스 역할:** 각 에이전트는 매 에피소드마다 **Strike / Vanguard / Support** 클래스를 부여받으며, 해당 클래스에 최적화된 포지셔닝 행동을 학습합니다.
+- **에피소드 길이:** 개별 환경의 에피소드는 승리 조건이 발생하거나 타임아웃으로 종료됩니다.
+- **RL 에이전트**: 각 RL 에이전트는 강화학습 정책 네트워크를 통해 실시간 상황에 따라 공간 이동 파라미터를 추론하여 현재 상황에서의 최적 위치를 결정할 수 있습니다.
+- **스크립티드 AI 대전:** Blue 팀(RL)은 고정 가중치 + 상태 머신으로 구동되는 Red 팀(ScriptedAI)을 상대로 학습합니다. 상대가 고정되어 있으므로 Blue 팀 관점에서 환경이 정상(stationary)으로 유지됩니다.
+
+
+<div style="margin-top: 40px;"></div>
+
+<font size="4">**ScriptedAI**</font>
+- 스크립트 AI는 클래스별(Strike/Vanguard/Support) 하드코딩 EQS 가중치 프로파일을 구동합니다. 
+- 상태 머신은 4개 상태(Patrol → Approach → Engage → Retreat)로 전투 상황에 반응하며, 에피소드마다 ±0.1 노이즈를 추가해 행동 다양성을 확보합니다. 
+- 난이도는 3단계 티어(1=Basic, 2=Standard, 3=Aggressive)로 구분되며 상태머신 사용 유무, 승리 조건에 더 부합하는 가중치 세팅 등의 차이가 있습니다.
+
+<div style="margin-top: 40px;"></div>
+
+<font size="4">**커리큘럼 티어 시스템**</font>
+- RL 팀의 에피소드별 승률을 모니터링하여 일정 기간 승률이 승격 임계값(1→2: 55%, 2→3: 65%)을 초과하면 자동으로 다음 티어로 승격합니다. 
+- 새 티어는 `scripted_ai_config.json`에 기록되고 UE5의 `LoadTierFromConfig()`가 다음 에피소드 리셋 시 적용합니다. 이를 통해 RL 에이전트가 낮은 난이도에 과적합(overfitting)되지 않고 점진적으로 강한 상대에 노출됩니다.
+
+<div style="margin-top: 40px;"></div>
+
+<font size="4">**승률 기록**</font>
+- 매 이터레이션 종료 시 `rl_win_rate`, `script_win_rate`, `draw_rate`를 TensorBoard에 기록합니다.
+
+---
+
+공격(Attack)과 치유(Heal) 어빌리티는 **우선순위 점수(Priority Scoring)** 기반 타겟 선정 정책을 사용합니다. Attack은 `거리 × 0.3 + 낮은 체력 × 0.4 + 클래스 우선순위 × 0.3` 점수로 가장 위협적이거나 취약한 적을 공격하고(Support 클래스 우선), Heal은 `낮은 체력 × 0.7 + 거리 × 0.3` 점수로 가장 위급한 아군을 치유합니다. 이를 통해 어빌리티 행동이 RL 포지셔닝 정책과 자연스럽게 연계됩니다.
+
+
+
+
+
+
+<hr style="border: 0; height: 1px; background: #b3b3b3;">
+
+
 
 
 ## 주요 기능 (Key Features)
@@ -273,13 +299,23 @@ if cached_target.health < threshold and agent attempted kill:
 
 <div style="margin-top: 40px;"></div>
 
-<font size="4">**PPO 알고리즘 선택 근거**</font>
+<font size="4">**MAPPO (Multi-Agent PPO) 도입**</font>
 
-본 프로젝트는 PPO(Proximal Policy Optimization)를 사용하며, 역할별로 독립된 3개의 정책 인스턴스(`strike_policy`, `vanguard_policy`, `support_policy`)를 학습합니다. RLlib의 `policy_mapping_fn`이 에이전트의 클래스 인덱스에 따라 해당 정책으로 라우팅합니다.
+본 프로젝트는 **MAPPO(Multi-Agent PPO)** 를 채택하여 역할별 독립 정책(Actor) 3개(`strike_policy`, `vanguard_policy`, `support_policy`)와 공유 중앙집중식 Critic을 함께 학습합니다.
 
-PPO를 선택한 핵심 이유는 **셀프플레이 환경에서의 정책 안정성**입니다. 상대 팀이 동일한 정책을 공유하므로 매 업데이트마다 환경의 분포 자체가 이동(non-stationarity)합니다. PPO의 클리핑 메커니즘(`clip_param=0.2`)과 KL 페널티(`kl_target=0.01`)가 이 분포 이동 하에서 정책의 급격한 붕괴를 방지합니다. SAC 등 off-policy 알고리즘은 리플레이 버퍼의 과거 데이터가 현재 상대 정책과 일치하지 않아 학습이 불안정해지는 문제가 있습니다.
+**중앙집중식 Critic (Centralized Critic)** — `CentralizedCritic`은 71-dim 전역 팀 상태(`FDETeamWorldState`: 아군 5명 위치·체력·전략 + 적 5명 위치·신뢰도 + 맵 상태)를 입력받아 팀 전체의 가치를 추정합니다. 개별 에이전트 관측만으로는 알 수 없는 팀-레벨 정보(아군 분포, 전체 거점 점령 상황 등)를 Critic이 직접 참조하므로 Advantage 추정의 분산이 감소합니다.
 
-MAPPO(Multi-Agent PPO)는 모든 에이전트의 관측을 결합한 중앙집중식 Critic을 사용하는데, 본 프로젝트의 RLlib 기반 파이프라인은 역할별로 독립된 정책 인스턴스(`PolicySpec`)를 생성하고, 각 정책이 자체 Actor-Critic을 보유하는 구조입니다. MAPPO의 중앙집중식 Critic을 도입하려면 RLlib의 `TorchModelV2` 래퍼를 대폭 수정하여 모든 에이전트 관측을 Value Function에 전달하는 커스텀 파이프라인을 구축해야 합니다. 역할별 정책 분리가 주는 전략 특화 학습의 이점과 구현 복잡도를 고려하여 표준 PPO를 선택했습니다.
+**Dual Value Estimation** — 각 `EntityCentricRLlibModel`은 로컬 Critic(`V_local`, 226-dim 에이전트 관측)과 중앙 Critic(`V_central`, 71-dim 전역 상태)을 학습 가능한 혼합 계수 α로 결합합니다.
+
+```
+V = α · V_local(agent_obs[0:226]) + (1-α) · V_central(global_state[226:297])
+```
+
+α는 `sigmoid(_value_mix_logit)`로 초기화되며(초기값 0.5), 학습을 통해 각 역할에 최적인 로컬/전역 비중을 자동으로 결정합니다.
+
+**Self-Attention의 역할** — Actor의 인코더에서 아군·적·거점 각 엔티티 그룹에 Intra-Set Self-Attention을 적용합니다(Zambaldi et al., 2018). 엔티티 토큰들이 서로를 참조하여 "슬롯 3과 슬롯 5가 같은 거점 근처에 집결" 같은 집합 내 공간 관계를 학습합니다. 이 문맥화된 표현이 이후 Cross-Attention의 입력으로 사용됩니다.
+
+**Cross-Attention의 역할** — Self Token(자신 관측 7-dim의 임베딩)이 Query가 되고, Self-Attention을 거친 아군·적·거점 토큰이 Key/Value가 됩니다. Cross-Attention은 "현재 나의 상태에서 각 엔티티가 얼마나 중요한가"를 가중합으로 집약하여 행동(EQS 가중치 7-dim)을 결정합니다.
 
 
 {{< code lang="python" label="train.py" width="100%" height="250px" align="right" >}}
@@ -301,83 +337,43 @@ config = config.multi_agent(
 
 
 
-### 3. 듀얼 모드 아키텍처 (Dual-Mode Architecture)
+### 3. 평가 모드 (Evaluation Mode)
 
-모든 주요 컴포넌트는 단일 UE5 바이너리 내에서 **학습 모드(Training)** 와 **추론 모드(Inference)** 를 동시에 지원하도록 설계했습니다. 학습이 끝난 ONNX 모델을 별도의 빌드 없이 동일한 UE5 환경에서 즉시 실행하고 검증할 수 있습니다.
-
-<div style="margin-top: 40px;"></div>
-
-<font size="4">**핵심 설계: `UDynamicEQSAgentComponent`**</font>
-
-
-에이전트 컴포넌트 `UDynamicEQSAgentComponent`가 두 모드를 하나의 인터페이스로 추상화합니다. `AgentMode` 프로퍼티 하나로 행동 파이프라인 전체가 분기됩니다.
-
+학습 중 저장된 체크포인트의 성능을 ScriptedAI 대전을 통해 정량적으로 검증하는 **Live Evaluation** 파이프라인(`eval_live.py`)입니다.
 
 <div style="margin-top: 40px;"></div>
 
-<font size="4">**모드 비교**</font>
+<font size="4">**구조 개요**</font>
 
+UE5에 **2개의 서브 환경**을 동시 연결하여 `best` 체크포인트(env 0)와 `latest` 체크포인트(env 1)를 병렬로 평가합니다. 양쪽 모두 Blue 팀(RL)이 Red 팀(ScriptedAI, `bUseScriptedOpponent=true`)과 대전하며, 에피소드 결과를 `win / loss / draw / timeout`으로 분류하고 승률을 산출합니다.
 
-| 항목 | Training Mode | Inference Mode |
-|---|---|---|
-| **정책 실행 주체** | Python RLlib (gRPC) | UE5 내장 ONNX (NNE) |
-| **스테퍼** | `GymConnector` (Schola 통신 루프) | `USimpleStepper` (TickComponent) |
-| **EQS 실행** | `EQS Executor` | `EQS Executor` |
-| **보상 계산** | `UDERewardSubsystem` 매 스텝 | 없음 |
-| **에피소드 관리** | Schola `AutoResetType::SAME_STEP` | 레벨 재시작 |
-| **ONNX 추론 레이턴시** | N/A (Python 측 실행) | < 2ms (60fps 프레임 버짓 16.6ms의 12%) |
-
+| 항목 | 값 |
+|---|---|
+| **서브 환경 수** | 2 (best vs latest 동시 평가) |
+| **상대** | ScriptedAI (Red, `bUseScriptedOpponent=true`) |
+| **기본 평가 에피소드** | 50회 (per checkpoint) |
+| **기본 ScriptedAI 티어** | 3 (Aggressive) |
+| **결과 출력** | `eval_results_<timestamp>.json` |
 
 <div style="margin-top: 40px;"></div>
 
-<font size="4">**모드별 실행 분기: `BeginPlay` & `PerformTacticalAction()`**</font>
+<font size="4">**실행 흐름**</font>
 
+1. **ScriptedAI 티어 기록** — 평가 시작 전 `scripted_ai_config.json`에 난이도 티어를 기록하여 UE5의 `LoadTierFromConfig()`가 첫 에피소드 리셋부터 지정 티어로 동작하도록 합니다.
+2. **체크포인트 로딩** — `policy_state.pkl`에서 Actor 가중치(`policy.*` prefix)만 추출하여 `EntityCentricPolicy`에 로드합니다. Ray 런타임 없이 CPU에서 즉시 추론 가능한 `eval()` 상태로 전환합니다.
+3. **평가 루프** — 에이전트 ID의 `env{i}` prefix로 라우팅하여 두 체크포인트가 독립적으로 행동을 생성합니다. 에피소드 종료 시 UE5의 `WinnerTeamID` 신호를 파싱하여 결과를 기록합니다.
+4. **최종 비교** — 목표 에피소드 수 완료 후 승률 비교 결과와 전체 통계를 출력하고 JSON으로 저장합니다.
 
-{{< code lang="cpp" label="DynamicEQSAgentComponent.cpp" width="100%" height="250px" align="right" >}}
-// DynamicEQSAgentComponent.cpp — BeginPlay에서 모드 분기
-void UDynamicEQSAgentComponent::BeginPlay()
-{
-    Super::BeginPlay();
-    if (AgentMode == EDynamicEQSAgentMode::Inference)
-    {
-        // ONNX 정책 초기화 후 SimpleStepper 생성
-        Stepper = NewObject<USimpleStepper>(this);
-        Stepper->Init({this}, InferencePolicyObject);
-    }
-    // Training 모드: Schola GymConnector가 외부에서 Observe/Act 호출
-}
+{{< code lang="python" label="eval_live.py — checkpoint routing" width="100%" height="200px" align="right" >}}
+# agent_id prefix "env0_*" → best_policies
+# agent_id prefix "env1_*" → latest_policies
+env_idx = int(agent_id.split("_")[0][3:])
+policy_set = best_policies if env_idx == 0 else latest_policies
 
-// DynamicEQSAgentComponent.cpp — TickComponent (Inference only)
-void UDynamicEQSAgentComponent::TickComponent(...)
-{
-    Super::TickComponent(...);
-    if (AgentMode == EDynamicEQSAgentMode::Inference && Stepper)
-        Stepper->Step();  // Observe → ONNX Infer → Act
-}
+# Policy input: first 226 dims of the 297-dim MAPPO obs (agent obs only)
+agent_obs = torch.from_numpy(obs[:AGENT_OBS_DIM]).float().unsqueeze(0)  # (1, 226)
+action = policy(agent_obs).squeeze(0).numpy()                           # (7,)
 {{< /code >}}
-
-
-{{< code lang="cpp" label="ADEAgent.cpp" width="100%" height="250px" align="right" >}}
-// ADEAgent::PerformTacticalAction() — EQS 실행 방식 분기
-void ADEAgent::PerformTacticalAction()
-{
-    if (ScholaAgent->AgentMode == EDynamicEQSAgentMode::Training)
-    {
-        // Training: 동기 EQS (Schola 스텝 버짓 내에서 즉시 완료)
-        FVector BestLoc;
-        EQSExecutor->ExecuteQuerySynchronous(CurrentEQSWeights, BestLoc);
-        AIController->MoveToLocation(BestLoc);
-    }
-    else
-    {
-        // Inference: Blackboard 경유 비동기 EQS → BTTask_DEMoveToEQSLocation
-        EQSExecutor->ExecuteQuery(CurrentEQSWeights,
-            [this](FVector BestLoc){ WriteWeightsToBB(BestLoc); });
-    }
-}
-{{< /code >}}
-
-<div style="margin-top: 40px;"></div>
 
 
 <hr style="border: 0; height: 1px; background: #b3b3b3;">
@@ -385,7 +381,7 @@ void ADEAgent::PerformTacticalAction()
 
 ### 4. 학습 결과 (Training Results)
 
-총 2.4M(240만) 타임스텝에 걸쳐 PPO 기반 셀프플레이 학습을 수행했습니다.
+총 2.4M(240만) 타임스텝에 걸쳐 MAPPO 기반 ScriptedAI 대전 학습을 수행했습니다.
 
 {{< img src="/images/project1/reward.png"
         alt=""
@@ -417,6 +413,188 @@ void ADEAgent::PerformTacticalAction()
 
 **조기 종료 판단:** lr 스케줄러가 0에 도달하고 reward가 평탄화(plateau)에 진입한 2.4M 스텝에서 학습을 종료했습니다.
 
+<div style="margin-top: 40px;"></div>
+
+<font size="4">**클래스별 학습 결과**</font>
+
+> **Strike**
+
+원거리 거점 점령 역할에 최적화된 정책을 학습했습니다. 적과 최소 교전 거리(`MinCombatRange`)를 유지하면서 목표 거점에 접근하는 행동이 안정적으로 수렴했으며, 거점 점령 완료 후 다음 거점으로 이동하는 모멘텀 패턴이 관측되었습니다.
+
+> **Vanguard**
+
+근접 전열 역할에 맞게 적과 밀착하는 행동을 학습했습니다. 거점 내 근접 사거리(`MeleeRangeBonus`) 조건이 충족되는 포지션을 적극적으로 유지하며, Strike 대비 적에 더 가까운 위치에 수렴하는 EQS 가중치 프로파일이 형성되었습니다.
+
+> **Support**
+
+부상 아군 추적 및 후방 포지셔닝 행동을 학습했습니다. 5스텝 캐시 타겟을 따라 접근하다가 치유 후 다음 타겟으로 전환하는 사이클이 확인되었으며, 아군 뒤편 후방 호 내 체류 시간이 학습 초기 대비 증가했습니다. 부상 아군이 없는 상황에서는 아군 클러스터 중심부에 집결하는 보조 행동이 관측되었습니다.
+
+
+
+<hr style="border: 0; height: 1px; background: #b3b3b3;">
+
+
+### 5. AWS 병렬 학습 환경 (AWS Parallel Training Environment)
+
+로컬 단일 UE5 인스턴스에서 수십 개의 클라우드 병렬 환경으로 확장하는 **AWS 기반 분산 학습 파이프라인**입니다. UE5와 학습 스크립트를 Linux 컨테이너로 패키징하고, Ray Autoscaler를 통해 EC2 클러스터를 동적으로 관리합니다.
+
+<div style="margin-top: 40px;"></div>
+
+<font size="4">**전체 인프라 구성**</font>
+
+{{< img src="/images/project1/aws_architecture.png"
+        alt=""
+        class="max-w-full"
+        caption="Fig 10. AWS 병렬 학습 인프라 전체 구성도 — ECR, EC2 Ray 클러스터(Head/Worker), S3 체크포인트 스토리지, W&B 모니터링의 연결 구조" >}}
+
+학습 인프라는 4개의 주요 컴포넌트로 구성됩니다.
+
+| 컴포넌트 | 역할 |
+|---|---|
+| **Amazon ECR** | 학습 Docker 이미지 레지스트리 — 모든 노드가 동일 이미지를 Pull하여 환경 일관성 보장 |
+| **EC2 Ray 클러스터** | Head(GPU, g4dn.xlarge) + Worker(CPU Spot, c5.2xlarge×4) 혼합 구성 |
+| **Amazon S3** | 체크포인트 및 학습 데이터 영구 저장 — s3fs로 노드에 FUSE 마운트 |
+| **W&B** | 이터레이션별 보상·승률·손실 지표 실시간 모니터링 |
+
+Terraform(`aws/terraform/main.tf`)으로 VPC, 서브넷, IAM 인스턴스 프로파일, 보안 그룹을 프로비저닝하고, Ray Autoscaler(`aws/cluster.yaml`)가 학습 부하에 따라 Worker 수를 자동 조절합니다.
+
+---
+
+<div style="margin-top: 40px;"></div>
+
+<font size="4">**Ray 클러스터 토폴로지**</font>
+
+{{< img src="/images/project1/aws_cluster.png"
+        alt=""
+        class="max-w-full"
+        caption="Fig 11. Ray 클러스터 노드 구성 — Head 노드(GPU 정책 업데이트)와 Worker 노드(CPU 롤아웃 수집)의 역할 분리 구조" >}}
+
+Head 노드와 Worker 노드는 역할이 명확히 분리됩니다.
+
+| 항목 | Head 노드 | Worker 노드 |
+|---|---|---|
+| **인스턴스** | g4dn.xlarge (4 vCPU, 16 GB RAM, T4 GPU) | c5.2xlarge (8 vCPU, 16 GB RAM) × 0~4 |
+| **구매 옵션** | On-Demand | Spot (비용 최적화) |
+| **역할** | Policy gradient 업데이트, 체크포인트 저장 | 병렬 롤아웃 수집 (UE5 env 구동) |
+| **GPU** | T4 1개 — PyTorch 추론 가속 | 없음 |
+
+Spot 인스턴스 중단 시 Ray Autoscaler가 자동으로 새 Worker를 기동하여 학습이 중단되지 않습니다. `idle_timeout_minutes: 10` 설정으로 유휴 Worker를 10분 내 자동 종료하여 비용을 절감합니다.
+
+{{< code lang="yaml" label="cluster.yaml — 클러스터 핵심 설정" width="100%" height="250px" align="right" >}}
+cluster_name: de-v10-2
+max_workers: 4
+idle_timeout_minutes: 10
+
+docker:
+  image: "<account>.dkr.ecr.us-east-1.amazonaws.com/de:v10-2-latest"
+  run_options: ["--shm-size=4g", "--ulimit nofile=65536:65536"]
+
+head_node_type:          # g4dn.xlarge — GPU, on-demand
+  InstanceType: g4dn.xlarge
+  resources: {GPU: 1}
+
+worker_node_types:       # c5.2xlarge — CPU only, Spot
+  - InstanceType: c5.2xlarge
+    SpotInstanceType: c5.2xlarge
+    resources: {CPU: 8}
+{{< /code >}}
+
+---
+
+<div style="margin-top: 40px;"></div>
+
+<font size="4">**Docker 컨테이너 — UE5 Linux 헤드리스 환경**</font>
+
+{{< img src="/images/project1/aws_docker.png"
+        alt=""
+        class="max-w-full"
+        caption="Fig 12. Dockerfile.aws 레이어 구조 — CUDA 베이스, UE5 헤드리스 실행을 위한 가상 디스플레이 설정, Schola gRPC 브릿지, 학습 스크립트 패키징" >}}
+
+`aws/Dockerfile.aws`는 로컬 Dockerfile 대비 클라우드 운영에 특화된 4가지 차이점을 갖습니다.
+
+| 항목 | 내용 |
+|---|---|
+| **베이스 이미지** | `nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu20.04` — GPU 추론 지원 |
+| **UE5 헤드리스** | `ENV DISPLAY=:0` + 가상 프레임버퍼(Xvfb) — 모니터 없이 UE5 실행 |
+| **비루트 사용자** | `de` 사용자(UID 1000) 생성 — 컨테이너 보안 강화 |
+| **S3 마운트** | `s3fs` + `awscli` 사전 설치 — IAM Role 기반 자격증명(정적 키 없음) |
+
+{{< code lang="dockerfile" label="Dockerfile.aws — 핵심 설정" width="100%" height="250px" align="right" >}}
+FROM nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu20.04
+
+# UE5 헤드리스 실행용 가상 디스플레이
+ENV DISPLAY=:0
+
+# Ray 메모리 모니터 비활성화 (컨테이너 환경 cgroup 제한 대응)
+ENV RAY_DISABLE_MEMORY_MONITOR=1
+ENV OMP_NUM_THREADS=1
+
+# 비루트 사용자 — 보안 강화
+RUN useradd -u 1000 -g de -m -s /bin/bash de
+
+# S3 마운트용 FUSE 권한 부여
+RUN usermod -aG fuse de
+{{< /code >}}
+
+---
+
+<div style="margin-top: 40px;"></div>
+
+<font size="4">**학습 파이프라인 흐름**</font>
+
+{{< img src="/images/project1/aws_pipeline.png"
+        alt=""
+        class="max-w-full"
+        caption="Fig 13. AWS 학습 파이프라인 전체 흐름 — Docker 빌드 → ECR Push → Ray 클러스터 기동 → 병렬 롤아웃 수집 → 정책 업데이트 → S3 체크포인트 저장 → W&B 기록" >}}
+
+전체 학습 사이클은 5단계로 진행됩니다.
+
+**1. 이미지 빌드 및 배포**
+```bash
+docker build -f aws/Dockerfile.aws -t de:v10-2-latest .
+docker push <account>.dkr.ecr.us-east-1.amazonaws.com/de:v10-2-latest
+```
+
+**2. Ray 클러스터 기동**
+```bash
+ray up aws/cluster.yaml          # Head + Worker 인스턴스 프로비저닝
+ray submit aws/cluster.yaml train_rllib.py -- --config aws/rllib_config.py
+```
+
+**3. 병렬 롤아웃 수집**
+
+각 Worker 노드의 Docker 컨테이너 내에서 UE5 헤드리스 인스턴스가 기동되고, Schola gRPC 브릿지를 통해 RLlib 환경(`DECombatEnv-v0`)과 연결됩니다. 4개 Worker가 동시에 롤아웃을 수집하여 `train_batch_size=4096` 배치를 채웁니다.
+
+**4. 정책 업데이트 및 체크포인트**
+
+Head 노드의 GPU에서 PPO gradient 업데이트가 수행되며, 10 이터레이션마다 체크포인트가 S3에 동기화됩니다. `DETrainingCallbacks.on_train_result()`가 신규 최고 승률 달성 시 즉시 `best/` 경로에 추가 동기화합니다.
+
+{{< code lang="python" label="rllib_config.py — S3 체크포인트 동기화" width="100%" height="200px" align="right" >}}
+def on_train_result(self, *, algorithm, result, **kwargs):
+    wins = result.get("custom_metrics", {}).get("win_mean", 0.0)
+    result["custom_metrics"]["win_rate"] = wins
+
+    s3_bucket = os.environ.get("S3_BUCKET", "")
+    if s3_bucket and result.get("is_new_best", False):
+        checkpoint = algorithm.save()
+        _sync_to_s3(checkpoint, s3_bucket, prefix="checkpoints/best/")
+{{< /code >}}
+
+**5. 모니터링 (W&B)**
+
+`WandbLoggerCallback`이 매 이터레이션 종료 시 `episode_reward_mean`, `custom_metrics/win_rate`, `policy_reward_mean/{strike,vanguard,support}_policy`, `num_env_steps_sampled_lifetime` 등의 지표를 W&B 대시보드에 기록합니다.
+
+---
+
+<div style="margin-top: 40px;"></div>
+
+<font size="4">**클러스터 종료 및 비용 관리**</font>
+
+```bash
+ray down aws/cluster.yaml -y   # 전체 EC2 인스턴스 종료
+```
+
+`cache_stopped_nodes: false` 설정으로 `ray down` 시 모든 인스턴스가 즉시 종료(Terminate)되어 유휴 비용이 발생하지 않습니다. S3에 저장된 체크포인트는 클러스터 종료 후에도 유지되므로, 재기동 시 `--restore` 옵션으로 이어서 학습할 수 있습니다.
 
 
 <hr style="border: 0; height: 1px; background: #b3b3b3;">
