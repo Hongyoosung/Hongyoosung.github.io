@@ -89,7 +89,7 @@ The flow for injecting the policy network's output (7-dim Box action) into actua
 2. Enter the parameter names used in each EQS Query test into the `WeightParamNames` array (e.g., `EnemyObjectiveProximity`, `AllyObjectiveProximity`, ...).
 3. Set the `Actuator` in the `UDEScholaAgent` component to `UDETacticalParameterActuator`.
 
-{{< img src="/images/project1/flow2.png"
+{{< img src="/images/project1/flow3.png"
 alt=""
 class="max-w-full"
 caption="Fig 3. Training/Inference Runtime Data Flow" >}}

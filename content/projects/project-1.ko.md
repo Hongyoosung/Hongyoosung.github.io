@@ -16,11 +16,15 @@ math: true
 ## 개요 (Overview)
 
 본 프로젝트는 Unreal Engine 5 환경에서 강화학습 모델을 활용한 EQS(Environment Query system) 가중치
- 업데이트를 지원하는 플러그인의 개발을 목표로 합니다.
+ 최적화를 지원하는 플러그인의 개발 및 플러그인을 활용한 MAPPO 환경의 구현 및 검증을 목표로 합니다.
 
-본 프로젝트에서는 팀 기반 거점 점령전에서의 전략적 포지셔닝 최적화 환경을 대상으로 해당 플러그인을 활용하였습니다.
+본 프로젝트에서는 팀 기반 거점 점령전에서의 전략적 포지셔닝 최적화를 대상으로 해당 플러그인을 활용하였습니다.
 
-{{< gif-grid urls="/gifs/project1/1.gif, /gifs/project1/3.gif" widths="50%, 50%" >}}
+Schola 플러그인을 통해 Unreal Engine 5의 강화학습 환경과 외부 스크립트(Ray Rllib)와의 gRPC 기반 브릿지를 구성하였으며 Schola Layer 위에 EQS 가중치를 설정하고 정책 네트워크 출력과 연결하는 Dynamic EQS를 플러그인 형태로 구현하였습니다.
+
+훈련은 초기 하나의 UE 인스턴스에 8개의 병렬 환경으로 수행하였으며 이후 AWS 클라우드 기반의 대규모 병렬 학습 환경을 구축했습니다.
+
+{{< gif-grid urls="/gifs/project1/project1.gif, /gifs/project1/project1_battle.gif" widths="50%, 50%" >}}
 
 
 <hr style="border: 0; height: 1px; background: #b3b3b3;">
@@ -34,9 +38,7 @@ math: true
         caption="Fig 1. 시스템 아키텍처 및 계층적 포지셔닝 워크플로우" >}}
 
 
-Schola 플러그인을 통해 Unreal Engine 5의 강화학습 환경과 외부 스크립트(Ray Rllib)와의 gRPC 기반 브릿지를 구성하였으며 Schola Layer 위에 EQS 가중치를 설정하고 정책 네트워크 출력과 연결하는 Dynamic EQS를 플러그인 형태로 구현하였습니다.
 
-훈련은 초기 하나의 UE 인스턴스에 8개의 병렬 환경으로 수행하였으며 이후 AWS 클라우드 기반의 대규모 병렬 학습 환경을 구축했습니다. 이를 통해 수십 개의 언리얼 엔진 인스턴스로부터 데이터를 동시 수집하고 정책을 업데이트하는 고성능 학습 파이프라인을 구현했습니다.
 
 <hr style="border: 0; height: 1px; background: #b3b3b3;">
 
@@ -66,8 +68,8 @@ Schola 플러그인을 통해 Unreal Engine 5의 강화학습 환경과 외부 �
 - **승리 조건:** 더 많은 거점을 점령하고 유지하여 목표 점수를 먼저 달성하는 팀이 승리합니다.
 - **클래스 역할:** 각 에이전트는 매 에피소드마다 **Strike / Vanguard / Support** 클래스를 부여받으며, 해당 클래스에 최적화된 포지셔닝 행동을 학습합니다.
 - **에피소드 길이:** 개별 환경의 에피소드는 승리 조건이 발생하거나 타임아웃으로 종료됩니다.
-- **RL 에이전트**: 각 RL 에이전트는 강화학습 정책 네트워크를 통해 실시간 상황에 따라 공간 이동 파라미터를 추론하여 현재 상황에서의 최적 위치를 결정할 수 있습니다.
-- **스크립티드 AI 대전:** Blue 팀(RL)은 고정 가중치 + 상태 머신으로 구동되는 Red 팀(ScriptedAI)을 상대로 학습합니다. 상대가 고정되어 있으므로 Blue 팀 관점에서 환경이 정상(stationary)으로 유지됩니다.
+- **RL 에이전트**: 각 RL 에이전트는 클래스별 독립된 강화학습 정책 네트워크를 통해 실시간 상황에 따라 공간 이동 파라미터를 추론하여 현재 상황에서의 최적 위치를 결정할 수 있습니다.
+- **스크립티드 AI 대전:** Blue 팀(RL)은 고정 가중치 + 상태 머신으로 구동되는 Red 팀(ScriptedAI)을 상대로 학습합니다.
 
 
 <div style="margin-top: 40px;"></div>
@@ -117,7 +119,7 @@ DynamicEQS의 주요 클래스는 4가지로, **환경**, **에이전트**, **�
         class="max-w-full"
         caption="Fig 2. 플러그인 계층 구조" >}}
 
-{{< img src="/images/project1/flow2.png"
+{{< img src="/images/project1/flow3.png"
         alt=""
         class="max-w-full"
         caption="Fig 3. 학습/추론 런타임 데이터 플로우" >}}
@@ -190,7 +192,7 @@ if (Ctx)
 <hr style="border: 0; height: 1px; background: #b3b3b3;">
 
 
-### 2. 관측 공간 및 클래스 조건부 보상 설계 (Class-Conditioned Reward Shaping)
+### 2. MAPPO (Multi-Agent PPO)
 
 
 <div style="margin-top: 40px;"></div>
@@ -224,12 +226,15 @@ if (Ctx)
 
 <div style="margin-top: 40px;"></div>
 
-<font size="4">**보상 구조 개요**</font>
+<font size="4">**에이전트 유형 및 보상 구조 개요**</font>
 
 
-> **스트라이크: 원거리 공격의 높은 데미지**
+<font size="4">**S T R I K E**</font>
+{{< gif-grid urls="/gifs/project1/project1_strike.gif" widths="80%">}}
 
-목표는 원거리에서 높은 데미지를 유지하며 거점을 점령하는 것입니다. 적 거점까지의 거리 감소분에 비례한 접근 보상을 매 스텝 부여하고, 거점 반경 내 진입 시 추가 존재 보너스를 부여합니다. 점령이 완료되면 즉시 `PostCaptureMomentumDuration` 스텝 동안 모멘텀 보너스가 활성화됩니다. 적과 너무 가까운 경우 원거리 역할 이탈 패널티가 부과됩니다.
+> **원거리 공격의 높은 데미지**
+
+목표는 원거리에서 높은 데미지를 유지하며 거점을 점령하는 것입니다. 적 거점까지의 거리 감소분에 비례한 접근 보상을 매 스텝 부여하고, 거점 반경 내 진입 시 추가 존재 보너스를 부여합니다. 적과 너무 가까운 경우 원거리 역할 이탈 페널티가 부과됩니다.
 
 
 {{< code lang="cpp" label="Strike reward (per step)" width="100%" height="250px" align="right" >}}
@@ -249,9 +254,12 @@ if distance_to_enemy < MinCombatRange:
 
 ---
 
-> **뱅가드: 높은 체력, 근접 공격**
+<font size="4">**V A N G U A R D**</font>
+{{< gif-grid urls="/gifs/project1/project1_vanguard.gif" widths="80%">}}
 
-목표는 전열에서 근접 전투를 수행하며 거점을 점령하는 것입니다. 적 거점 접근 및 점령 방식은 스트라이크와 동일하게 적용됩니다. 거점 내에서 근접 사거리에 적이 있을 때 추가 근접 보너스(`MeleeRangeBonus`)가 지급되어, 전선을 유지하며 적과 밀착하는 행동을 강화합니다.
+> **높은 체력, 근접 공격**
+
+목표는 전열에서 근접 전투를 수행하며 거점을 점령하는 것입니다. 적 거점 접근 및 점령 방식은 Strike와 동일하게 적용됩니다. 거점 내에서 근접 사거리에 적이 있을 때 추가 근접 보너스가 지급되어, 전선을 유지하며 적과 밀착하는 행동을 강화합니다.
 
 
 
@@ -272,9 +280,13 @@ if momentum active:
 
 ---
 
-> **지원: 후방 힐링**
+<font size="4">**S U P P O R T**</font>
+{{< gif-grid urls="/gifs/project1/project1_support.gif" widths="80%">}}
 
-목표는 데미지를 많이 받은 아군을 추적하고 힐링하며 후방을 유지하는 것입니다. 매 스텝 부상 아군 탐색을 수행하되, 잦은 타겟 전환으로 인한 진동 행동을 막기 위해 5스텝 캐시를 적용합니다. 캐시된 아군이 현재 가장 낮은 체력이 아니더라도 5스텝이 지나기 전까지는 교체하지 않습니다. 아군 뒤편에 위치하면 후방 포지셔닝 보너스를 받으며, 아군이 부상 중인 상황에서 직접 킬을 시도하면 역할 이탈 패널티가 부과됩니다.
+
+> **후방 힐러**
+
+목표는 데미지가 심한 아군을 추적하고 치유하며 후방 포지션을 유지하는 것입니다. 매 스텝 부상 아군 탐색을 수행하되, 잦은 타겟 전환으로 인한 진동 행동을 막기 위해 5스텝 캐시를 적용합니다. Support를 제외한 아군 뒤편에 위치하면 후방 포지셔닝 보너스를 받습니다.
 
 
 {{< code lang="cpp" label="Support reward (per step)" width="100%" height="250px" align="right" >}}
@@ -299,23 +311,36 @@ if cached_target.health < threshold and agent attempted kill:
 
 <div style="margin-top: 40px;"></div>
 
-<font size="4">**MAPPO (Multi-Agent PPO) 도입**</font>
+<font size="4">**MAPPO (Multi-Agent PPO) 및 어텐션 도입**</font>
 
 본 프로젝트는 **MAPPO(Multi-Agent PPO)** 를 채택하여 역할별 독립 정책(Actor) 3개(`strike_policy`, `vanguard_policy`, `support_policy`)와 공유 중앙집중식 Critic을 함께 학습합니다.
 
 **중앙집중식 Critic (Centralized Critic)** — `CentralizedCritic`은 71-dim 전역 팀 상태(`FDETeamWorldState`: 아군 5명 위치·체력·전략 + 적 5명 위치·신뢰도 + 맵 상태)를 입력받아 팀 전체의 가치를 추정합니다. 개별 에이전트 관측만으로는 알 수 없는 팀-레벨 정보(아군 분포, 전체 거점 점령 상황 등)를 Critic이 직접 참조하므로 Advantage 추정의 분산이 감소합니다.
 
-**Dual Value Estimation** — 각 `EntityCentricRLlibModel`은 로컬 Critic(`V_local`, 226-dim 에이전트 관측)과 중앙 Critic(`V_central`, 71-dim 전역 상태)을 학습 가능한 혼합 계수 α로 결합합니다.
+<div style="margin-top: 40px;"></div>
 
-```
-V = α · V_local(agent_obs[0:226]) + (1-α) · V_central(global_state[226:297])
-```
+**Dual Value Estimation** 
+
+각 `EntityCentricRLlibModel`은 로컬 Critic(`V_local`, 226-dim 에이전트 관측)과 중앙 Critic(`V_central`, 71-dim 전역 상태)을 학습 가능한 혼합 계수 α로 결합합니다.
+
+
+$$V = \alpha \cdot V_{\text{local}}(\text{agent\_obs}[0:226]) + (1 - \alpha) \cdot V_{\text{central}}(\text{global\_state}[226:297])$$
+
 
 α는 `sigmoid(_value_mix_logit)`로 초기화되며(초기값 0.5), 학습을 통해 각 역할에 최적인 로컬/전역 비중을 자동으로 결정합니다.
 
-**Self-Attention의 역할** — Actor의 인코더에서 아군·적·거점 각 엔티티 그룹에 Intra-Set Self-Attention을 적용합니다(Zambaldi et al., 2018). 엔티티 토큰들이 서로를 참조하여 "슬롯 3과 슬롯 5가 같은 거점 근처에 집결" 같은 집합 내 공간 관계를 학습합니다. 이 문맥화된 표현이 이후 Cross-Attention의 입력으로 사용됩니다.
+<div style="margin-top: 50px;"></div>
 
-**Cross-Attention의 역할** — Self Token(자신 관측 7-dim의 임베딩)이 Query가 되고, Self-Attention을 거친 아군·적·거점 토큰이 Key/Value가 됩니다. Cross-Attention은 "현재 나의 상태에서 각 엔티티가 얼마나 중요한가"를 가중합으로 집약하여 행동(EQS 가중치 7-dim)을 결정합니다.
+**Self-Attention의 역할**
+
+Actor의 인코더에서 아군·적·거점 각 엔티티 그룹에 Intra-Set Self-Attention을 적용합니다(Zambaldi et al., 2018). 엔티티 토큰들이 서로를 참조하여 **"슬롯 3과 슬롯 5가 같은 거점 근처에 집결"** 같은 집합 내 공간 관계를 학습합니다. 이 문맥화된 표현이 이후 Cross-Attention의 입력으로 사용됩니다.
+
+<div style="margin-top: 50px;"></div>
+
+**Cross-Attention의 역할**
+
+Self Token(자신 관측 7-dim의 임베딩)이 Query가 되고, Self-Attention을 거친 아군·적·거점 토큰이 Key/Value가 됩니다. Cross-Attention은 **"현재 나의 상태에서 각 엔티티가 얼마나 중요한가"** 를 가중합으로 집약하여 행동(EQS 가중치 7-dim)을 결정합니다.
+
 
 
 {{< code lang="python" label="train.py" width="100%" height="250px" align="right" >}}
@@ -337,7 +362,8 @@ config = config.multi_agent(
 
 
 
-### 3. 평가 모드 (Evaluation Mode)
+
+<font size="4">**평가 모드 (Evaluation Mode)**</font>
 
 학습 중 저장된 체크포인트의 성능을 ScriptedAI 대전을 통해 정량적으로 검증하는 **Live Evaluation** 파이프라인(`eval_live.py`)입니다.
 
@@ -379,62 +405,8 @@ action = policy(agent_obs).squeeze(0).numpy()                           # (7,)
 <hr style="border: 0; height: 1px; background: #b3b3b3;">
 
 
-### 4. 학습 결과 (Training Results)
 
-총 2.4M(240만) 타임스텝에 걸쳐 MAPPO 기반 ScriptedAI 대전 학습을 수행했습니다.
-
-{{< img src="/images/project1/reward.png"
-        alt=""
-        class="max-w-3xl"
-        caption="Fig 7. reward" >}}
-
-{{< img src="/images/project1/value.png"
-        alt=""
-        class="max-w-3xl"
-        caption="Fig 8. vf explained, entropy, kl" >}}
-
-{{< img src="/images/project1/loss.png"
-        alt=""
-        class="max-w-3xl"
-        caption="Fig 9. loss" >}}
-
-
-<div style="margin-top: 40px;"></div>
-
-<font size="4">**핵심 수치 요약**</font>
-
-| 지표 | 값 | 의미 |
-|---|---|---|
-| **episode_reward_mean** | 0 → 60,000 수렴 | min 보상 동반 상승 — 최악 시나리오에서도 안정적 성능 |
-| **vf/explained_var** | 0.87 | Critic이 미래 보상의 87%를 설명 — 높은 상태 가치 예측력 |
-| **kl/value** | 낮고 안정 | 정책 업데이트가 신뢰 영역 내에서 제어됨 |
-| **entropy** | 0.01 → 0.0005 감소 | 탐험→활용 전환 확인 (스케줄 기반) |
-| **losses/vf_loss** | 우상향 | 보상 스케일 증가(0→60K)에 따른 타겟 범위 확대 효과. explained_var 0.87로 Critic 성능은 정상 |
-
-**조기 종료 판단:** lr 스케줄러가 0에 도달하고 reward가 평탄화(plateau)에 진입한 2.4M 스텝에서 학습을 종료했습니다.
-
-<div style="margin-top: 40px;"></div>
-
-<font size="4">**클래스별 학습 결과**</font>
-
-> **Strike**
-
-원거리 거점 점령 역할에 최적화된 정책을 학습했습니다. 적과 최소 교전 거리(`MinCombatRange`)를 유지하면서 목표 거점에 접근하는 행동이 안정적으로 수렴했으며, 거점 점령 완료 후 다음 거점으로 이동하는 모멘텀 패턴이 관측되었습니다.
-
-> **Vanguard**
-
-근접 전열 역할에 맞게 적과 밀착하는 행동을 학습했습니다. 거점 내 근접 사거리(`MeleeRangeBonus`) 조건이 충족되는 포지션을 적극적으로 유지하며, Strike 대비 적에 더 가까운 위치에 수렴하는 EQS 가중치 프로파일이 형성되었습니다.
-
-> **Support**
-
-부상 아군 추적 및 후방 포지셔닝 행동을 학습했습니다. 5스텝 캐시 타겟을 따라 접근하다가 치유 후 다음 타겟으로 전환하는 사이클이 확인되었으며, 아군 뒤편 후방 호 내 체류 시간이 학습 초기 대비 증가했습니다. 부상 아군이 없는 상황에서는 아군 클러스터 중심부에 집결하는 보조 행동이 관측되었습니다.
-
-
-
-<hr style="border: 0; height: 1px; background: #b3b3b3;">
-
-
-### 5. AWS 병렬 학습 환경 (AWS Parallel Training Environment)
+### 3. AWS 병렬 학습 환경 (AWS Parallel Training Environment)
 
 로컬 단일 UE5 인스턴스에서 수십 개의 클라우드 병렬 환경으로 확장하는 **AWS 기반 분산 학습 파이프라인**입니다. UE5와 학습 스크립트를 Linux 컨테이너로 패키징하고, Ray Autoscaler를 통해 EC2 클러스터를 동적으로 관리합니다.
 
@@ -604,10 +576,10 @@ ray down aws/cluster.yaml -y   # 전체 EC2 인스턴스 종료
 
 ### Problem 1: 멀티 에이전트 강화학습 환경(Schola + RLlib)에서의 에이전트 개별 사망 처리 결함
 
-{{< img src="/images/project1/problem2.png"
+{{< img src="/images/project1/problem1.png"
         alt=""
         class="max-w-full"
-        caption="Fig 5. 프리징 현상의 원인과 해결" >}}
+        caption="Fig 14. 프리징 현상의 원인과 해결" >}}
 
 **에피소드 멈춤(Episode Freeze)**: 특정 에이전트가 먼저 사망할 경우, RLlib은 해당 에이전트의 액션을 전송하지 않지만 Unreal Engine Schola는 모든 에이전트의 액션을 기다리며 대기 상태에 빠지는 통신 불일치 발생했습니다.
 
@@ -674,6 +646,11 @@ C++ (Unreal Plugin):
 
 
 ### Problem 2: 엔티티 간 관계 정보 손실
+
+{{< img src="/images/project1/problem2.png"
+        alt=""
+        class="max-w-full"
+        caption="Fig 15. 엔티티 관계 정보 손실과 어텐션 도입을 통한 해결" >}}
 
 
 학습된 정책이 "적 2명이 같은 거점에 집결" 같은 엔티티 간 공간 패턴을 인식하지 못하는 문제가 관찰되었습니다. 에이전트가 아군이 이미 점령 중인 거점에 중복 배치되는 비효율이 반복되었고, 보상 구조만으로는 이 현상을 충분히 정의하기 어려웠습니다.
@@ -744,6 +721,11 @@ def _safe_mask(m: torch.Tensor) -> torch.Tensor:
 
 
 ### Problem 3: 스텝 속도와 에이전트 이동 간의 타이밍 불일치
+
+{{< img src="/images/project1/problem3.png"
+        alt=""
+        class="max-w-full"
+        caption="Fig 16. 스로틀링 제어" >}}
 
 학습 환경에서 `AGymConnectorManager`의 `Tick()`이 매 프레임(60Hz+) `Connector->Step()`을 호출하여, EQS 이동이 완료되기 전에 다음 스텝이 실행되는 문제가 발생했습니다. 에이전트가 목적지에 도달하기 전에 새로운 EQS 목표 위치가 덮어써지면서 이동이 취소되어 목표 지점에 도달하지 못한 채 관측이 수집되면서 학습 데이터의 품질이 저하되었습니다.
 
@@ -835,8 +817,55 @@ void ADEGymConnectorManager::Tick(float DeltaTime)
 
 
 
-
----
-
 ## 결과 (Results)
 
+<font size="4">**학습 결과**</font>
+
+
+총 2.4M(240만) 타임스텝에 걸쳐 MAPPO 기반 ScriptedAI 대전 학습을 수행했습니다.
+
+{{< img src="/images/project1/reward.png"
+        alt=""
+        class="max-w-3xl"
+        caption="Fig 7. reward" >}}
+
+{{< img src="/images/project1/value.png"
+        alt=""
+        class="max-w-3xl"
+        caption="Fig 8. vf explained, entropy, kl" >}}
+
+{{< img src="/images/project1/loss.png"
+        alt=""
+        class="max-w-3xl"
+        caption="Fig 9. loss" >}}
+
+
+<div style="margin-top: 40px;"></div>
+
+<font size="4">**핵심 수치 요약**</font>
+
+| 지표 | 값 | 의미 |
+|---|---|---|
+| **episode_reward_mean** | 0 → 60,000 수렴 | min 보상 동반 상승 — 최악 시나리오에서도 안정적 성능 |
+| **vf/explained_var** | 0.87 | Critic이 미래 보상의 87%를 설명 — 높은 상태 가치 예측력 |
+| **kl/value** | 낮고 안정 | 정책 업데이트가 신뢰 영역 내에서 제어됨 |
+| **entropy** | 0.01 → 0.0005 감소 | 탐험→활용 전환 확인 (스케줄 기반) |
+| **losses/vf_loss** | 우상향 | 보상 스케일 증가(0→60K)에 따른 타겟 범위 확대 효과. explained_var 0.87로 Critic 성능은 정상 |
+
+**조기 종료 판단:** lr 스케줄러가 0에 도달하고 reward가 평탄화(plateau)에 진입한 2.4M 스텝에서 학습을 종료했습니다.
+
+<div style="margin-top: 40px;"></div>
+
+<font size="4">**클래스별 학습 결과**</font>
+
+> **Strike**
+
+원거리 거점 점령 역할에 최적화된 정책을 학습했습니다. 적과 최소 교전 거리(`MinCombatRange`)를 유지하면서 목표 거점에 접근하는 행동이 안정적으로 수렴했으며, 거점 점령 완료 후 다음 거점으로 이동하는 모멘텀 패턴이 관측되었습니다.
+
+> **Vanguard**
+
+근접 전열 역할에 맞게 적과 밀착하는 행동을 학습했습니다. 거점 내 근접 사거리(`MeleeRangeBonus`) 조건이 충족되는 포지션을 적극적으로 유지하며, Strike 대비 적에 더 가까운 위치에 수렴하는 EQS 가중치 프로파일이 형성되었습니다.
+
+> **Support**
+
+부상 아군 추적 및 후방 포지셔닝 행동을 학습했습니다. 5스텝 캐시 타겟을 따라 접근하다가 치유 후 다음 타겟으로 전환하는 사이클이 확인되었으며, 아군 뒤편 후방 호 내 체류 시간이 학습 초기 대비 증가했습니다. 부상 아군이 없는 상황에서는 아군 클러스터 중심부에 집결하는 보조 행동이 관측되었습니다.
