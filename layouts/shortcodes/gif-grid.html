@@ -4,18 +4,19 @@
 {{ $gridStyle := "" }}
 
 {{ if $widths }}
-  {{/* 사용자가 widths="30%, 70%" 또는 widths="1, 2" 처럼 입력했을 때 처리 */}}
-  {{ $columns := replace $widths "," " " }}
-  {{ $gridStyle = printf "grid-template-columns: %s;" $columns }}
+{{/* 사용자가 widths="30%, 70%" 또는 widths="1, 2" 처럼 입력했을 때 처리 */}}
+{{ $columns := replace $widths "," " " }}
+{{ $gridStyle = printf "grid-template-columns: %s;" $columns }}
 {{ else }}
-  {{/* widths가 없으면 기존처럼 등분 (1fr 1fr ..) */}}
-  {{ $gridStyle = printf "grid-template-columns: repeat(%d, 1fr);" (len $urls) }}
+{{/* widths가 없으면 기존처럼 등분 (1fr 1fr ..) */}}
+{{ $gridStyle = printf "grid-template-columns: repeat(%d, 1fr);" (len $urls) }}
 {{ end }}
 
 <div class="gif-grid-container" style="{{ $gridStyle | safeCSS }} margin-top: 0; padding-top: 0;">
   {{ range $urls }}
-    <div class="gif-item" style="line-height: 0;"> {{/* 이미지 하단 빈틈 방지 */}}
-      <img src="{{ . | safeURL | strings.TrimSpace }}" alt="Project Demo" loading="lazy" style="display: block; margin: 0 auto;">
-    </div>
+  <div class="gif-item" style="line-height: 0;"> {{/* 이미지 하단 빈틈 방지 */}}
+    <img src="{{ . | safeURL | strings.TrimSpace }}" alt="Project Demo" loading="lazy"
+      style="display: block; margin: 0 auto;" class="modal-trigger cursor-pointer">
+  </div>
   {{ end }}
 </div>

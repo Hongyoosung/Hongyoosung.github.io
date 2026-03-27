@@ -12,162 +12,121 @@ math: true
 
 ---
 
+
+<hr style="border: 0; height: 1px; background: #b3b3b3;">
+
 ## Overview
 
-This project aims to develop a plugin for Unreal Engine 5 (UE5) that supports real-time updates of Environment Query System (EQS) weights using Reinforcement Learning (RL) models.
+This project involved the design and implementation of the **Dynamic EQS Plugin**, which uses Reinforcement Learning (RL) to automatically optimize the tactical positioning of UE5 NPCs without manual hardcoding. The system was validated through **MAPPO (Multi-Agent PPO)** training within a 5v5 team-based "Capture the Point" environment.
 
-The plugin was validated within a team-based "Capture the Point" environment, focusing on optimizing strategic positioning for multiple agents.
+I designed a reusable architecture by abstracting an RL-EQS integration middle layer as a plugin on top of **Schola (gRPC)**, making it compatible with other UE5 projects. Additionally, I independently built the entire end-to-end pipeline, including a parallel training infrastructure based on **AWS EC2 + Ray Autoscaler**.
 
----
+<div style="margin-top: 40px;"></div>
+
+{{< gif-grid urls="/gifs/project1/project1_title.gif, /gifs/project1/project1_battle.gif" widths="50%, 50%" >}}
+
+<hr style="border: 0; height: 1px; background: #b3b3b3;">
 
 ## System Architecture
 
 {{< img src="/images/project1/archi.png"
-alt=""
+alt="System Architecture"
 class="max-w-full"
 caption="Fig 1. System Architecture and Hierarchical Positioning Workflow" >}}
 
----
-
-## Training Environment
-
-A **5 vs 5 Team-based Capture Point** battle featuring 5 capture points distributed across the map.
-
-* **Victory Condition:** The first team to reach the target score by capturing and maintaining points wins.
-* **Respawn Rules:** Instead of individual respawns, a **Team Wipe** mechanic is used. When the entire team is eliminated, they respawn simultaneously near the team spawn point after a `RespawnDelay`.
-* **Strategic Roles:** Each agent is assigned an **Assault / Defend / Support** strategy per episode, learning positioning behaviors optimized for that specific role.
-* **Episode Length:** Fixed number of steps.
-* **Self-Play:** Both teams share the same policy and learn by reacting to each other's strategies.
-
-Each agent uses an RL policy network to infer spatial movement parameters in real-time, determining the optimal position for the current situation.
-
-Using the **Schola** plugin, a gRPC-based bridge was established between the UE5 environment and external Python scripts (Ray RLlib). **Dynamic EQS** was implemented as a plugin layer on top of Schola to map policy network outputs to EQS weights.
-
-Training initially started with 4 parallel environments on a single UE5 instance and was later scaled to a large-scale parallel training pipeline on **AWS Cloud**, collecting data from dozens of UE5 instances simultaneously to update the policy.
-
-{{< gif-grid urls="/gifs/project1/1.gif, /gifs/project1/3.gif" widths="50%, 50%" >}}
-
----
 
 ## Tech Stack
 
 | Category | Technologies |
-| --- | --- |
+|---|---|
 | **Game Engine** | Unreal Engine 5.6 (C++17) |
 | **RL Framework** | Ray RLlib 2.7, PyTorch |
 | **UE5-Python Bridge** | Schola Plugin (gRPC-based) |
 | **Neural Network Inference** | ONNX Runtime via UE5 NNE (Neural Network Engine) |
-| **Ability System** | UE5 Gameplay Ability System (GAS) — GameplayAbility, GameplayEffect, GameplayTag, GameplayCue |
+| **Ability System** | UE5 Gameplay Ability System (GAS) — GameplayAbility, GameplayEffect, GameplayTag |
 | **Cloud & Infra** | AWS (EC2, EKS), Docker (Linux) |
 | **Communication** | gRPC (Schola protocol) |
 | **Monitoring** | TensorBoard |
 
----
+<hr style="border: 0; height: 1px; background: #b3b3b3;">
 
-## Key Features
+## Training Environment
 
-### 1. Dynamic-EQS Plugin
+The environment is a **5v5 team-based Capture the Point** mode featuring 5 capture points across the map. The team that captures and holds more points to reach the target score first wins the match.
 
-**DynamicEQS** is a reusable RL-EQS integration layer for UE5 based on the Schola plugin. Game projects using DynamicEQS can inherit EQS-specific abstract classes without directly handling Schola's low-level gRPC/ONNX processing.
+-----
 
-The plugin consists of four main classes managing **Environment**, **Agent**, **Action**, and **Observation**, acting as middleware to map policy network outputs to EQS weights.
+### Class Role Design
 
-{{< img src="/images/project1/pluginarchi.png"
-alt=""
-class="max-w-full"
-caption="Fig 2. Plugin Layer Hierarchy" >}}
+Each agent is assigned a specific class—**Strike, Vanguard, or Support**—at the start of every episode. Since each class requires a fundamentally different positioning strategy, I assigned **independent policy networks** to each class and applied role-specific reward functions.
 
----
+{{< gif-grid urls="/gifs/project1/project1_strike.gif, /gifs/project1/project1_vanguard.gif, /gifs/project1/project1_support.gif" >}}
 
-#### Injecting EQS Weights (ApplyWeightsToRequest)
+| Class | Role | Core Positioning Objective |
+|---|---|---|
+| **Strike** | Ranged DPS | Approach enemy points + Maintain optimal firing range |
+| **Vanguard** | Melee Tank | Maintain front-line presence + Close-quarters engagement |
+| **Support** | Backline Healer | Track injured allies + Maintain safe rear positioning |
 
-The flow for injecting the policy network's output (7-dim Box action) into actual EQS query parameters is as follows:
+-----
 
-**Editor Configuration:**
+### Training Against Scripted AI
 
-1. Add the `UDynamicEQSExecutor` component to the `BP_Agent` (ADECharacter).
-2. Enter the parameter names used in each EQS Query test into the `WeightParamNames` array (e.g., `EnemyObjectiveProximity`, `AllyObjectiveProximity`, ...).
-3. Set the `Actuator` in the `UDEScholaAgent` component to `UDETacticalParameterActuator`.
+The Blue Team (RL) trains against the **Red Team (Scripted AI)**, which operates using hardcoded EQS weights and State Machines.
 
-{{< img src="/images/project1/flow3.png"
-alt=""
-class="max-w-full"
-caption="Fig 3. Training/Inference Runtime Data Flow" >}}
+Due to the complex mix of the three agent classes, which makes Self-Play less effective in the early stages, Scripted AI was chosen to provide a consistent difficulty baseline. This allowed the RL agents to learn foundational strategies reliably.
 
-```cpp
-// DynamicEQSExecutor.cpp — Injecting EQS Parameters
-void UDynamicEQSExecutor::ApplyWeightsToRequest(FEnvQueryRequest& Request) const
-{
-    for (int32 i = 0; i < Weights.Num(); ++i)
-    {
-        const FName ParamName = (WeightParamNames.IsValidIndex(i) && !WeightParamNames[i].IsNone())
-            ? WeightParamNames[i]
-            : FName(*FString::Printf(TEXT("Weight%d"), i));
-        Request.SetFloatParam(ParamName, Weights[i]);
-    }
-}
+-----
 
-```
+### Curriculum Tier System
 
----
+The Scripted AI is divided into **three difficulty tiers**: 1 (Basic), 2 (Standard), and 3 (Aggressive). When the RL team's win rate exceeds a specific promotion threshold over a set period, the system automatically transitions to the next tier.
 
-#### Decoupling Game Logic with FInstancedStruct
+| Tier Transition | Promotion Threshold |
+|---|---|
+| Tier 1 → 2 | 55% or higher |
+| Tier 2 → 3 | 65% or higher |
 
-To prevent the plugin from being dependent on game-specific types (like `AssignedBaseIndex`), `FInstancedStruct` is used to store external parameters opaquely.
-
-```cpp
-// DynamicEQSAgentComponent.h — The plugin only knows about FInstancedStruct
-UPROPERTY(BlueprintReadWrite)
-FInstancedStruct ExternalParams;  // Can store any USTRUCT
-
-// DETacticalParameterActuator.cpp — Cast to game-specific type at runtime
-const FDEAgentExternalContext* Ctx =
-    AgentComponent->ExternalParams.GetPtr<FDEAgentExternalContext>();
-if (Ctx)
-    Weights.AssignedBaseProximity = ComputeBaseProximityWeight(Ctx->AssignedBaseIndex);
-
-```
-
-This pattern allows the plugin to remain independent of game headers, making it easily reusable in other projects.
-
----
-
-### 2. Observation Space & Strategy-Conditioned Reward Shaping
-
-**Observation Space**
-
-A 170-dim Entity-Centric vector generated by `FDEObservationV2::ToFlatArray()`. Allies, enemies, and bases are encoded into fixed-size slot tokens, with padding masks provided so the Python MultiheadAttention only processes valid entities.
+This system was implemented to prevent overfitting to lower difficulties and to gradually expose the agents to stronger opponents. Tier information is stored in `scripted_ai_config.json`, and UE5’s `LoadTierFromConfig()` applies the update automatically during the next episode reset.
 
 <div style="margin-top: 40px;"></div>
 
-#### **Agent Input State Configuration**
+---
+
+### Observation Space
+
+A **218-dimensional Entity-Centric vector** generated by `FDEObservationV2::ToFlatArray()`. It encodes allies, enemies, and strategic bases into fixed-size slot tokens. A separate padding mask is provided to ensure the Python-based **MultiheadAttention** mechanism processes only valid entities.
+
+<div style="margin-top: 40px;"></div>
+
+**Agent Input State Configuration**
 
 | Index | Dim | Token Content | Normalization & Details |
 | --- | --- | --- | --- |
-| **[0 : 3]** | 3 | Self Position | / (7500, 7500, 1000) |
-| **[3 : 6]** | 3 | Self Velocity | / (600, 600, 600) |
-| **[6 : 7]** | 1 | Self Health | raw [0, 1] |
-| **[7 : 47]** | 40 | Ally Tokens (8×5) | Relative Pos/8000(3) + Health(1) + Survival(1) |
-| **[47 : 87]** | 40 | Enemy Tokens (8×5) | Relative Pos/8000(3) + In-Sight(1) + Reliability(1) |
-| **[87 : 143]** | 56 | Base Tokens (8×7) | Relative Pos/15000(2) + Height/1000(1) + Ownership(1) + Capture Progress(1) + Assignment(1) + Strategic Value(1) |
-| **[143 : 151]** | 8 | Ally Mask | 0=Valid, 1=Padding |
-| **[151 : 159]** | 8 | Enemy Mask | 0=Valid, 1=Padding |
-| **[159 : 167]** | 8 | Base Mask | 0=Valid, 1=Padding |
-| **[167 : 170]** | 3 | Strategy One-hot | [assault, defend, support] |
-| **TOTAL** | **170** |  |  |
+| **[0 : 7]** | 7 | Self Token | Pos/7500(3) + Vel/600(3) + Health(1) |
+| **[7 : 71]** | 64 | Ally Tokens (8×8) | Rel\_Pos/8000(3) + HP(1) + Alive(1) + Class One-hot(3) |
+| **[71 : 135]** | 64 | Enemy Tokens (8×8) | Rel\_Pos/8000(3) + HP(1) + Visibility(1) + Class One-hot(3) |
+| **[135 : 191]** | 56 | Base Tokens (8×7) | Rel\_Pos/15000(2) + Height/1000(1) + Occupancy(1) + Progress(1) + Assigned(1) + Strat\_Value(1) |
+| **[191 : 199]** | 8 | Ally Mask | 0 = Valid, 1 = Padding |
+| **[199 : 207]** | 8 | Enemy Mask | 0 = Valid, 1 = Padding |
+| **[207 : 215]** | 8 | Base Mask | 0 = Valid, 1 = Padding |
+| **[215 : 218]** | 3 | Class One-hot | [strike, vanguard, support] |
+| **TOTAL** | **218** | | |
 
-> **Mask Handling:** The `_safe_mask()` in the Python policy forces unmasking of slot 0 if all slots are padded to prevent NaN in MultiheadAttention. The mask threshold is `> 0.5`, preserving the `0.0=Valid / 1.0=Padding` semantics.
+> **Mask Handling:** The `_safe_mask()` function in the Python policy prevents **NaN** errors in MultiheadAttention by forcibly unmasking Slot 0 when all slots are padded. The mask threshold is set to `> 0.5` (float comparison), preserving the `0.0=Valid / 1.0=Padding` semantics.
 
 ---
 
-**Reward Structure Overview**
+### Reward Structure
 
-> **Assault: Capturing Bases**
+<div style="margin-top: 40px;"></div>
 
-The goal is to approach and capture enemy bases. Approach rewards proportional to distance reduction are given every step, along with a presence bonus for staying within the base radius. Once captured, a momentum bonus is activated for `PostCaptureMomentumDuration` steps, encouraging the agent to move toward the next base instead of idling.
 
-```cpp
-# Assault reward (per step)
+<font size="4">**S T R I K E**</font>
+
+The objective is to capture bases while maintaining high damage output from a distance. An **approach reward** is granted per step proportional to the distance closed toward the target base, with an additional **presence bonus** upon entering the capture radius. To ensure role adherence, a penalty is applied if the agent gets too close to enemies.
+
+{{< code lang="cpp" label="Strike reward (per step)" width="100%" height="250px" align="right" >}}
 reward = 0
 if distance_to_target_base decreased:
     reward += approach_reward * delta_distance
@@ -178,36 +137,40 @@ if base just captured:
     reward += capture_bonus
 if momentum active:
     reward += momentum_bonus  # encourages moving to next base
-
-```
+if distance_to_enemy < MinCombatRange:
+    reward -= too_close_enemy_penalty  # ranged: maintain combat distance
+{{< /code >}}
 
 ---
 
-> **Defend: Maintaining Bases**
 
-The goal is to maintain friendly bases and repel enemies within them. A base presence reward is given while inside a friendly base. If the agent takes damage while inside, a `ZoneDurabilityBonus` is awarded to reinforce the behavior of holding the position under fire. If no friendly bases exist, the goal shifts to approaching neutral or enemy bases.
+<font size="4">**V A N G U A R D**</font>
 
-```cpp
-# Defend reward (per step)
+The objective is to capture bases while engaging in frontline melee combat. The base approach and capture logic follow the same principles as the Strike class. A **melee engagement bonus** is awarded when enemies are within close range inside a base, reinforcing frontline tanking behavior.
+
+{{< code lang="cpp" label="Vanguard reward (per step)" width="100%" height="250px" align="right" >}}
 reward = 0
-if agent inside friendly_base radius:
+if distance_to_target_base decreased:
+    reward += approach_reward * delta_distance
+if agent inside target_base radius:
     reward += zone_presence_bonus
-    if agent took damage this step:
-        reward += zone_durability_bonus   # reward staying under fire
-if no friendly base exists:
-    if distance_to_neutral_or_enemy_base decreased:
-        reward += approach_reward * delta_distance  # fallback objective
-
-```
+    if enemy within melee range:
+        reward += melee_range_bonus  # frontline tank: reward close engagement
+if base just captured:
+    activate momentum_bonus for PostCaptureMomentumDuration steps
+    reward += capture_bonus
+if momentum active:
+    reward += momentum_bonus
+{{< /code >}}
 
 ---
 
-> **Support: Sustaining Allies**
+<font size="4">**S U P P O R T**</font>
 
-The goal is to track and heal low-health allies while maintaining a rear position. Every step, the agent searches for injured allies, using a 5-step cache to prevent oscillatory behavior from frequent target switching. If the agent heals an ally or stays behind them, bonuses are awarded. Attempting kills while an ally needs urgent healing results in a role deviation penalty.
 
-```cpp
-# Support reward (per step)
+The objective is to track, heal, and maintain rear-guard positioning for wounded allies. To prevent "jittery" behavior (oscillating between targets), a **5-step target cache** is implemented. Agents receive a **rear-positioning bonus** for staying behind non-support allies.
+
+{{< code lang="cpp" label="Support reward (per step)" width="100%" height="250px" align="right" >}}
 reward = 0
 if staleness_counter >= 5 or no cached_target:
     cached_target = ally with lowest health
@@ -223,329 +186,495 @@ if agent positioned behind cached_target (rear arc):
     reward += rear_positioning_bonus
 if cached_target.health < threshold and agent attempted kill:
     reward -= role_deviation_penalty
-
-```
-
----
-
-### 3. Containerization and Environment Management for AWS Parallel Training
-
-To run large-scale parallel RL reliably, the entire Python training environment was packaged into Linux Docker containers, with a pipeline designed to connect multiple UE5 instances on AWS EC2.
-
-#### Containerization Strategy
-
-The training scripts (including Ray RLlib and Schola dependencies) were built into a Linux container image. This bypassed the `spawn`/`fork` multiprocess conflicts Ray faced on Windows. Packaged UE5 builds run on separate Linux instances and communicate with the containers via gRPC.
-
-#### Dynamic Port Routing
-
-To ensure each RLlib env-runner connects to a unique UE5 instance, I implemented automatic port assignment logic based on the worker index.
-
-```python
-# de_env.py — Automatic port assignment per worker
-def _resolve_port(self, **kwargs):
-    """Assign ports automatically in a multi-worker RLlib environment."""
-    base_port = kwargs.get("base_port")
-    if base_port is not None:
-        from ray.rllib.evaluation.rollout_worker import get_global_worker
-        worker = get_global_worker()
-        worker_index = worker.worker_index if worker else 0
-        return base_port + max(0, worker_index - 1)
-    return base_port
-
-```
-
-As RLlib creates multiple env-runners, each worker is assigned a unique port (`base_port + worker_index`) to connect to its own independent UE5 instance.
+{{< /code >}}
 
 ---
 
-#### Orchestration via Environment Variables
+<font size="4">**Team Reward Mixing (MAPPO Cooperative Signal)**</font>
 
-Training scale and hyperparameters are controlled via Docker Compose settings without modifying source code.
-
-```python
-# phase1_policy_training_v10_2.py — Dynamic scaling via env vars
-PORT                  = 50051
-NUM_UE5_ENVIRONMENTS  = int(os.environ.get('NUM_SCHOLA_ENVS', 4))
-NUM_WORKERS           = int(os.environ.get('NUM_WORKERS', 0))
-NUM_ITERATIONS        = int(os.environ.get('NUM_ITERATIONS', 100))
-
-```
-
-By defining `NUM_SCHOLA_ENVS` and `NUM_WORKERS` in the Docker Compose `environment` block, the number of UE5 instances and Ray workers can be scaled out independently, facilitating rapid hyperparameter sweeps.
-
----
-
-#### Training Monitoring (TensorBoard)
-
-Ray RLlib automatically logs rewards, policy loss, KL divergence, and entropy to TensorBoard for each iteration.
-
-{{< img src="/images/project1/reward.png"
-alt=""
-class="max-w-3xl"
-caption="Fig 7. Reward" >}}
-
-{{< img src="/images/project1/klenvf.png"
-alt=""
-class="max-w-3xl"
-caption="Fig 8. KL, Entropy, VF Explained" >}}
-
----
-
-### 4. GAS-based Combat System (Gameplay Ability System Integration)
-
-Combat logic (Attack/Heal) was designed using the UE5 **Gameplay Ability System (GAS)**, standardizing ability execution, cooldowns, and attribute management into a data-driven pipeline.
-
-#### Core Design Principles
-
-Abilities are triggered via **Gameplay Tag** lookups (`TryActivateAbilitiesByTag`) from Behavior Tree tasks. This allows the BT to trigger abilities without knowing the specific implementation class, enabling easy ability replacement or extension without code changes.
+To enhance cooperation in team-based environments, we implement a **Reward Mixing** strategy that blends individual and team-average rewards.
 
 <div style="margin-top: 40px;"></div>
 
-#### Attribute Management: `UDEAttributeSet`
-
-| Attribute | Type | Description |
-| --- | --- | --- |
-| `Health` / `MaxHealth` | Persistent (Replicated) | Tracks agent survival status |
-| `Armor` | Persistent (Replicated) | Damage reduction factor (1 point = 1% reduction) |
-| `Damage` / `Healing` | Meta (Transient) | Consumed immediately upon GameplayEffect application |
-
-In `PostGameplayEffectExecute()`, the `Damage` meta attribute is processed: Armor reduction is applied (`1 - Armor * 0.01`), invulnerability tags are checked, Health is clamped, and the `State.Dead` tag is attached upon death.
-
-```cpp
-// DEAttributeSet.cpp — Damage Processing Pipeline
-if (Data.EvaluatedData.Attribute == GetDamageAttribute())
-{
-    const float MitigationFactor = FMath::Clamp(1.0f - GetArmor() * 0.01f, 0.1f, 1.0f);
-    float FinalDamage = GetDamage() * MitigationFactor;
-
-    // Check invulnerability
-    if (SourceASC && SourceASC->HasMatchingGameplayTag(DEGameplayTags::State_Invulnerable))
-        FinalDamage = 0.0f;
-
-    const float NewHealth = FMath::Clamp(GetHealth() - FinalDamage, 0.0f, GetMaxHealth());
-    SetHealth(NewHealth);
-
-    // Death handling: Attach State.Dead tag
-    if (NewHealth <= 0.0f)
-        AbilitySystemComponent->AddLooseGameplayTag(DEGameplayTags::State_Dead);
-
-    SetDamage(0.0f); // Consume meta attribute
-}
-
-```
-
----
-
-#### Attack Ability: `UDEGA_Attack`
-
-* **Server-Only Execution** (`NetExecutionPolicy::ServerOnly`): AI-only ability requiring no client prediction.
-* Checks for `State.Dead` tag as a blocking condition.
-* Uses `FindNearestEnemy()` for range and sight-based target selection before spawning projectiles.
-* `AIController->SetFocus()` directs the character's aim, driving the Animation Blueprint's Aim Offset.
-* Cooldowns are managed within GAS via `GE_AttackCooldown` based on the `Cooldown.Attack` tag.
-
-```cpp
-// DEGA_Attack.cpp — Ability Activation
-void UDEGA_Attack::ActivateAbility(...)
-{
-    if (!CommitAbility(Handle, ActorInfo, ActivationInfo, &FailureTags))
-    { EndAbility(...); return; }
-
-    AActor* Target = TargetActor ? TargetActor : FindNearestEnemy();
-    if (!IsTargetValid(Target))
-    { EndAbility(...); return; }
-
-    // Direct AI aim for AnimBP
-    if (AController* Ctrl = Character->GetController())
-        Ctrl->SetFocus(Target);
-
-    FireAtTarget(Target, ActorInfo);
-    EndAbility(...);
-}
-
-```
-
----
-
-#### Healing Ability: `UDEGA_Heal`
-
-- Automatically select the ally with the lowest health in the team using `FindNearestInjuredAlly()` (operates independently of the 5-step cache)
-
-- Dynamically set the healing amount at runtime using `SetByCaller` magnitude (`Data.Healing` tag)
-
-- Provide the `CumulativeHealAmount` cumulative value to the reward subsystem to feed back as a support role density reward
-
-```cpp
-
-// DEGA_Heal.cpp — Apply healing via GameplayEffect
-
-FGameplayEffectSpecHandle SpecHandle =
-
-AbilitySystemComponent->MakeOutgoingSpec(HealEffectClass, 1.0f, EffectContext);
-
-SpecHandle.Data->SetSetByCallerMagnitude(DEGameplayTags::Data_Healing, HealAmount);
-
-TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
-```
-
-
----
-
-### 5. Dual-Mode Architecture
-
-Major components are designed to support both **Training** and **Inference** modes within a single UE5 binary. Trained ONNX models can be executed immediately in the same UE5 environment without additional builds.
-
-#### Core Design: `UDynamicEQSAgentComponent`
-
-The `UDynamicEQSAgentComponent` abstracts both modes into a single interface. The behavioral pipeline branches based on the `AgentMode` property.
+$$\text{final\_reward} = (1 - \alpha) \times r_{\text{individual}} + \alpha \times r_{\text{team\_avg}}$$
 
 <div style="margin-top: 40px;"></div>
 
-#### Mode Comparison
+| Parameter | Value | Design Intent |
+| :--- | :--- | :--- |
+| `TeamRewardMixingRatio` (α) | **0.2** | Maintains individual role optimization as the primary signal while preventing selfish behavior through a 20% cooperative signal. |
 
-| Feature | Training Mode | Inference Mode |
-| --- | --- | --- |
-| **Policy Execution** | Python RLlib (gRPC) | UE5 Built-in ONNX (NNE) |
-| **Stepper** | `GymConnector` (Schola loop) | `USimpleStepper` (TickComponent) |
-| **EQS Execution** | `EQS Executor` | `EQS Executor` |
-| **Reward Calculation** | `UDERewardSubsystem` (Every step) | None |
-| **Episode Management** | `AutoResetType::SAME_STEP` | Level Reset |
+The ratio is set to **$\alpha = 0.2$** to allow agents to first converge on basic role-specific behaviors (positioning, range maintenance) before refining team-level coordination. The team average is calculated based on the `LastIndividualStepReward` of teammates (excluding the self). Mixing is automatically disabled for solo agents. This calculation occurs every step in `DERewardSubsystem.cpp` via the `CalculateStepReward()` function.
+
+---
+
+<font size="4">**UE5 → Python Reward Pipeline**</font>
+
+Rewards are calculated in **C++ (UE5)**, normalized in **Python (RLlib)**, and then utilized for PPO updates.
+
+{{< img src="/images/project1/rewardpipeline.png"
+        alt=""
+        class="max-w-full"
+        caption="Fig 14. Reward Pipeline" >}}
+
+
+**Workflow:**
+
+1.  **C++ Calculation:** `DERewardSubsystem` computes per-step rewards (approach, objective, combat), applies 80:20 team mixing, and performs initial normalization via `RewardScale` and `Clamp`.
+2.  **gRPC Transmission:** The **Schola plugin** transmits reward data to the Python environment (`DEEntityCentricEnv`) via gRPC.
+3.  **Python Normalization:** `process_reward()` applies a `reward_scale=0.01` and clips the value to `±5.0` to ensure PPO training stability.
+4.  **Dual Critic Evaluation:** The `EntityCentricRLlibModel` value function utilizes a learnable mixing coefficient (α, initial sigmoid 0.5) to combine **$V_{local}$** (226-dim Attention Critic) and **$V_{central}$** (71-dim Global MLP Critic). All three role policies share the centralized critic.
+
+
+<hr style="border: 0; height: 1px; background: #b3b3b3;">
+
+## Key Features
+
+### 1. Dynamic-EQS Plugin
+
+**DynamicEQS** is a **reusable UE5-exclusive RL-EQS integration layer** built upon the Schola plugin. Game projects using DynamicEQS can inherit EQS-specific abstract classes instead of directly handling Schola's low-level gRPC/ONNX processing.
+
+DynamicEQS consists of four primary classes responsible for **Environment**, **Agent**, **Action**, and **Observation**. It serves as a middleware layer between Schola and the game project, configuring EQS weights and mapping them to the policy network.
+
+{{< img src="/images/project1/pluginarchi.png"
+        alt=""
+        class="max-w-full"
+        caption="Fig 2. Plugin Hierarchy" >}}
+
+{{< img src="/images/project1/flow3.png"
+        alt=""
+        class="max-w-full"
+        caption="Fig 3. Training/Inference Runtime Data Flow" >}}
+
+---
 
 <div style="margin-top: 40px;"></div>
 
-#### Execution Branching: `BeginPlay` & `PerformTacticalAction()`
+<font size="4">**EQS Weight Injection**</font>
 
-```cpp
-// DynamicEQSAgentComponent.cpp — Branching in BeginPlay
-void UDynamicEQSAgentComponent::BeginPlay()
+The following flow describes how the policy network's output (7-dim Box action) is injected as actual EQS query parameters.
+
+**Editor Setup**
+
+1.  Add the `UDynamicEQSExecutor` component to the `BP_Agent` (ADECharacter).
+2.  Enter the parameter names used in each EQS Query test into the `WeightParamNames` array in order (e.g., `EnemyObjectiveProximity`, `AllyObjectiveProximity`, etc.).
+3.  Set the `Actuator` to `UDETacticalParameterActuator` within the `UDEScholaAgent` component.
+
+{{< img-grid-scaler
+    src1="/images/project1/eqs1.png"
+    cap1="Fig 3. DynamicEQSExecutor Component"
+    class1="w-full"
+
+    src2="/images/project1/eqs2.png"
+    cap2="Fig 4. EQS Asset Configuration"
+    class2="w-3/4"
+
+>}}
+
+{{< code lang="cpp" label="EQS Parameter Injection" width="100%" height="250px" align="right" >}}
+// DynamicEQSExecutor.cpp — EQS Parameter Injection
+void UDynamicEQSExecutor::ApplyWeightsToRequest(FEnvQueryRequest& Request) const
 {
-    Super::BeginPlay();
-    if (AgentMode == EDynamicEQSAgentMode::Inference)
+    for (int32 i = 0; i < Weights.Num(); ++i)
     {
-        // Initialize ONNX Policy and SimpleStepper
-        Stepper = NewObject<USimpleStepper>(this);
-        Stepper->Init({this}, InferencePolicyObject);
+        const FName ParamName = (WeightParamNames.IsValidIndex(i) && !WeightParamNames[i].IsNone())
+            ? WeightParamNames[i]
+            : FName(*FString::Printf(TEXT("Weight%d"), i));
+        Request.SetFloatParam(ParamName, Weights[i]);
     }
 }
-
-// DynamicEQSAgentComponent.cpp — TickComponent (Inference only)
-void UDynamicEQSAgentComponent::TickComponent(...)
-{
-    Super::TickComponent(...);
-    if (AgentMode == EDynamicEQSAgentMode::Inference && Stepper)
-        Stepper->Step();  // Observe → ONNX Infer → Act
-}
-
-```
+{{< /code >}}
 
 ---
 
-## Technical Challenges & Problem Solving
+<div style="margin-top: 40px;"></div>
 
-### Problem 1: Need for a Standardized UE5-RLlib Communication Framework
+<font size="4">**Decoupling Game Logic via FInstancedStruct**</font>
 
-The native **Learning Agent** framework in UE5 only operates locally, making it impossible to leverage the advantages of Python's Ray RLlib for distributed reinforcement learning.
+To prevent the plugin from having direct members of game-specific types (such as `AssignedBaseIndex`), external parameters are stored opaquely using `FInstancedStruct`.
+
+If a plugin has a **compile-time dependency** on the game module, it becomes impossible to reuse in other projects. Therefore, a method was needed to break dependencies between modules while preserving runtime type information. `void*` lacks type safety, and the interface pattern (`IExternalContext`) forces implementation on the game side, compromising the plugin's independence. UE5's `FInstancedStruct` met these requirements by allowing opaque storage while preserving USTRUCT metadata.
+
+{{< code lang="cpp" label="DynamicEQSAgentComponent.h" width="100%" height="250px" align="right" >}}
+UPROPERTY(BlueprintReadWrite)
+FInstancedStruct ExternalParams; // Can store any USTRUCT
+
+// DETacticalParameterActuator.cpp — Casting to game type at the point of use
+const FDEAgentExternalContext* Ctx =
+    AgentComponent->ExternalParams.GetPtr\<FDEAgentExternalContext\>(); 
+if (Ctx)
+    Weights.AssignedBaseProximity = ComputeBaseProximityWeight(Ctx->AssignedBaseIndex);
+{{< /code >}}
+
+Thanks to this pattern, the plugin does not include any game headers and can be reused as-is in other projects.
+
+<hr style="border: 0; height: 1px; background: #b3b3b3;">
+
+
+### 2. MAPPO (Multi-Agent PPO)
 
 <div style="margin-top: 40px;"></div>
 
-#### Goal
+This project adopts **MAPPO (Multi-Agent PPO)** to train three role-specific independent actors (`strike_policy`, `vanguard_policy`, `support_policy`) alongside a shared centralized critic.
 
-Establish a high-performance training pipeline between UE5 and Python (Ray RLlib) using a stable communication protocol and standardized formats.
-
-<div style="margin-top: 40px;"></div>
-
-#### Solution
-
-Adopted AMD’s open-source library, **[Schola](https://github.com/GPUOpen-LibrariesAndSDKs/Schola)**, which provided several advantages:
-
-* **Standardized Formats**: Schola provides interfaces for Observations (`UBoxObserver`) and Actions (`UBoxActuator`), alongside dedicated controllers (`AAbstractTrainer`) for intuitive RL environment setup.
-* **gRPC Communication Bridge**: It wraps UE5 data into `gym.Env` formats and uses gRPC for low-latency serialization between the engine and RLlib.
+**Centralized Critic** — The `CentralizedCritic` estimates the overall team value by taking a 71-dim global team state (`FDETeamWorldState`: positions/HP/strategy of 5 allies + positions/reliability of 5 enemies + map state) as input. By directly referencing team-level information that cannot be captured by individual agent observations alone (e.g., ally distribution, overall capture progress), the critic significantly reduces the variance of Advantage estimation.
 
 <div style="margin-top: 40px;"></div>
 
-#### Result
+**Dual Value Estimation** Each `EntityCentricRLlibModel` combines a local critic ($V_{local}$, 226-dim agent observation) and a centralized critic ($V_{central}$, 71-dim global state) using a learnable mixing coefficient $\alpha$.
 
-By utilizing Schola’s interfaces, I successfully integrated UE5 with Ray RLlib without building custom wrappers from scratch, significantly increasing development efficiency.
+$$V = \alpha \cdot V_{\text{local}}(\text{agent\_obs}[0:226]) + (1 - \alpha) \cdot V_{\text{central}}(\text{global\_state}[226:297])$$
+
+$\alpha$ is initialized via `sigmoid(_value_mix_logit)` (initial value of 0.5) and automatically determines the optimal weight between local and global signals for each role through training.
+
+<div style="margin-top: 50px;"></div>
+
+**Role of Self-Attention**
+
+Intra-Set Self-Attention is applied to each entity group (allies, enemies, bases) within the Actor's encoder (Zambaldi et al., 2018). This allows entity tokens to reference one another and learn spatial relationships within the set, such as **"Slot 3 and Slot 5 are clustering near the same base."** This contextualized representation then serves as the input for Cross-Attention.
+
+<div style="margin-top: 50px;"></div>
+
+**Role of Cross-Attention**
+
+The Self Token (embedding of the 7-dim self-observation) acts as the **Query**, while the ally, enemy, and base tokens processed via Self-Attention serve as **Keys/Values**. Cross-Attention aggregates the importance of each entity relative to the agent's current state into a weighted sum, which is then used to determine the action (7-dim EQS weights).
+
+{{< code lang="python" label="train.py" width="100%" height="250px" align="right" >}}
+
+# Independent policy routing by role
+
+STRATEGY_POLICY_NAMES = {0: "strike_policy", 1: "vanguard_policy", 2: "support_policy"}
+
+config = config.multi_agent(
+policies={
+name: PolicySpec(config={"model": model_cfg})
+for name in STRATEGY_POLICY_NAMES.values()
+},
+policy_mapping_fn=_policy_mapping_fn,  # agent_id → class → policy
+count_steps_by="agent_steps",
+)
+{{< /code >}}
+
+<hr style="border: 0; height: 1px; background: #b3b3b3;">
+
+<font size="4">**Evaluation Mode**</font>
+
+The **Live Evaluation** pipeline (`eval_live.py`) quantitatively validates the performance of checkpoints saved during training through matches against Scripted AI.
+
+<div style="margin-top: 40px;"></div>
+
+<font size="4">**Structural Overview**</font>
+
+The `eval_live.py` pipeline is designed to quantitatively verify checkpoint performance against Scripted AI during the training process.
+
+By concurrently connecting two sub-environments in UE5, it evaluates two checkpoints (`best`, `latest`) in parallel. Episode outcomes are categorized into `win / loss / draw / timeout`, and the win rate based on 50 episodes is saved in `eval_results_<timestamp>.json`.
+
+The system is designed to run immediately via CPU inference by extracting only the Actor weights from `policy_state.pkl`, eliminating the need for a Ray runtime.
+
+<hr style="border: 0; height: 1px; background: #b3b3b3;">
+
+
+
+
+### 3. AWS Parallel Training Environment
+
+To overcome the limitations of a single local UE5 instance and scale into a cloud-based parallel environment, I built a distributed training pipeline on AWS. UE5 and the training scripts are packaged into Linux containers, with an EC2 cluster dynamically managed via the Ray Autoscaler.
 
 ---
 
-### Problem 2: Individual Agent Death Handling in Multi-Agent RL
+<font size="4">**Overall Infrastructure**</font>
 
-{{< img src="/images/project1/problem2.png"
+{{< img src="/images/project1/aws_architecture.png"
 alt=""
 class="max-w-full"
-caption="Fig 5. Cause and Resolution of Episode Freezing" >}}
+caption="Fig 10. AWS Parallel Training Infrastructure Architecture" >}}
 
-* **Episode Freeze**: If one agent died, RLlib stopped sending actions for it, but Schola would wait indefinitely for all agent actions, causing a communication deadlock.
-* **Death-Resurrection Loop**: In `SAME_STEP` mode, dead agents were reset immediately without valid states, leading to an infinite loop of death and respawn.
+-----
 
-#### Root Cause: Conflicting Reset Systems
+<font size="4">**Infrastructure Components**</font>
 
-Schola was attempting to reset agents immediately upon death (`SAME_STEP`), while RLlib was suppressing end-of-episode signals (`done`) to prevent mixing trajectories. This caused the dead agent to consume the entire "step budget," leaving surviving agents stuck at the synchronization barrier.
+| Component | Role |
+|---|---|
+| **Amazon ECR** | Training Docker Image Registry — Ensures environment consistency across all nodes |
+| **EC2 Ray Cluster** | Hybrid Configuration: Head (GPU, g4dn.xlarge) + Workers (CPU Spot, c5.2xlarge × 4) |
+| **Amazon S3** | Persistent Checkpoint Storage — Shared across nodes via s3fs FUSE mount |
+| **W\&B** | Real-time monitoring of per-iteration reward, win rate, and loss metrics |
 
-<div style="margin-top: 40px;"></div>
+VPC, IAM, and Security Groups are provisioned via Terraform, while the Ray Autoscaler automatically adjusts the number of workers based on the training load.
 
-#### Goal
+-----
 
-Ensure stable training even during staggered deaths.
+<font size="4">**Cluster Design Intent**</font>
 
-* Guarantee the entire episode terminates correctly (`__all__=True`).
-* Filter invalid data from dead agents to prevent NaN or trajectory pollution.
+The Head node (GPU) is dedicated to policy gradient updates, while the Worker nodes (CPU Spot) handle running headless UE5 instances and collecting rollouts. I utilized Spot instances for Workers because rollout collection is a stateless task that can be interrupted and resumed. If a Spot instance is reclaimed, the Ray Autoscaler automatically spins up a new worker to prevent training stalls. Additionally, the `idle_timeout_minutes: 10` setting ensures idle workers are terminated to optimize costs.
 
-<div style="margin-top: 40px;"></div>
+Since UE5 typically requires a display, I configured a virtual framebuffer (Xvfb) in the Dockerfile to enable execution in a cloud headless environment. For enhanced security, processes are run as a non-root user (UID 1000), and S3 credentials are managed via IAM Roles rather than static keys.
 
-#### Solution: Dual-Layer Fix (Python & C++)
+-----
 
-**Python (Schola Wrapper):**
+<font size="4">**Training Cycle Summary**</font>
 
-* **No-op Padding**: Inserted no-op actions for dead agents so UE5 always receives a full action set.
-* **Data Filtering**: Filtered observations and rewards of dead agents before passing them to RLlib.
+1.  Build Docker image → Push to ECR.
+2.  Launch Ray cluster (`ray up`) → Submit training script.
+3.  4 Workers collect UE5 rollouts in parallel → Formulate batches with `train_batch_size=4096`.
+4.  Execute PPO gradient updates on the Head GPU → Sync checkpoints to S3 every 10 iterations.
+5.  Immediately sync to the `best/` path upon reaching a new peak win rate.
 
-**C++ (Unreal Plugin):**
+Executing `ray down` terminates all instances immediately, while S3 checkpoints are preserved to allow training to resume upon restart.
 
-* **Dead Agent Snapshot**: Recorded the state of dead agents before `Step()` and restored terminal flags after execution to prevent the respawn loop.
-* **Action Filter**: Ensured actions from dead agents did not affect the physics engine or game logic.
 
-<div style="margin-top: 40px;"></div>
+<hr style="border: 0; height: 1px; background: #b3b3b3;">
 
-#### Result
 
-* Passed all 10 standalone unit tests (No-op generation, padding protocols, etc.).
-* Resolved episode freezing and confirmed normal reset cycles in the integrated environment.
-* **PR submitted and merged into the Schola Open Source repository.**
+## Problem Solving
+
+
+### Problem 1: Agent Death Handling Defects in Multi-Agent Reinforcement Learning (Schola + RLlib)
+
+{{< img src="/images/project1/problem1.png"
+        alt=""
+        class="max-w-full"
+        caption="Fig 14. Cause and Resolution of the Freezing Phenomenon" >}}
+
+**Episode Freeze**: A communication mismatch occurred where RLlib stopped sending actions for an agent that died early, while Unreal Engine (Schola) remained in a wait-state, expecting actions for all agents.
+
+**Death-resurrection loop**: In `SAME_STEP` mode, deceased agents were immediately reset without a valid state, falling into an infinite loop of repeated deaths.
+
+---
+
+<font size="4">**Cause**</font>
+
+**Conflict between two termination systems**
+
+There was a contradiction in episode termination signals between Schola (`AutoResetType::SAME_STEP`) and the Python side (RLlib).
+
+- **Schola**: Triggered an immediate auto-reset upon agent death per the `SAME_STEP` policy.
+- **Python**: RLlib suppressed individual termination signals (`done`) to prevent mixed trajectories (data from different episodes mixing in a single batch).
+
+Consequently, the Schola engine would revive the agent only for it to die again instantly, consuming the entire "step budget." Surviving agents were then blocked by Schola's multi-agent step barrier, failing to receive subsequent actions indefinitely.
+
+---
+
+<font size="4">**Goal**</font>
+
+Establish a stable training environment that operates without interruption even during staggered agent deaths.
+* Ensure the entire episode terminates correctly (`__all__=True`) regardless of individual death timings.
+* Implement a filtering system to prevent deceased agents' observations or rewards from contaminating training data (e.g., preventing NaN values).
+
+---
+
+<font size="4">**Solution**</font>
+
+**Dual-layer modifications in Python (Communication) and C++ (Engine)**
+
+Python (Schola Wrapper):
+* **No-op Padding**: Inserted no-op actions for deceased agents to ensure Unreal always receives actions for the full agent count.
+* **Data Filtering**: Filtered observations, rewards, and info for already-deceased agents from the Unreal response before passing data to RLlib.
+
+C++ (Unreal Plugin):
+* **Dead Agent Snapshot**: Recorded the state of deceased agents before `Step()` execution and restored terminal flags afterward to prevent state overwriting and resurrection loops.
+* **Action Filter**: Excluded actions of deceased agents from affecting the physics engine and game logic.
+
+---
+
+<font size="4">**Result**</font>
+
+* **Unit Tests Passed**: 100% pass rate across 10 standalone tests (No-op generation, padding protocols, etc.).
+* **Training Stability**: Resolved episode freezes in integrated Unreal environments and confirmed normal episode reset cycles.
+* **Data Integrity**: Verified the elimination of NaN values in rewards and prevented trajectory leakage.
+* **Open Source Contribution**: Submitted a Pull Request to the Schola repository regarding these fixes.
 
 {{< img src="/images/project1/pr.png"
-alt=""
-class="max-w-3xl"
-caption="Fig 6. Pull Request" >}}
+        alt=""
+        class="max-w-3xl"
+        caption="Fig 6. Pull Request" >}}
+
+<hr style="border: 0; height: 1px; background: #b3b3b3;">
+
+### Problem 2: Loss of Relational Information Between Entities
+
+{{< img src="/images/project1/problem2.png"
+        alt=""
+        class="max-w-full"
+        caption="Fig 15. Solving Entity Relation Loss through Attention Implementation" >}}
+
+I observed that the trained policy failed to recognize spatial patterns between entities, such as "two enemies converging on the same point." This led to inefficiencies, such as agents redundantly deploying to points already captured by allies—a phenomenon difficult to define solely through reward structures.
 
 ---
 
-### Problem 3: Environment Instability in Parallel Training
+<font size="4">**Cause**</font>
 
-Two issues occurred when running Ray's multi-worker architecture on Windows: (1) Ray Learner actors freezing during weight synchronization, and (2) bottlenecks caused by all workers attempting to connect to a single UE5 instance.
-
-<div style="margin-top: 40px;"></div>
-
-#### Goal
-
-Build a horizontally scalable multi-worker pipeline that remains stable and OS-independent.
-
-<div style="margin-top: 40px;"></div>
-
-#### Solution
-
-* **Docker Containerization**: Packaged the Python training scripts and Ray RLlib into a Linux Docker image, eliminating Windows-specific process creation conflicts.
-* **gRPC Port Routing**: Customized the Schola connection process so each env-runner calculates a unique port (`base_port + worker_index`) to connect to its own dedicated UE5 instance.
-* **Orchestration via Env Vars**: Managed `NUM_SCHOLA_ENVS` and `NUM_WORKERS` via environment variables for dynamic scaling through Docker Compose.
-
-<div style="margin-top: 40px;"></div>
-
-#### Result
-
-Successfully decoupled UE5 instances and Python workers for independent horizontal scaling. The Docker-based pipeline removed local environment dependencies and enabled rapid hyperparameter sweeps.
+In the 218-dim observation vector, each entity slot is embedded independently via a linear encoder (`nn.Linear`). While the Self Token subsequently queries the entity set via Cross-Attention, the single-query nature means **relative relationships between entities** (density, flanking patterns, overlap) are not reflected in the Attention weights. The Cross-Attention output is merely a weighted sum of "how important each entity is to Self," lacking information on "how entities relate to one another."
 
 ---
+
+<font size="4">**Solution**</font>
+
+**Intra-Set Self-Attention (Zambaldi et al., 2018)**
+
+I inserted a **Self-Attention layer** for each entity group (Ally / Enemy / Point) prior to Cross-Attention, allowing entities to reference each other. Entity tokens processed through Self-Attention now carry contextual information (e.g., "There are two allies near the same point as me"). The Self Token then aggregates this **contextualized** entity information during Cross-Attention.
+
+
+
+{{< code lang="python" label="policy.py — Relational Self-Attention pipeline" width="100%" height="250px" align="right" >}}
+# 1. Linear Encoding: Raw features → Hidden dimension
+a_enc = self.ally_enc(allies)                  # (B, 8, 64)
+
+# 2. Self-Attention: Mutual reference between ally tokens
+#    → Learns relations like "Slot 3 and Slot 5 are near the same point"
+a_rel, _ = self.ally_self_attn(a_enc, a_enc, a_enc,
+                                key_padding_mask=ally_mask)
+
+# 3. Residual + LayerNorm: Preserve original info + Stability
+a_enc = self.ally_ln(a_enc + a_rel)             # (B, 8, 64)
+
+# 4. Cross-Attention: Self Token aggregates contextualized ally info
+a_ctx, _ = self.ally_attn(q, a_enc, a_enc,
+                          key_padding_mask=ally_mask)  # (B, 1, 64)
+{{< /code >}}
+
+**Padding Mask Handling**: The C++ observation layout's `0=Valid, 1=Padding` mask is applied identically to both Self-Attention and Cross-Attention. A `_safe_mask()` function forces an unmask of Slot 0 if all slots are padded to prevent NaN. This is completed within the Python policy without requiring C++ modifications.
+
+{{< code lang="python" label="policy.py — safe mask" width="100%" height="150px" align="right" >}}
+def _safe_mask(m: torch.Tensor) -> torch.Tensor:
+    all_masked = m.all(dim=1, keepdim=True)   # (B, 1)
+    return m & ~all_masked                     # Unmask Slot 0 if all slots are padding
+{{< /code >}}
+
+**Design Constraints & Trade-offs**
+
+| Item | Value |
+|---|---|
+| Parameter Increase | 168K → 268K (+60%) |
+| Inference Latency | < 2ms (0.7% of the 0.3s step budget) |
+| ONNX Compatibility | opset 14 — No changes required for UE5 NNE |
+| C++ Modification | None (reused padding mask layout) |
+
+**Quantitative Comparison:** Ablation study results before and after Self-Attention implementation will be added following further experimentation.
+
+<hr style="border: 0; height: 1px; background: #b3b3b3;">
+
+### Problem 3: Timing Mismatch Between Step Speed and Agent Movement
+
+{{< img src="/images/project1/problem3.png"
+        alt=""
+        class="max-w-full"
+        caption="Fig 16. Throttling Control" >}}
+
+In the training environment, `AGymConnectorManager::Tick()` called `Connector->Step()` every frame (60Hz+), causing the next step to execute before EQS-based movement was complete. This caused new EQS goals to overwrite existing ones, canceling movement and resulting in poor-quality training data where observations were collected before reaching targets.
+
+---
+
+<font size="4">**Goal**</font>
+
+Coordinate the step cycle with the agent's EQS movement completion time to ensure observations are collected only after the agent has reached its destination.
+
+---
+
+<font size="4">**Solution**</font>
+
+**Rationale for overriding `AGymConnectorManager`**
+
+The entry point for Schola's training loop is structured as follows:
+
+```
+AGymConnectorManager::Tick()
+    └─ UAbstractGymConnector::Step()           ← Single training step
+            ├─ ResolveEnvironmentStateUpdate()  ← Receive action from Python (gRPC, ~10ms blocking)
+            ├─ HandleStep() / HandleReset()     ← Apply action to environment
+            └─ SubmitState()                    ← Send observation/reward to Python
+```
+
+`UAbstractGymConnector::Step()` processes a full cycle atomically, with `ResolveEnvironmentStateUpdate()` blocking for gRPC responses. Therefore, the **sole point to control step frequency** is `AGymConnectorManager::Tick()`, which calls `Step()`. I determined that step speed could be controlled externally by overriding `Tick()` without modifying the internal connector implementation.
+
+---
+
+**`ADEGymConnectorManager` Implementation**
+
+I implemented a custom class `ADEGymConnectorManager` inheriting from `AGymConnectorManager`. Instead of the default behavior, I call `AActor::Tick()` directly and control the frequency of `Connector->Step()` using a `StepInterval` variable.
+
+{{< code lang="cpp" label="ADEGymConnectorManager.h" width="100%" height="150px" align="right" >}}
+// Step interval adjustable in Editor
+UPROPERTY(EditAnywhere, Category = "Schola|Throttling",
+    meta = (ClampMin = "0.01", ClampMax = "10.0"))
+float StepInterval = 0.3f;  // Seconds, Default 2Hz
+{{< /code >}}
+
+The `StepInterval = 0.3s` value was determined by profiling the minimum cycle required: EQS 48-sample query time (~5ms) + NavMesh path calculation (~2ms) + Agent travel time (~1s for 600cm at 600cm/s). 
+
+{{< code lang="cpp" label="ADEGymConnectorManager.cpp — Implementation of Tick throttling" width="100%" height="250px" align="right" >}}
+void ADEGymConnectorManager::Tick(float DeltaTime)
+{
+    // Bypass AGymConnectorManager::Tick to prevent per-frame Step calls
+    AActor::Tick(DeltaTime);
+
+    if (!Connector) return;
+
+    // Connection Phase: Step internally executes CheckForStart() without blocking
+    if (Connector->IsNotStarted())
+    {
+        Connector->Step();
+        return;
+    }
+
+    // Running Phase: Execute Step once per StepInterval
+    if (Connector->IsRunning())
+    {
+        // Prevent burst steps caused by DeltaTime spikes when switching to background
+        const float ClampedDelta = FMath::Min(DeltaTime, StepInterval);
+        StepAccumulator += ClampedDelta;
+        if (StepAccumulator >= StepInterval)
+        {
+            StepAccumulator = 0.0f;
+            Connector->Step();
+        }
+    }
+}
+{{< /code >}}
+
+Implementation is finalized by changing the parent class of `BP_GymConnectorManager` to `ADEGymConnectorManager` in the Editor. The `StepInterval` can be tuned in the Details panel without requiring a rebuild.
+
+---
+
+<font size="4">**Result**</font>
+
+With `StepInterval = 0.3s`, training data quality improved as observations were collected after agents fully reached their EQS targets. Burst steps caused by `DeltaTime` spikes during editor background transitions were eliminated via `FMath::Min` clamping. This architecture allows for real-time balancing of training speed and movement completion rates through a single variable.
+
+<hr style="border: 0; height: 1px; background: #b3b3b3;">
 
 ## Results
+
+<font size="4">**Training Results**</font>
+
+Performed MAPPO-based training against Scripted AI over 2.5 million timesteps.
+
+{{< img src="/images/project1/result_reward.png"
+        alt=""
+        class="max-w-full"
+        caption="Fig 7. Reward" >}}
+
+{{< img src="/images/project1/result_vf.png"
+        alt=""
+        class="max-w-full"
+        caption="Fig 8. VF Explained" >}}
+
+{{< img src="/images/project1/result_entropy.png"
+        alt=""
+        class="max-w-full"
+        caption="Fig 9. Entropy" >}}
+
+<div style="margin-top: 40px;"></div>
+
+<font size="4">**Key Metrics Summary**</font>
+
+| Metric | Value | Meaning |
+|---|---|---|
+| **episode_mean** | 0 → 30, Converged at 14 | Successful policy improvement |
+| **vf/explained_var** | > 0.8 | Critic explains >80% of future rewards — High state-value prediction accuracy |
+| **entropy** | Initial rise then falling | Confirmed transition from exploration to exploitation |
+
+**Termination Rationale:** Training was concluded at 2.5M steps as the learning rate scheduler reached zero and the reward hit a plateau.
+
+<div style="margin-top: 40px;"></div>
+
 
