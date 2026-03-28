@@ -17,9 +17,9 @@ math: true
 
 ## Overview
 
-This project involved the design and implementation of the **Dynamic EQS Plugin**, which uses Reinforcement Learning (RL) to automatically optimize the tactical positioning of UE5 NPCs without manual hardcoding. The system was validated through **MAPPO (Multi-Agent PPO)** training within a 5v5 team-based "Capture the Point" environment.
+This project features the development of Dynamic EQS, a plugin designed to dynamically tune UE5 EQS weights through Reinforcement Learning. It employs a hybrid AI approach where the RL model determines the optimal tactical positions while the EQS handles the underlying spatial queries and pathfinding. The solution was rigorously tested in a 5v5 tactical scenario using the MAPPO algorithm. 
 
-I designed a reusable architecture by abstracting an RL-EQS integration middle layer as a plugin on top of **Schola (gRPC)**, making it compatible with other UE5 projects. Additionally, I independently built the entire end-to-end pipeline, including a parallel training infrastructure based on **AWS EC2 + Ray Autoscaler**.
+To maximize utility, I abstracted the RL-EQS integration as a middleware on top of Schola (gRPC) for seamless reuse in other UE5 projects. I also managed the full-stack DevOps workflow, including building a distributed training pipeline via Ray Autoscaler on AWS EC2.
 
 <div style="margin-top: 40px;"></div>
 
@@ -84,8 +84,8 @@ The Scripted AI is divided into **three difficulty tiers**: 1 (Basic), 2 (Standa
 
 | Tier Transition | Promotion Threshold |
 |---|---|
-| Tier 1 → 2 | 55% or higher |
-| Tier 2 → 3 | 65% or higher |
+| Tier 1 → 2 | 25% or higher |
+| Tier 2 → 3 | 40% or higher |
 
 This system was implemented to prevent overfitting to lower difficulties and to gradually expose the agents to stronger opponents. Tier information is stored in `scripted_ai_config.json`, and UE5’s `LoadTierFromConfig()` applies the update automatically during the next episode reset.
 
@@ -214,7 +214,7 @@ Rewards are calculated in **C++ (UE5)**, normalized in **Python (RLlib)**, and t
 
 {{< img src="/images/project1/rewardpipeline.png"
         alt=""
-        class="max-w-full"
+        class="max-w-3xl"
         caption="Fig 14. Reward Pipeline" >}}
 
 
@@ -319,6 +319,8 @@ This project adopts **MAPPO (Multi-Agent PPO)** to train three role-specific ind
 
 **Centralized Critic** — The `CentralizedCritic` estimates the overall team value by taking a 71-dim global team state (`FDETeamWorldState`: positions/HP/strategy of 5 allies + positions/reliability of 5 enemies + map state) as input. By directly referencing team-level information that cannot be captured by individual agent observations alone (e.g., ally distribution, overall capture progress), the critic significantly reduces the variance of Advantage estimation.
 
+---
+
 <div style="margin-top: 40px;"></div>
 
 **Dual Value Estimation** Each `EntityCentricRLlibModel` combines a local critic ($V_{local}$, 226-dim agent observation) and a centralized critic ($V_{central}$, 71-dim global state) using a learnable mixing coefficient $\alpha$.
@@ -329,13 +331,13 @@ $\alpha$ is initialized via `sigmoid(_value_mix_logit)` (initial value of 0.5) a
 
 <div style="margin-top: 50px;"></div>
 
-**Role of Self-Attention**
+<font size="4">**Role of Self-Attention**</font>
 
 Intra-Set Self-Attention is applied to each entity group (allies, enemies, bases) within the Actor's encoder (Zambaldi et al., 2018). This allows entity tokens to reference one another and learn spatial relationships within the set, such as **"Slot 3 and Slot 5 are clustering near the same base."** This contextualized representation then serves as the input for Cross-Attention.
 
 <div style="margin-top: 50px;"></div>
 
-**Role of Cross-Attention**
+<font size="4">**Role of Cross-Attention**</font>
 
 The Self Token (embedding of the 7-dim self-observation) acts as the **Query**, while the ally, enemy, and base tokens processed via Self-Attention serve as **Keys/Values**. Cross-Attention aggregates the importance of each entity relative to the agent's current state into a weighted sum, which is then used to determine the action (7-dim EQS weights).
 
@@ -354,6 +356,8 @@ policy_mapping_fn=_policy_mapping_fn,  # agent_id → class → policy
 count_steps_by="agent_steps",
 )
 {{< /code >}}
+
+Further details are covered in the **"Problem 2: Loss of Relationship Information Between Entities"** section.
 
 <hr style="border: 0; height: 1px; background: #b3b3b3;">
 
@@ -374,6 +378,11 @@ The system is designed to run immediately via CPU inference by extracting only t
 <hr style="border: 0; height: 1px; background: #b3b3b3;">
 
 
+
+{{< img src="/images/project1/eval.png"
+        alt=""
+        class="max-w-full"
+        caption="Fig 10. model eval result" >}}
 
 
 ### 3. AWS Parallel Training Environment
@@ -550,7 +559,7 @@ def _safe_mask(m: torch.Tensor) -> torch.Tensor:
 | ONNX Compatibility | opset 14 — No changes required for UE5 NNE |
 | C++ Modification | None (reused padding mask layout) |
 
-**Quantitative Comparison:** Ablation study results before and after Self-Attention implementation will be added following further experimentation.
+The empirical results can be found in **"Results: Empirical Analysis of Attention Patterns"**.
 
 <hr style="border: 0; height: 1px; background: #b3b3b3;">
 
@@ -644,7 +653,7 @@ With `StepInterval = 0.3s`, training data quality improved as observations were 
 
 ## Results
 
-<font size="4">**Training Results**</font>
+### Training Results
 
 Performed MAPPO-based training against Scripted AI over 2.5 million timesteps.
 
@@ -669,7 +678,7 @@ Performed MAPPO-based training against Scripted AI over 2.5 million timesteps.
 
 | Metric | Value | Meaning |
 |---|---|---|
-| **episode_mean** | 0 → 30, Converged at 14 | Successful policy improvement |
+| **episode_mean** | 0 → 40, Converged at 14 | Successful policy improvement |
 | **vf/explained_var** | > 0.8 | Critic explains >80% of future rewards — High state-value prediction accuracy |
 | **entropy** | Initial rise then falling | Confirmed transition from exploration to exploitation |
 
@@ -677,4 +686,124 @@ Performed MAPPO-based training against Scripted AI over 2.5 million timesteps.
 
 <div style="margin-top: 40px;"></div>
 
+---
+
+### Win Rate
+
+The win rate against Scripted AI increased from an initial 0% to around 70%. The intermediate drop in win rate was a temporary phenomenon caused by the increase in the Scripted AI's tier; as the win rate subsequently recovered, it was confirmed that the RL agent had successfully learned the game rules.
+
+{{< img src="/images/project1/win_rate.png"
+        alt=""
+        class="max-w-full"
+        caption="Fig 10. win rate" >}}
+
+---
+
+### Empirical Analysis of Attention Patterns
+
+We verified whether the entire pipeline (Self-Attention → Cross-Attention) operates according to the design intent by directly extracting attention weights from the trained checkpoints.
+
+---
+
+<font size="4">**Experimental Design**</font>
+
+We observed changes in attention distribution by inputting two contrasting scenarios under the same training policy.
+
+| Scenario | Description |
+|---|---|
+| **Clustered** | 4 allies concentrated within the same base radius (position difference ≈ 0.01) |
+| **Spread** | 4 allies distributed across 4 corners of the map (position difference ≈ 0.6) |
+
+The attention weights for slots 4–7 were 0.00 across all roles and scenarios, confirming that the padding mask was correctly applied and focus was restricted to valid entities (slots 0–3).
+
+---
+
+<font size="4">**Step 1 — Intra-Set Self-Attention: Capturing Spatial Relationships Between Entities**</font>
+
+Self-Attention serves as a preprocessing stage for Cross-Attention, where entity tokens reference each other to generate contextualized representations. The key metric is the **fluctuation range of weight distribution (Δmax)** in response to formation changes (Clustered → Spread).
+
+| Role | Formation Sensitivity | Key Observations |
+|---|---|---|
+| **Strike** | Medium (Δmax ≈ 0.19) | Clustered: Even distribution across 4 slots → Spread: Concentrated on Slot 1 (Assault) (0.47) |
+| **Support** | Low (Δmax ≈ 0.06) | Regardless of formation, maintains even distribution across all slots — Consistent with role characteristics |
+| **Vanguard** | High (Δmax ≈ 0.29) | Clustered: Concentrated on Slot 3 (0.53) → Spread: Concentrated on Slot 1 (0.54) |
+
+
+{{< img src="/images/project1/attn_comparison_strike.png"
+        alt=""
+        class="max-w-full"
+        caption="Fig 16. STRIKE Self-Attention, Clustered vs Spread vs Difference" >}}
+
+{{< img src="/images/project1/attn_comparison_support.png"
+        alt=""
+        class="max-w-full"
+        caption="Fig 17. SUPPORT Self-Attention, Clustered vs Spread vs Difference" >}}
+
+{{< img src="/images/project1/attn_comparison_vanguard.png"
+        alt=""
+        class="max-w-full"
+        caption="Fig 18. VANGUARD Self-Attention, Clustered vs Spread vs Difference" >}}
+
+The fact that Support shows the lowest sensitivity is not a bug, but a **natural internalization of role characteristics**. The healer role must monitor all allies equally regardless of team formation, and the training reflected this. In contrast, Vanguard showed the highest sensitivity, indicating that the frontline anchor role has differentiated to react most sensitively to changes in team positioning.
+
+---
+
+<font size="4">**Step 2 — Cross-Attention: Final Information Aggregation Before Action**</font>
+
+In Cross-Attention, the Self Token (one's own observation embedding) acts as the Query to look up each of the three entity sets: Allies, Enemies, and Bases. Since this weighted sum leads directly to EQS weights (actions), it most directly reveals "what the agent looks at when making actual behavioral decisions."
+
+<div style="margin-top: 40px;"></div>
+
+**Enemy Cross-Attention**
+
+Across all roles, weights are distributed almost equally between active enemy slots 0 and 1 (≈ 0.48–0.52). This is a consistent pattern of perceiving both enemies as equal threats, while slots 2–7 (padding) are accurately suppressed to 0.
+
+<div style="margin-top: 40px;"></div>
+
+**Base Cross-Attention**
+
+Priority bases differ clearly by role. Strike and Support concentrate on bases 0 and 1 (≈ 0.40–0.42), whereas Vanguard shows more distributed weights across bases 1 and 2. This is interpreted as a result of differentiation, where the Vanguard, as a frontline maintenance role, references neutral and rear bases in a balanced manner.
+
+<div style="margin-top: 40px;"></div>
+
+**Ally Cross-Attention — Consistency Verification with Self-Attention**
+
+{{< img-grid 
+    src1="/images/project1/attn_cross_strike_clustered.png" cap1="Fig 19. STRIKE Cross-Attention, Clustered vs Spread vs Difference"
+    src2="/images/project1/attn_cross_strike_spread.png" cap2="Fig 20. STRIKE Cross-Attention, Clustered vs Spread vs Difference"
+
+    class="max-w-full" 
+>}}
+
+{{< img-grid 
+    src1="/images/project1/attn_cross_vanguard_clustered.png" cap1="Fig 21. VANGUARD Cross-Attention, Clustered vs Spread vs Difference"
+    src2="/images/project1/attn_cross_vanguard_spread.png" cap2="Fig 22. VANGUARD Cross-Attention, Clustered vs Spread vs Difference"
+
+    class="max-w-full" 
+>}}
+
+{{< img-grid 
+    src1="/images/project1/attn_cross_support_clustered.png" cap1="Fig 23. SUPPORT Cross-Attention, Clustered vs Spread vs Difference"
+    src2="/images/project1/attn_cross_support_spread.png" cap2="Fig 24. SUPPORT Cross-Attention, Clustered vs Spread vs Difference"
+
+    class="max-w-full" 
+>}}
+
+
+<div style="margin-top: 40px;"></div>
+
+Vanguard's Cross-Attention ally weights correspond exactly with the Self-Attention results. In the Clustered scenario, Self-Attention dominantly selected Slot 3, and Cross-Attention also referenced Slot 3 most highly (0.50). In the Spread scenario, the focus shifted to Slot 1 in both cases (Self: 0.54, Cross: 0.42). This demonstrates that Cross-Attention consistently utilizes the contextualized representations generated by Self-Attention, **confirming that the two-stage pipeline is connected and functioning as intended.**
+
+---
+
+<font size="4">**Summary**</font>
+
+| Verification Item | Result |
+|---|---|
+| Padding Mask Suppression | Slots 4–7 completely suppressed — Normal |
+| Role-specific Self-Attention Differentiation | Support (Equal) / Strike (Medium) / Vanguard (High Sensitivity) — Consistent with role characteristics |
+| Cross-Attention Entity Priority | Enemy: Equal threat perception / Base: Varies by role / Ally: Consistent with Self-Attention |
+| Pipeline Consistency | Matching focus targets between Self → Cross Attention — Pipeline integrity confirmed |
+
+Through the two-stage attention patterns, we empirically demonstrated that **spontaneous differentiation of role-specific spatial reasoning** was achieved using only the Intra-Set Self-Attention structure, without any additional inductive biases such as reward functions or role labels.
 

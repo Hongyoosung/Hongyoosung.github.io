@@ -15,7 +15,7 @@ math: true
 
 ## 개요 (Overview)
 
-본 프로젝트는 UE5 NPC의 전술적 포지셔닝을 하드코딩 없이 강화학습으로 자동 최적화하는 Dynamic EQS 플러그인을 설계·구현하고, 5v5 팀 기반 거점 점령전 환경에서 MAPPO 학습을 통해 검증했습니다.
+본 프로젝트는 강화학습을 통해 UE5 에이전트의 EQS(Environment Query System) 가중치를 자동 최적화하는 Dynamic EQS 플러그인을 설계·구현하고, 5v5 팀 기반 거점 점령전 환경에서 MAPPO 학습을 통해 검증했습니다. 이를 통해 에이전트의 공간 탐색 및 이동은 EQS 시스템을 사용하고, 최적 위치 산정은 강화학습 모델이 담당하는 하이브리드 AI 시스템을 구현했습니다.
 
 Schola(gRPC) 위에 RL-EQS 통합 미들 레이어를 플러그인으로 추상화하여 다른 UE5 프로젝트에서도 재사용 가능한 구조로 설계했으며, AWS EC2 + Ray Autoscaler 기반의 병렬 학습 파이프라인까지 1인으로 전 과정을 구축했습니다.
 
@@ -246,7 +246,7 @@ $$
 {{< img src="/images/project1/rewardpipeline.png"
         alt=""
         class="max-w-3xl"
-        caption="Fig 14. 보상 파이프라인" >}}
+        caption="Fig 3. 보상 파이프라인" >}}
 
 **단계별 흐름:**
 
@@ -271,13 +271,13 @@ DynamicEQS의 주요 클래스는 4가지로, **환경**, **에이전트**, **�
 
 {{< img src="/images/project1/pluginarchi.png"
         alt=""
-        class="max-w-full"
-        caption="Fig 2. 플러그인 계층 구조" >}}
+        class="max-w-3xl"
+        caption="Fig 4. 플러그인 계층 구조" >}}
 
 {{< img src="/images/project1/flow3.png"
         alt=""
         class="max-w-3xl"
-        caption="Fig 3. 학습/추론 런타임 데이터 플로우" >}}
+        caption="Fig 5. 학습/추론 런타임 데이터 플로우" >}}
 
 ---
 
@@ -296,12 +296,19 @@ DynamicEQS의 주요 클래스는 4가지로, **환경**, **에이전트**, **�
 
 {{< img-grid-scaler
     src1="/images/project1/eqs1.png"
-    cap1="Fig 3. DynamicEQSExecutor 컴포넌트"
+    cap1="Fig 6. DynamicEQSExecutor 컴포넌트"
     class1="w-full"
 
     src2="/images/project1/eqs2.png"
-    cap2="Fig 4. EQS 에셋 구성"
+    cap2="Fig 7. EQS 에셋 구성"
     class2="w-3/4"
+>}}
+
+{{< img-grid 
+    src1="/images/project1/eqsdebug1.png" cap1="Fig 8. EQS Debugging 1"
+    src2="/images/project1/eqsdebug2.png" cap2="Fig 9. EQS Debugging 2"
+
+    class="max-w-full" 
 >}}
 
 
@@ -318,6 +325,9 @@ void UDynamicEQSExecutor::ApplyWeightsToRequest(FEnvQueryRequest& Request) const
     }
 }
 {{< /code >}}
+
+
+
 
 
 
@@ -428,6 +438,11 @@ UE5에 2개의 서브 환경을 동시 연결하여 두 개의 체크포인트(`
 Ray 런타임 없이 `policy_state.pkl`에서 Actor 가중치만 추출하여
 CPU 추론으로 즉시 실행 가능하도록 설계했습니다.
 
+{{< img src="/images/project1/eval.png"
+        alt=""
+        class="max-w-full"
+        caption="Fig 10. 모델 평가 결과" >}}
+
 
 <hr style="border: 0; height: 1px; background: #b3b3b3;">
 
@@ -504,7 +519,7 @@ S3 자격증명은 정적 키 대신 IAM Role 기반으로 처리했습니다.
 {{< img src="/images/project1/problem1.png"
         alt=""
         class="max-w-full"
-        caption="Fig 14. 프리징 현상의 원인과 해결" >}}
+        caption="Fig 11. 프리징 현상의 원인과 해결" >}}
 
 **에피소드 멈춤(Episode Freeze)**: 특정 에이전트가 먼저 사망할 경우, RLlib은 해당 에이전트의 액션을 전송하지 않지만 Unreal Engine Schola는 모든 에이전트의 액션을 기다리며 대기 상태에 빠지는 통신 불일치 발생했습니다.
 
@@ -563,7 +578,7 @@ C++ (Unreal Plugin):
 {{< img src="/images/project1/pr.png"
         alt=""
         class="max-w-3xl"
-        caption="Fig 6. Pull Request" >}}
+        caption="Fig 12. Pull Request" >}}
 
 
 <hr style="border: 0; height: 1px; background: #b3b3b3;">
@@ -575,7 +590,7 @@ C++ (Unreal Plugin):
 {{< img src="/images/project1/problem2.png"
         alt=""
         class="max-w-full"
-        caption="Fig 15. 엔티티 관계 정보 손실과 어텐션 도입을 통한 해결" >}}
+        caption="Fig 13. 엔티티 관계 정보 손실과 어텐션 도입을 통한 해결" >}}
 
 
 학습된 정책이 "적 2명이 같은 거점에 집결" 같은 엔티티 간 공간 패턴을 인식하지 못하는 문제가 관찰되었습니다. 에이전트가 아군이 이미 점령 중인 거점에 중복 배치되는 비효율이 반복되었고, 보상 구조만으로는 이 현상을 충분히 정의하기 어려웠습니다.
@@ -650,7 +665,7 @@ def _safe_mask(m: torch.Tensor) -> torch.Tensor:
 {{< img src="/images/project1/problem3.png"
         alt=""
         class="max-w-full"
-        caption="Fig 16. 스로틀링 제어" >}}
+        caption="Fig 14. 스로틀링 제어" >}}
 
 학습 환경에서 `AGymConnectorManager`의 `Tick()`이 매 프레임(60Hz+) `Connector->Step()`을 호출하여, EQS 이동이 완료되기 전에 다음 스텝이 실행되는 문제가 발생했습니다. 에이전트가 목적지에 도달하기 전에 새로운 EQS 목표 위치가 덮어써지면서 이동이 취소되어 목표 지점에 도달하지 못한 채 관측이 수집되면서 학습 데이터의 품질이 저하되었습니다.
 
@@ -752,17 +767,17 @@ void ADEGymConnectorManager::Tick(float DeltaTime)
 {{< img src="/images/project1/result_reward.png"
         alt=""
         class="max-w-full"
-        caption="Fig 7. reward" >}}
+        caption="Fig 15. reward" >}}
 
 {{< img src="/images/project1/result_vf.png"
         alt=""
         class="max-w-full"
-        caption="Fig 8. vf explained" >}}
+        caption="Fig 16. vf explained" >}}
 
 {{< img src="/images/project1/result_entropy.png"
         alt=""
         class="max-w-full"
-        caption="Fig 9. entropy" >}}
+        caption="Fig 17. entropy" >}}
 
 
 <div style="margin-top: 40px;"></div>
@@ -788,7 +803,7 @@ void ADEGymConnectorManager::Tick(float DeltaTime)
 {{< img src="/images/project1/win_rate.png"
         alt=""
         class="max-w-full"
-        caption="Fig 10. win rate" >}}
+        caption="Fig 18. win rate" >}}
 
 
 ---
@@ -827,17 +842,17 @@ Self-Attention은 Cross-Attention의 전처리 단계로, 엔티티 토큰들이
 {{< img src="/images/project1/attn_comparison_strike.png"
         alt=""
         class="max-w-full"
-        caption="Fig 16. STRIKE Self-Attention, Clustered vs Spread vs Difference" >}}
+        caption="Fig 19. STRIKE Self-Attention, Clustered vs Spread vs Difference" >}}
 
 {{< img src="/images/project1/attn_comparison_support.png"
         alt=""
         class="max-w-full"
-        caption="Fig 17. SUPPORT Self-Attention, Clustered vs Spread vs Difference" >}}
+        caption="Fig 20. SUPPORT Self-Attention, Clustered vs Spread vs Difference" >}}
 
 {{< img src="/images/project1/attn_comparison_vanguard.png"
         alt=""
         class="max-w-full"
-        caption="Fig 18. VANGUARD Self-Attention, Clustered vs Spread vs Difference" >}}
+        caption="Fig 21. VANGUARD Self-Attention, Clustered vs Spread vs Difference" >}}
 
 Support가 가장 낮은 민감도를 보이는 것은 버그가 아닌 **역할 특성의 자연스러운 내재화**입니다. 회복 역할은 팀 대형에 관계없이 전체 아군을 동등하게 모니터링해야 하며, 학습이 이를 반영했습니다. 반면 Vanguard는 가장 높은 민감도를 보여, 전선 앵커 역할이 팀 배치 변화에 가장 민감하게 반응하도록 분화됐음을 나타냅니다.
 
@@ -864,22 +879,22 @@ Cross-Attention은 Self Token(자신의 관측 임베딩)이 Query가 되어 아
 **아군(Ally) Cross-Attention — Self-Attention과의 일관성 검증**
 
 {{< img-grid 
-    src1="/images/project1/attn_cross_strike_clustered.png" cap1="Fig 19. STRIKE Cross-Attention, Clustered vs Spread vs Difference"
-    src2="/images/project1/attn_cross_strike_spread.png" cap2="Fig 20. SUPPORT Cross-Attention, Clustered vs Spread vs Difference"
+    src1="/images/project1/attn_cross_strike_clustered.png" cap1="Fig 22. STRIKE Cross-Attention, Clustered vs Spread vs Difference"
+    src2="/images/project1/attn_cross_strike_spread.png" cap2="Fig 23. SUPPORT Cross-Attention, Clustered vs Spread vs Difference"
 
     class="max-w-full" 
 >}}
 
 {{< img-grid 
-    src1="/images/project1/attn_cross_vanguard_clustered.png" cap1="Fig 21. VANGUARD Cross-Attention, Clustered vs Spread vs Difference"
-    src2="/images/project1/attn_cross_vanguard_spread.png" cap2="Fig 22. SUPPORT Cross-Attention, Clustered vs Spread vs Difference"
+    src1="/images/project1/attn_cross_vanguard_clustered.png" cap1="Fig 24. VANGUARD Cross-Attention, Clustered vs Spread vs Difference"
+    src2="/images/project1/attn_cross_vanguard_spread.png" cap2="Fig 25. SUPPORT Cross-Attention, Clustered vs Spread vs Difference"
 
     class="max-w-full" 
 >}}
 
 {{< img-grid 
-    src1="/images/project1/attn_cross_support_clustered.png" cap1="Fig 23. SUPPORT Cross-Attention, Clustered vs Spread vs Difference"
-    src2="/images/project1/attn_cross_support_spread.png" cap2="Fig 24. SUPPORT Cross-Attention, Clustered vs Spread vs Difference"
+    src1="/images/project1/attn_cross_support_clustered.png" cap1="Fig 26. SUPPORT Cross-Attention, Clustered vs Spread vs Difference"
+    src2="/images/project1/attn_cross_support_spread.png" cap2="Fig 27. SUPPORT Cross-Attention, Clustered vs Spread vs Difference"
 
     class="max-w-full" 
 >}}
