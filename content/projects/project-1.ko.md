@@ -103,8 +103,8 @@ RL 팀의 에피소드 승률이 일정 기간 동안 승격 임계값을 초과
 
 | 티어 전환 | 승격 임계값 |
 |---|---|
-| Tier 1 → 2 | 55% 이상 |
-| Tier 2 → 3 | 65% 이상 |
+| Tier 1 → 2 | 25% 이상 |
+| Tier 2 → 3 | 40% 이상 |
 
 낮은 난이도 과적합(overfitting)을 방지하고 점진적으로 더 강한 상대에 노출시키기 위해
 도입했습니다. 티어 정보는 `scripted_ai_config.json`에 기록되며, UE5의
@@ -245,7 +245,7 @@ $$
 
 {{< img src="/images/project1/rewardpipeline.png"
         alt=""
-        class="max-w-full"
+        class="max-w-3xl"
         caption="Fig 14. 보상 파이프라인" >}}
 
 **단계별 흐름:**
@@ -276,7 +276,7 @@ DynamicEQS의 주요 클래스는 4가지로, **환경**, **에이전트**, **�
 
 {{< img src="/images/project1/flow3.png"
         alt=""
-        class="max-w-full"
+        class="max-w-3xl"
         caption="Fig 3. 학습/추론 런타임 데이터 플로우" >}}
 
 ---
@@ -357,9 +357,10 @@ if (Ctx)
 
 **중앙집중식 Critic (Centralized Critic)** — `CentralizedCritic`은 71-dim 전역 팀 상태(`FDETeamWorldState`: 아군 5명 위치·체력·전략 + 적 5명 위치·신뢰도 + 맵 상태)를 입력받아 팀 전체의 가치를 추정합니다. 개별 에이전트 관측만으로는 알 수 없는 팀-레벨 정보(아군 분포, 전체 거점 점령 상황 등)를 Critic이 직접 참조하므로 Advantage 추정의 분산이 감소합니다.
 
-<div style="margin-top: 40px;"></div>
+---
 
-**Dual Value Estimation** 
+
+<font size="4">**Dual Value Estimation**</font>
 
 각 `EntityCentricRLlibModel`은 로컬 Critic(`V_local`, 226-dim 에이전트 관측)과 중앙 Critic(`V_central`, 71-dim 전역 상태)을 학습 가능한 혼합 계수 α로 결합합니다.
 
@@ -371,13 +372,18 @@ $$V = \alpha \cdot V_{\text{local}}(\text{agent\_obs}[0:226]) + (1 - \alpha) \cd
 
 <div style="margin-top: 50px;"></div>
 
-**Self-Attention의 역할**
+---
+
+<font size="4">**Self-Attention의 역할**</font>
+
 
 Actor의 인코더에서 아군·적·거점 각 엔티티 그룹에 Intra-Set Self-Attention을 적용합니다(Zambaldi et al., 2018). 엔티티 토큰들이 서로를 참조하여 **"슬롯 3과 슬롯 5가 같은 거점 근처에 집결"** 같은 집합 내 공간 관계를 학습합니다. 이 문맥화된 표현이 이후 Cross-Attention의 입력으로 사용됩니다.
 
 <div style="margin-top: 50px;"></div>
 
-**Cross-Attention의 역할**
+---
+
+<font size="4">**Cross-Attention의 역할**</font>
 
 Self Token(자신 관측 7-dim의 임베딩)이 Query가 되고, Self-Attention을 거친 아군·적·거점 토큰이 Key/Value가 됩니다. Cross-Attention은 **"현재 나의 상태에서 각 엔티티가 얼마나 중요한가"** 를 가중합으로 집약하여 행동(EQS 가중치 7-dim)을 결정합니다.
 
@@ -397,6 +403,8 @@ config = config.multi_agent(
 )
 {{< /code >}}
 
+
+자세한 내용은 **"Problem 2: 엔티티 간 관계 정보 소실"** 섹션에서 다룹니다.
 
 <hr style="border: 0; height: 1px; background: #b3b3b3;">
 
@@ -628,8 +636,8 @@ def _safe_mask(m: torch.Tensor) -> torch.Tensor:
 | ONNX 호환성 | opset 14 — UE5 NNE 변경 없음 |
 | C++ 수정 | 없음 (패딩 마스크 레이아웃 재사용) |
 
-**정량적 비교:** Self-Attention 도입 전후 ablation 비교 결과는 별도 실험 후 추가 예정입니다.
 
+실증 결과는 **"결과: Attention 패턴 실증 분석"** 에서 확인 할 수 있습니다.
 
 
 
@@ -736,7 +744,7 @@ void ADEGymConnectorManager::Tick(float DeltaTime)
 
 ## 결과 (Results)
 
-<font size="4">**학습 결과**</font>
+### 학습 결과
 
 
 총 2.5M(250만) 타임스텝에 걸쳐 MAPPO 기반 ScriptedAI 대전 학습을 수행했습니다.
@@ -763,10 +771,133 @@ void ADEGymConnectorManager::Tick(float DeltaTime)
 
 | 지표 | 값 | 의미 |
 |---|---|---|
-| **episode_mean** | 0 → 30, 14 수렴 |
+| **episode_mean** | 0 → 40, 17, 48 수렴 |
 | **vf/explained_var** | 0.8 이상 | Critic이 미래 보상의 80% 이상을 설명 — 높은 상태 가치 예측력 |
 | **entropy** | 초기 상승 후 하락 중 | 탐험→활용 전환 확인 |
 
 **학습 종료 판단:** lr 스케줄러가 0에 도달하고 reward가 plateau에 진입한 2.5M 스텝에서 학습을 종료했습니다.
 
 <div style="margin-top: 40px;"></div>
+
+---
+
+### 승률
+
+스크립티드 AI와의 승률은 초기 0%에서 70% 수준으로 상승했습니다. 중간의 승률 저하는 스크립티드 AI의 티어가 상승하면서 발생한 일시적인 현상으로, 이후 다시 승률을 회복하면서 RL 에이전트가 정상적으로 게임 규칙을 학습했음을 확인했습니다.
+
+{{< img src="/images/project1/win_rate.png"
+        alt=""
+        class="max-w-full"
+        caption="Fig 10. win rate" >}}
+
+
+---
+
+
+### Attention 패턴 실증 분석
+
+학습된 체크포인트에서 Attention weight를 직접 추출하여 파이프라인 전체(Self-Attention → Cross-Attention)가 설계 의도대로 동작하는지 검증했습니다.
+
+---
+
+<font size="4">**실험 설계**</font>
+
+동일한 학습 정책에 두 가지 대조 시나리오를 입력하여 Attention 분포 변화를 관찰했습니다.
+
+| 시나리오 | 설명 |
+|---|---|
+| **Clustered** | 아군 4명이 동일 거점 반경 내에 밀집 (위치 차이 ≈ 0.01) |
+| **Spread** | 아군 4명이 맵 4개 코너에 분산 배치 (위치 차이 ≈ 0.6) |
+
+슬롯 4–7의 Attention weight는 전 역할·전 시나리오에서 0.00으로, 패딩 마스크가 정상 적용되어 유효 엔티티(슬롯 0–3)에만 집중됨을 확인했습니다.
+
+---
+
+<font size="4">**1단계 — Intra-Set Self-Attention: 엔티티 간 공간 관계 포착**</font>
+
+Self-Attention은 Cross-Attention의 전처리 단계로, 엔티티 토큰들이 서로를 참조해 맥락화된 표현을 생성합니다. 핵심 지표는 **대형 변화(Clustered → Spread)에 따른 가중치 분포의 변동폭(Δmax)** 입니다.
+
+| 역할 | 대형 민감도 | 주요 관찰 |
+|---|---|---|
+| **Strike** | 중간 (Δmax ≈ 0.19) | Clustered: 4슬롯 균등 분배 → Spread: 슬롯 1(Assault) 집중(0.47) |
+| **Support** | 낮음 (Δmax ≈ 0.06) | 대형 무관, 전 슬롯 균등 유지 — 역할 특성과 일치 |
+| **Vanguard** | 높음 (Δmax ≈ 0.29) | Clustered: 슬롯 3 집중(0.53) → Spread: 슬롯 1 집중(0.54) |
+
+
+{{< img src="/images/project1/attn_comparison_strike.png"
+        alt=""
+        class="max-w-full"
+        caption="Fig 16. STRIKE Self-Attention, Clustered vs Spread vs Difference" >}}
+
+{{< img src="/images/project1/attn_comparison_support.png"
+        alt=""
+        class="max-w-full"
+        caption="Fig 17. SUPPORT Self-Attention, Clustered vs Spread vs Difference" >}}
+
+{{< img src="/images/project1/attn_comparison_vanguard.png"
+        alt=""
+        class="max-w-full"
+        caption="Fig 18. VANGUARD Self-Attention, Clustered vs Spread vs Difference" >}}
+
+Support가 가장 낮은 민감도를 보이는 것은 버그가 아닌 **역할 특성의 자연스러운 내재화**입니다. 회복 역할은 팀 대형에 관계없이 전체 아군을 동등하게 모니터링해야 하며, 학습이 이를 반영했습니다. 반면 Vanguard는 가장 높은 민감도를 보여, 전선 앵커 역할이 팀 배치 변화에 가장 민감하게 반응하도록 분화됐음을 나타냅니다.
+
+---
+
+<font size="4">**2단계 — Cross-Attention: 행동 직전 최종 정보 집약**</font>
+
+Cross-Attention은 Self Token(자신의 관측 임베딩)이 Query가 되어 아군·적·거점 세 엔티티 집합 각각을 조회하는 단계입니다. 이 가중합이 직접 EQS 가중치(행동)로 이어지므로, "에이전트가 실제 행동 결정 시 무엇을 보는가"를 가장 직접적으로 드러냅니다.
+
+<div style="margin-top: 40px;"></div>
+
+**적(Enemy) Cross-Attention**
+
+전 역할에서 활성 적 슬롯 0·1에 가중치가 거의 균등하게 분배됩니다(≈ 0.48–0.52). 두 적을 동등한 위협으로 인식하는 일관된 패턴으로, 슬롯 2–7(패딩)은 정확히 0으로 억제됩니다.
+
+<div style="margin-top: 40px;"></div>
+
+**거점(Base) Cross-Attention**
+
+역할마다 우선 거점이 명확히 다릅니다. Strike와 Support는 거점 0·1에 집중(≈ 0.40–0.42)하는 반면, Vanguard는 거점 1·2에 더 분산된 가중치를 보입니다. 전선 유지 역할인 Vanguard가 중립 거점 및 후방 거점을 균형 있게 참조하도록 분화된 결과로 해석됩니다.
+
+<div style="margin-top: 40px;"></div>
+
+**아군(Ally) Cross-Attention — Self-Attention과의 일관성 검증**
+
+{{< img-grid 
+    src1="/images/project1/attn_cross_strike_clustered.png" cap1="Fig 19. STRIKE Cross-Attention, Clustered vs Spread vs Difference"
+    src2="/images/project1/attn_cross_strike_spread.png" cap2="Fig 20. SUPPORT Cross-Attention, Clustered vs Spread vs Difference"
+
+    class="max-w-full" 
+>}}
+
+{{< img-grid 
+    src1="/images/project1/attn_cross_vanguard_clustered.png" cap1="Fig 21. VANGUARD Cross-Attention, Clustered vs Spread vs Difference"
+    src2="/images/project1/attn_cross_vanguard_spread.png" cap2="Fig 22. SUPPORT Cross-Attention, Clustered vs Spread vs Difference"
+
+    class="max-w-full" 
+>}}
+
+{{< img-grid 
+    src1="/images/project1/attn_cross_support_clustered.png" cap1="Fig 23. SUPPORT Cross-Attention, Clustered vs Spread vs Difference"
+    src2="/images/project1/attn_cross_support_spread.png" cap2="Fig 24. SUPPORT Cross-Attention, Clustered vs Spread vs Difference"
+
+    class="max-w-full" 
+>}}
+
+
+<div style="margin-top: 40px;"></div>
+
+Vanguard의 Cross-Attention 아군 가중치는 Self-Attention 결과와 정확히 대응합니다. Clustered에서 Self-Attention이 슬롯 3을 지배적으로 선택했고, Cross-Attention도 슬롯 3을 가장 높게 참조합니다(0.50). Spread에서는 양쪽 모두 슬롯 1로 초점이 이동합니다(Self: 0.54, Cross: 0.42). 이는 Self-Attention이 생성한 맥락화된 표현을 Cross-Attention이 일관성 있게 활용함을 보여주며, **두 단계 파이프라인이 의도대로 연결되어 작동함이 확인되었습니다.**
+
+---
+
+<font size="4">**종합**</font>
+
+| 검증 항목 | 결과 |
+|---|---|
+| 패딩 마스크 억제 | 슬롯 4–7 완전 억제 — 정상 |
+| 역할별 Self-Attention 분화 | Support(균등) / Strike(중간) / Vanguard(고민감) — 역할 특성과 일치 |
+| Cross-Attention 엔티티 우선순위 | 적: 균등 위협 인식 / 거점: 역할별 상이 / 아군: Self-Attention과 일관 |
+| 파이프라인 일관성 | Self → Cross Attention 간 초점 대상 일치 — 파이프라인 정합성 확인 |
+
+보상 함수나 역할 레이블 외 별도의 귀납 편향 없이, Intra-Set Self-Attention 구조만으로 **역할 특화된 공간 추론의 자발적 분화**가 달성됐음을 두 단계의 Attention 패턴을 통해 실증했습니다.
