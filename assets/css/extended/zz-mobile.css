@@ -172,4 +172,83 @@
         right: 20px !important;
         font-size: 30px !important;
     }
+
+    /* Home Page Footer - change from fixed to relative to avoid overlap */
+    body.min-h-screen footer.fixed {
+        position: relative !important;
+        bottom: auto !important;
+        margin-top: 3rem !important;
+        margin-bottom: 2rem !important;
+        padding-bottom: 1rem !important;
+        pointer-events: auto !important;
+        opacity: 1 !important;
+    }
+
+    /* Journal Page Mobile Adjustments */
+    .journal-controls-wrap {
+        display: block !important;
+        width: 100% !important;
+        margin-bottom: 2rem !important;
+    }
+
+    .journal-filter-wrap {
+        flex-direction: column !important;
+        /* Filter button above search */
+        align-items: stretch !important;
+        gap: 0.8rem !important;
+        width: 100% !important;
+    }
+
+    .journal-filter-dropdown-wrap {
+        width: 100% !important;
+    }
+
+    .journal-filter-btn {
+        width: 100% !important;
+        justify-content: center !important;
+        background: rgba(128, 128, 128, 0.05) !important;
+        border: 1px solid var(--color-line) !important;
+        padding: 0.6rem !important;
+    }
+
+    .project-main input.journal-search-input,
+    .project-main .journal-search-input {
+        width: 100% !important;
+        max-width: none !important;
+        text-align: center !important;
+    }
+
+    /* Display only up to 2 tags in journal list */
+    .post-entry-tags .post-entry-tag:nth-child(n+3) {
+        display: none !important;
+    }
+
+    /* Font Size Reductions for Journal */
+    .post-entry-title {
+        font-size: 1.05rem !important;
+    }
+
+    .post-header h1 {
+        font-size: 1.6rem !important;
+    }
+
+    .post-content h1 {
+        font-size: 1.5rem !important;
+    }
+
+    .post-content h2 {
+        font-size: 1.4rem !important;
+    }
+
+    .post-content h3 {
+        font-size: 1.3rem !important;
+    }
+
+    /* Project Page Horizontal Nav */
+    .project-nav .buttons {
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        gap: 0.5rem !important;
+    }
 }

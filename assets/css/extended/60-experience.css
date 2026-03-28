@@ -14,7 +14,7 @@
 /* 대단원 제목 (Publish, Awards 등) */
 .exp-section-title {
     font-family: var(--font-cinzel);
-    font-size: 1.7rem; /* 글씨 크기 제어 */
+    font-size: 1.53rem; /* 1.7rem * 0.9 */
     color: var(--primary);
     margin-bottom: 2rem; /* 제목과 아래 콘텐츠 사이의 여백 제어 */
     letter-spacing: 0.07em;
@@ -31,7 +31,7 @@
 /* 개별 아이템 제목 (논문 제목, 자격증 이름 등) */
 .exp-item-title {
     font-family: var(--font-serif);
-    font-size: 1.1rem;
+    font-size: 0.99rem; /* 1.1rem * 0.9 */
     font-weight: 400;          /* 폰트 두께 조절 */
     letter-spacing: 0.02em;    /* 자간 조절 (원하는 수치로 변경 가능) */
     line-height: 1.4;          /* 행간 조절 */
@@ -48,14 +48,14 @@
 /* 개별 아이템 부가 정보 (저자, 날짜, 회사 부서 등) */
 .exp-item-meta {
     font-family: var(--font-sans);
-    font-size: 0.95rem;
+    font-size: 0.855rem; /* 0.95rem * 0.9 */
     color: var(--color-text-subtitle);
     margin-top: 0.5rem; /* 제목과 부가정보 사이 여백 */
 }
 
 .exp-item-date {
     font-family: var(--font-mono);
-    font-size: 0.85rem;
+    font-size: 0.765rem; /* 0.85rem * 0.9 */
     color: var(--color-text-muted);
 }
 

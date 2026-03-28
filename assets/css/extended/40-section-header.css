@@ -9,7 +9,8 @@
 
 .section-header__title {
     font-family: var(--font-cinzel);
-    font-size: 2.7rem;
+    font-size: 2.43rem;
+    /* 2.7rem * 0.9 */
     font-weight: 500;
     letter-spacing: 0.05em;
     color: var(--primary);
@@ -18,7 +19,8 @@
 
 .section-header__description {
     margin: 1rem 0 0;
-    font-size: 1.125rem;
+    font-size: 1.01rem;
+    /* 1.125rem * 0.9 */
     font-family: var(--font-serif);
     color: var(--color-text-subtitle);
     font-style: italic;
