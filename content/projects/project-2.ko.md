@@ -117,11 +117,12 @@ $$U_{final} = \max(w_1 \cdot U_1, w_2 \cdot U_2, \dots, w_n \cdot U_n)$$
     
     
     class="max-w-full" 
+    nocrop="true"
 >}}
 
 {{< img src="/images/project2/graph.png" 
         alt="유틸리티 그래프" 
-        class="max-w-3xl" 
+        class="max-w-3xl"
         caption="Fig 4. 정규화와 미세 환경 변화 반응 그래프" >}}
 
 <br>
@@ -152,8 +153,8 @@ public abstract class GOBTEvaluatorSO : ScriptableObject
 
 {{< img-grid-3
     src1="/images/project2/unity1.png" cap1="Fig 5. Behavior Designer 내에 배치된 커스텀 플래너 노드" class1="w-full"
-    src2="/images/project2/action.png" cap2="Fig 6. 사전조건/사후효과가 정의된 액션 클래스의 인스펙터 창" class2="w-3/4"
-    src3="/images/project2/planner.png" cap3="Fig 7. 커스텀 플래너 노드에서 목표 상태와 평가 상태변수를 설정하는 인스펙터 창" class3="w-1/2"
+    src2="/images/project2/action.png" cap2="Fig 6. 사전조건/사후효과가 정의된 액션 클래스의 인스펙터 창" class2="w-full"
+    src3="/images/project2/planner.png" cap3="Fig 7. 커스텀 플래너 노드에서 목표 상태와 평가 상태변수를 설정하는 인스펙터 창" class3="w-full"
     class="max-w-full" 
 >}}
 
@@ -200,6 +201,7 @@ public IEnumerator PlanCoroutine(PlanRequest request)
     src2="/images/project2/after.png" cap2="Fig 9. 코루틴 시분할 방식"
 
     class="max-w-full" 
+    nocrop="true"
 >}}
 
 

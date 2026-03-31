@@ -119,12 +119,12 @@ math: true
 
 {{< img-grid 
     src1="/images/project4/case1.png" cap1="Fig 6. 최적화 전(블로킹 발생)"
-    class1="w-2/4" 
+    class1="w-3/4"
 
     src2="/images/project4/case2.png" cap2="Fig 7. 최적화 후(비동기 처리)"
-    class1="w-3/4" 
+    class2="w-3/4"
 
-    class="max-w-full" 
+    nocrop="true"
 >}}
 
 <br>

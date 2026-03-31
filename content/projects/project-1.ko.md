@@ -17,7 +17,7 @@ math: true
 
 본 프로젝트는 강화학습을 통해 UE5 에이전트의 EQS(Environment Query System) 가중치를 자동 최적화하는 Dynamic EQS 플러그인을 설계·구현하고, 5v5 팀 기반 거점 점령전 환경에서 MAPPO 학습을 통해 검증했습니다. 이를 통해 에이전트의 공간 탐색 및 이동은 EQS 시스템을 사용하고, 최적 위치 산정은 강화학습 모델이 담당하는 하이브리드 AI 시스템을 구현했습니다.
 
-Schola(gRPC) 위에 RL-EQS 통합 미들 레이어를 플러그인으로 추상화하여 다른 UE5 프로젝트에서도 재사용 가능한 구조로 설계했으며, AWS EC2 + Ray Autoscaler 기반의 병렬 학습 파이프라인까지 1인으로 전 과정을 구축했습니다.
+Schola(gRPC) 위에 RL-EQS 통합 미들 레이어를 플러그인으로 추상화하여 다른 UE5 프로젝트에서도 재사용 가능한 구조로 설계했으며, AWS 기반의 병렬 학습 파이프라인까지 1인으로 전 과정을 구축했습니다.
 
 <div style="margin-top: 40px;"></div>
 
@@ -112,7 +112,7 @@ RL 팀의 에피소드 승률이 일정 기간 동안 승격 임계값을 초과
 
 <div style="margin-top: 40px;"></div>
 
-<hr style="border: 0; height: 1px; background: #b3b3b3;">
+---
 
 
 ### 관측 공간
@@ -138,6 +138,26 @@ RL 팀의 에피소드 승률이 일정 기간 동안 승격 임계값을 초과
 
 
 > **마스크 처리:** Python 정책의 `_safe_mask()`는 모든 슬롯이 패딩일 때 슬롯 0을 강제 언마스크하여 MultiheadAttention의 NaN을 방지합니다. 마스크 임계값은 `> 0.5` (float 비교)로, `0.0=유효 / 1.0=패딩` 의미론을 보존합니다.
+
+---
+
+
+### 액션 공간
+
+정책 네트워크의 출력은 **7-dim Continuous Box Action**입니다. 각 차원은 EQS 쿼리의 개별 테스트에 대응하는 가중치 파라미터로, EQS가 48개 후보 위치를 평가할 때 각 테스트의 기여도를 동적으로 조절합니다.
+
+| Index | 파라미터 이름 | 범위 | 역할 설명 |
+| :---: | :--- | :---: | :--- |
+| **[0]** | `EnemyObjectiveProximity` | [-1, 1] | 적 거점 방향 이동 욕구 (양수: 접근, 음수: 회피) |
+| **[1]** | `AllyObjectiveProximity` | [-1, 1] | 아군 거점 방어 욕구 (양수: 귀환, 음수: 전진) |
+| **[2]** | `CoverDensity` | [-1, 1] | 엄폐물 밀집 지역 선호도 (양수: 엄폐 우선, 음수: 개방 지형 선호) |
+| **[3]** | `EnemyVisibility` | [-1, 1] | 적 가시선 유지 욕구 (양수: 시야 확보, 음수: 은폐) |
+| **[4]** | `AllyProximity` | [-1, 1] | 아군 근접 유지 욕구 (양수: 뭉침, 음수: 분산) |
+| **[5]** | `CombatRange` | [-1, 1] | 선호 교전 거리 조절 (양수: 원거리 유지, 음수: 근접 추구) |
+| **[6]** | `AssignedBaseProximity` | [-1, 1] | 할당 거점 방향 인력 (양수: 할당 거점 접근, 음수: 이탈) |
+| **TOTAL** | **7-dim** | **[-1, 1]** | `FDEEQSWeightParameters` |
+
+정책 네트워크의 출력 레이어는 `tanh` 활성화를 사용하여 각 가중치를 자연스럽게 [-1, 1] 범위로 제한합니다. 전달받은 7개 가중치는 `UDynamicEQSExecutor::ApplyWeightsToRequest()`를 통해 EQS 쿼리 파라미터로 주입되고, EQS는 이를 바탕으로 48개 후보 위치에 대한 종합 점수를 산출하여 최적 이동 목표를 결정합니다.
 
 ---
 
@@ -225,6 +245,8 @@ $$
 \text{final\_reward} = (1 - \alpha) \times r_{\text{individual}} + \alpha \times r_{\text{team\_avg}}
 $$
 
+<div style="margin-top: 40px;"></div>
+
 | 파라미터 | 값 | 설계 의도 |
 | :--- | :--- | :--- |
 | `TeamRewardMixingRatio` (α) | **0.2** | 개인 역할 최적화를 주 신호로 유지하되, 팀 협동 신호를 20% 혼합하여 과도한 이기적 행동 방지 |
@@ -246,7 +268,7 @@ $$
 {{< img src="/images/project1/rewardpipeline.png"
         alt=""
         class="max-w-3xl"
-        caption="Fig 3. 보상 파이프라인" >}}
+        caption="Fig 2. 보상 파이프라인" >}}
 
 **단계별 흐름:**
 
@@ -272,12 +294,12 @@ DynamicEQS의 주요 클래스는 4가지로, **환경**, **에이전트**, **�
 {{< img src="/images/project1/pluginarchi.png"
         alt=""
         class="max-w-3xl"
-        caption="Fig 4. 플러그인 계층 구조" >}}
+        caption="Fig 3. 플러그인 계층 구조" >}}
 
 {{< img src="/images/project1/flow3.png"
         alt=""
         class="max-w-3xl"
-        caption="Fig 5. 학습/추론 런타임 데이터 플로우" >}}
+        caption="Fig 4. 학습/추론 런타임 데이터 플로우" >}}
 
 ---
 
@@ -289,24 +311,24 @@ DynamicEQS의 주요 클래스는 4가지로, **환경**, **에이전트**, **�
 
 **에디터 설정**
 
-1. `BP_Agent`(ADECharacter)에 `UDynamicEQSExecutor` 컴포넌트를 추가합니다.
+1. 에이전트에 `UDynamicEQSExecutor` 컴포넌트를 추가합니다.
 2. `WeightParamNames` 배열에 EQS Query의 각 테스트에서 사용하는 파라미터 이름을 순서대로 입력합니다 (예: `EnemyObjectiveProximity`, `AllyObjectiveProximity`, …).
 3. `UDEScholaAgent` 컴포넌트에서 `Actuator`로 `UDETacticalParameterActuator`를 지정합니다.
 
 
 {{< img-grid-scaler
     src1="/images/project1/eqs1.png"
-    cap1="Fig 6. DynamicEQSExecutor 컴포넌트"
+    cap1="Fig 5. DynamicEQSExecutor 컴포넌트"
     class1="w-full"
 
     src2="/images/project1/eqs2.png"
-    cap2="Fig 7. EQS 에셋 구성"
+    cap2="Fig 6. EQS 에셋 구성"
     class2="w-3/4"
 >}}
 
 {{< img-grid 
-    src1="/images/project1/eqsdebug1.png" cap1="Fig 8. EQS Debugging 1"
-    src2="/images/project1/eqsdebug2.png" cap2="Fig 9. EQS Debugging 2"
+    src1="/images/project1/eqsdebug1.png" cap1="Fig 7. EQS Debugging 1"
+    src2="/images/project1/eqsdebug2.png" cap2="Fig 8. EQS Debugging 2"
 
     class="max-w-full" 
 >}}
@@ -441,7 +463,7 @@ CPU 추론으로 즉시 실행 가능하도록 설계했습니다.
 {{< img src="/images/project1/eval.png"
         alt=""
         class="max-w-full"
-        caption="Fig 10. 모델 평가 결과" >}}
+        caption="Fig 9. 모델 평가 결과" >}}
 
 
 <hr style="border: 0; height: 1px; background: #b3b3b3;">
@@ -451,14 +473,14 @@ CPU 추론으로 즉시 실행 가능하도록 설계했습니다.
 ### 3. AWS 병렬 학습 환경 (AWS Parallel Training Environment)
 
 로컬 단일 UE5 인스턴스의 한계를 넘어 클라우드 병렬 환경으로 확장하기 위해
-AWS 기반 분산 학습 파이프라인을 구축했습니다. UE5와 학습 스크립트를 Linux
-컨테이너로 패키징하고, Ray Autoscaler로 EC2 클러스터를 동적으로 관리합니다.
+AWS 기반 분산 학습 파이프라인을 구축했습니다. UE5를 Linux 바이너리로 패키징하고 S3에 적재, 
+학습 스크립트를 Docker 이미지로 EC2 인스턴스에서 실행하여 병렬 학습을 수행합니다.
 
 ---
 
 <font size="4">**전체 인프라 구성**</font>
 
-{{< img src="/images/project1/aws_architecture.png"
+{{< img src="/images/project1/aws_archi.png"
         alt=""
         class="max-w-full"
         caption="Fig 10. AWS 병렬 학습 인프라 전체 구성도" >}}
@@ -470,13 +492,11 @@ AWS 기반 분산 학습 파이프라인을 구축했습니다. UE5와 학습 �
 
 | 컴포넌트 | 역할 |
 |---|---|
-| **Amazon ECR** | 학습 Docker 이미지 레지스트리 — 모든 노드가 동일 이미지를 Pull하여 환경 일관성 보장 |
-| **EC2 Ray 클러스터** | Head(GPU, g4dn.xlarge) + Worker(CPU Spot, c5.2xlarge×4) 혼합 구성 |
-| **Amazon S3** | 체크포인트 영구 저장 — s3fs FUSE 마운트로 노드 간 공유 |
+| **Amazon ECR** | 훈련 스크립트 Docker 이미지 레지스트리, S3로부터 UE5 바이너리 다운로드 |
+| **EC2 Ray 클러스터** | Ray head + env_runners 4개 동시 실행, GPU로 PPO 학습 |
+| **Amazon S3** | UE5 바이너리 저장, 체크포인트, 훈련 데이터 영구 저장 및 W&B 연동 |
 | **W&B** | 이터레이션별 보상·승률·손실 지표 실시간 모니터링 |
-
-Terraform으로 VPC·IAM·보안 그룹을 프로비저닝하고, Ray Autoscaler가
-학습 부하에 따라 Worker 수를 자동 조절합니다.
+| **Terraform** | VPC·IAM·보안 그룹 프로비저닝 |
 
 ---
 
@@ -484,16 +504,8 @@ Terraform으로 VPC·IAM·보안 그룹을 프로비저닝하고, Ray Autoscaler
 
 Head 노드(GPU)는 정책 gradient 업데이트를, Worker 노드(CPU Spot)는
 UE5 헤드리스 인스턴스 구동 및 롤아웃 수집을 전담합니다.
-Worker를 Spot 인스턴스로 구성한 이유는 롤아웃 수집은 중단·재시작이
-가능한 stateless 작업이기 때문입니다. Spot 중단 시 Ray Autoscaler가
-자동으로 새 Worker를 기동하여 학습이 중단되지 않으며,
-`idle_timeout_minutes: 10` 설정으로 유휴 Worker를 자동 종료해
-비용을 절감합니다.
+롤아웃 수집은 중단·재시작이 가능한 stateless 작업이기 때문에 Worker는 Spot 인스턴스로 구성하여 비용을 절감했습니다. 
 
-UE5는 기본적으로 디스플레이가 필요하므로, 클라우드 헤드리스 환경에서
-구동하기 위해 Dockerfile에 가상 프레임버퍼(Xvfb)를 설정했습니다.
-보안 강화를 위해 비루트 사용자(UID 1000)로 실행하고,
-S3 자격증명은 정적 키 대신 IAM Role 기반으로 처리했습니다.
 
 ---
 
@@ -509,6 +521,30 @@ S3 자격증명은 정적 키 대신 IAM Role 기반으로 처리했습니다.
 재기동 시 이어서 학습할 수 있습니다.
 
 
+
+{{< img-grid 
+    src1="/images/project1/aws_ec2.png" cap1="Fig 11. AWS EC2 인스턴스"
+    src2="/images/project1/aws_ps.png" cap2="Fig 12. ps aux 커맨드로 확인한 4개의 PID(UE5 프로세스)"
+
+    class="w-full" 
+>}}
+
+{{< img-grid 
+    src1="/images/project1/aws_s3.png" cap1="Fig 13. AWS S3"
+    src2="/images/project1/aws_log.png" cap2="Fig 14. CloudWatch Log"
+
+    class="w-full" 
+>}}
+
+{{< img-grid 
+    src1="/images/project1/wan_spec.png" cap1="Fig 15. WAN DB Spec"
+    src2="/images/project1/wan_log.png" cap2="Fig 16. WAN DB Log"
+
+    class="w-full" 
+>}}
+
+
+
 <hr style="border: 0; height: 1px; background: #b3b3b3;">
 
 ## 기술적 난제 및 해결 전략 (Problem Solving)
@@ -519,7 +555,7 @@ S3 자격증명은 정적 키 대신 IAM Role 기반으로 처리했습니다.
 {{< img src="/images/project1/problem1.png"
         alt=""
         class="max-w-full"
-        caption="Fig 11. 프리징 현상의 원인과 해결" >}}
+        caption="Fig 17. 프리징 현상의 원인과 해결" >}}
 
 **에피소드 멈춤(Episode Freeze)**: 특정 에이전트가 먼저 사망할 경우, RLlib은 해당 에이전트의 액션을 전송하지 않지만 Unreal Engine Schola는 모든 에이전트의 액션을 기다리며 대기 상태에 빠지는 통신 불일치 발생했습니다.
 
@@ -578,7 +614,7 @@ C++ (Unreal Plugin):
 {{< img src="/images/project1/pr.png"
         alt=""
         class="max-w-3xl"
-        caption="Fig 12. Pull Request" >}}
+        caption="Fig 18. Pull Request" >}}
 
 
 <hr style="border: 0; height: 1px; background: #b3b3b3;">
@@ -590,10 +626,12 @@ C++ (Unreal Plugin):
 {{< img src="/images/project1/problem2.png"
         alt=""
         class="max-w-full"
-        caption="Fig 13. 엔티티 관계 정보 손실과 어텐션 도입을 통한 해결" >}}
+        caption="Fig 19. 엔티티 관계 정보 손실과 어텐션 도입을 통한 해결" >}}
 
 
-학습된 정책이 "적 2명이 같은 거점에 집결" 같은 엔티티 간 공간 패턴을 인식하지 못하는 문제가 관찰되었습니다. 에이전트가 아군이 이미 점령 중인 거점에 중복 배치되는 비효율이 반복되었고, 보상 구조만으로는 이 현상을 충분히 정의하기 어려웠습니다.
+초기에는 MAPPO 기반의 팀 협동 플레이 보상을 설계하여 협동성을 유도하려 했습니다. 그러나 Strike / Support / Vanguard 3가지 역할 간의 협동을 하나의 스칼라 보상으로 정의하는 것이 모호하고, 실제 학습에서는 의미 있는 협동이 나타나지 않으며 보상 해킹(Reward Hacking)이 빈번히 발생했습니다.
+
+협동성을 보상으로 강제하는 접근을 포기하고, 모델 아키텍처 차원에서 에이전트가 팀원 간의 관계를 자연스럽게 학습하도록 방향을 전환했습니다. 그 결과, 학습된 정책이 "적 2명이 같은 거점에 집결" 같은 엔티티 간 공간 패턴을 인식하지 못하는 근본 원인이 네트워크 구조에 있음을 발견했습니다. 에이전트가 아군이 이미 점령 중인 거점에 중복 배치되는 비효율이 반복되었고, 이는 보상 구조가 아닌 아키텍처 문제로 진단했습니다.
 
 ---
 
@@ -665,7 +703,7 @@ def _safe_mask(m: torch.Tensor) -> torch.Tensor:
 {{< img src="/images/project1/problem3.png"
         alt=""
         class="max-w-full"
-        caption="Fig 14. 스로틀링 제어" >}}
+        caption="Fig 20. 스로틀링 제어" >}}
 
 학습 환경에서 `AGymConnectorManager`의 `Tick()`이 매 프레임(60Hz+) `Connector->Step()`을 호출하여, EQS 이동이 완료되기 전에 다음 스텝이 실행되는 문제가 발생했습니다. 에이전트가 목적지에 도달하기 전에 새로운 EQS 목표 위치가 덮어써지면서 이동이 취소되어 목표 지점에 도달하지 못한 채 관측이 수집되면서 학습 데이터의 품질이 저하되었습니다.
 
@@ -767,17 +805,17 @@ void ADEGymConnectorManager::Tick(float DeltaTime)
 {{< img src="/images/project1/result_reward.png"
         alt=""
         class="max-w-full"
-        caption="Fig 15. reward" >}}
+        caption="Fig 21. reward" >}}
 
 {{< img src="/images/project1/result_vf.png"
         alt=""
         class="max-w-full"
-        caption="Fig 16. vf explained" >}}
+        caption="Fig 22. vf explained" >}}
 
 {{< img src="/images/project1/result_entropy.png"
         alt=""
         class="max-w-full"
-        caption="Fig 17. entropy" >}}
+        caption="Fig 23. entropy" >}}
 
 
 <div style="margin-top: 40px;"></div>
@@ -803,11 +841,49 @@ void ADEGymConnectorManager::Tick(float DeltaTime)
 {{< img src="/images/project1/win_rate.png"
         alt=""
         class="max-w-full"
-        caption="Fig 18. win rate" >}}
+        caption="Fig 24. win rate" >}}
+
+
+<div style="margin-top: 40px;"></div>
+
+---
+
+### 기타 시행 착오
+
+
+**1. RL 행동 공간 정의 — 세부 제어에서 전략적 포지셔닝으로**
+
+초기 설계에서는 이동 방향, 속도, 조준 등 저수준(Low-level) 행동을 RL로 직접 제어하려 했습니다. 그러나 로컬 환경에서의 실험 결과, 수렴에 필요한 샘플 수가 현실적인 학습 시간 내에 달성 불가능한 수준임을 확인했습니다.
+
+이에 Unreal Engine의 기존 내비게이션·EQS 시스템을 활용해 저수준 행동을 위임하고, RL은 **전략적 포지셔닝**만 담당하는 방향으로 전환했습니다. 구체적으로는 EQS 쿼리에 사용되는 7차원 가중치 벡터를 RL 정책의 출력으로 정의하여, 정책이 "어디에 위치할 것인가"를 결정하고 실제 이동은 UE5 시스템에 위임하는 구조로 수렴했습니다.
+
+<div style="margin-top: 40px;"></div>
+
+**2. 셀프 플레이 — 복잡한 환경에서의 정책 붕괴**
+
+MuZero에서 영감을 받아 초기에는 셀프 플레이(Self-Play) 방식으로 학습을 시도했습니다. 그러나 3가지 역할 타입(Strike / Support / Vanguard), 변동하는 아군·적 수, 거점 점령 상태 등 환경 복잡도가 높은 상황에서는 양측이 동시에 발전하는 과정에서 보상이 수렴하지 않고 정책 붕괴(Policy Collapse)가 반복적으로 발생했습니다.
+
+셀프 플레이는 환경 복잡도가 낮고 행동 공간이 명확하게 정의된 게임(예: 바둑, 체스)에서는 강점을 발휘할 수 있으나, 현재와 같이 이종(Heterogeneous) 에이전트와 동적 목표가 혼재하는 환경에 적용하기 위해서는 커리큘럼 셀프 플레이(Curriculum Self-Play)나 리그 학습(League Training) 등의 추가적인 안정화 기법을 탐색해야 할 것으로 판단했습니다.
 
 
 ---
 
+### 향후 계획
+
+**RL 에이전트의 난이도 구현**
+
+- RL 에이전트의 난이도를 구현하기 위해 다양한 방법의 실험 예정(학습시간으로 조정할지, Temperature를 부여할지)
+- 난이도별 모델을 별도로 학습해야하는지, 하나의 모델에 난이도별 파라미터를 부여할지 실험 예정
+
+**AWS 클라우드에서의 다중 EC2 인스턴스 활용**
+
+- 현재는 하나의 EC2 인스턴스에서 4개의 UE5를 실행하여 학습하는 상황
+- 다중 EC2 인스턴스와 Ray 클러스터를 통한 분산 학습 환경 구축 예정
+
+
+<div style="margin-top: 40px;"></div>
+
+---
 
 ### Attention 패턴 실증 분석
 
@@ -842,17 +918,17 @@ Self-Attention은 Cross-Attention의 전처리 단계로, 엔티티 토큰들이
 {{< img src="/images/project1/attn_comparison_strike.png"
         alt=""
         class="max-w-full"
-        caption="Fig 19. STRIKE Self-Attention, Clustered vs Spread vs Difference" >}}
+        caption="Fig 25. STRIKE Self-Attention, Clustered vs Spread vs Difference" >}}
 
 {{< img src="/images/project1/attn_comparison_support.png"
         alt=""
         class="max-w-full"
-        caption="Fig 20. SUPPORT Self-Attention, Clustered vs Spread vs Difference" >}}
+        caption="Fig 26. SUPPORT Self-Attention, Clustered vs Spread vs Difference" >}}
 
 {{< img src="/images/project1/attn_comparison_vanguard.png"
         alt=""
         class="max-w-full"
-        caption="Fig 21. VANGUARD Self-Attention, Clustered vs Spread vs Difference" >}}
+        caption="Fig 27. VANGUARD Self-Attention, Clustered vs Spread vs Difference" >}}
 
 Support가 가장 낮은 민감도를 보이는 것은 버그가 아닌 **역할 특성의 자연스러운 내재화**입니다. 회복 역할은 팀 대형에 관계없이 전체 아군을 동등하게 모니터링해야 하며, 학습이 이를 반영했습니다. 반면 Vanguard는 가장 높은 민감도를 보여, 전선 앵커 역할이 팀 배치 변화에 가장 민감하게 반응하도록 분화됐음을 나타냅니다.
 
@@ -879,22 +955,22 @@ Cross-Attention은 Self Token(자신의 관측 임베딩)이 Query가 되어 아
 **아군(Ally) Cross-Attention — Self-Attention과의 일관성 검증**
 
 {{< img-grid 
-    src1="/images/project1/attn_cross_strike_clustered.png" cap1="Fig 22. STRIKE Cross-Attention, Clustered vs Spread vs Difference"
-    src2="/images/project1/attn_cross_strike_spread.png" cap2="Fig 23. SUPPORT Cross-Attention, Clustered vs Spread vs Difference"
+    src1="/images/project1/attn_cross_strike_clustered.png" cap1="Fig 28. STRIKE Cross-Attention, Clustered vs Spread vs Difference"
+    src2="/images/project1/attn_cross_strike_spread.png" cap2="Fig 29. SUPPORT Cross-Attention, Clustered vs Spread vs Difference"
 
     class="max-w-full" 
 >}}
 
 {{< img-grid 
-    src1="/images/project1/attn_cross_vanguard_clustered.png" cap1="Fig 24. VANGUARD Cross-Attention, Clustered vs Spread vs Difference"
-    src2="/images/project1/attn_cross_vanguard_spread.png" cap2="Fig 25. SUPPORT Cross-Attention, Clustered vs Spread vs Difference"
+    src1="/images/project1/attn_cross_vanguard_clustered.png" cap1="Fig 30. VANGUARD Cross-Attention, Clustered vs Spread vs Difference"
+    src2="/images/project1/attn_cross_vanguard_spread.png" cap2="Fig 31. SUPPORT Cross-Attention, Clustered vs Spread vs Difference"
 
     class="max-w-full" 
 >}}
 
 {{< img-grid 
-    src1="/images/project1/attn_cross_support_clustered.png" cap1="Fig 26. SUPPORT Cross-Attention, Clustered vs Spread vs Difference"
-    src2="/images/project1/attn_cross_support_spread.png" cap2="Fig 27. SUPPORT Cross-Attention, Clustered vs Spread vs Difference"
+    src1="/images/project1/attn_cross_support_clustered.png" cap1="Fig 32. SUPPORT Cross-Attention, Clustered vs Spread vs Difference"
+    src2="/images/project1/attn_cross_support_spread.png" cap2="Fig 33. SUPPORT Cross-Attention, Clustered vs Spread vs Difference"
 
     class="max-w-full" 
 >}}

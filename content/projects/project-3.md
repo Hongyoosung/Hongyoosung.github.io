@@ -48,6 +48,7 @@ This project is a **VR FPS shooting game** developed using Unreal Engine 5. Rath
     src2="/images/project3/damage_flow.png" cap2="Figure 2.  Damage System Flow"
     class="max-w-full" 
     
+    nocrop="true"
 >}}
 
 
@@ -88,7 +89,6 @@ This project is a **VR FPS shooting game** developed using Unreal Engine 5. Rath
 
 {{< img-grid 
     src1="/images/project3/picture1.jpg" 
-    class1="w-3/4 mx-auto" 
 
     src2="/images/project3/picture2.jpg" 
 

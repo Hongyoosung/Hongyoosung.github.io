@@ -108,12 +108,12 @@ This project focuses on developing a decentralized platform for secure and effic
 
 {{< img-grid 
     src1="/images/project4/case1.png" cap1="Figure 6. Before Optimization (Blocking)"
-    class1="w-2/4" 
+    class1="w-3/4"
 
     src2="/images/project4/case2.png" cap2="Figure 7. After Optimization (Async Pipeline)"
-    class1="w-3/4" 
+    class2="w-3/4"
 
-    class="max-w-full" 
+    nocrop="true"
 >}}
 
 ### 2. Event-Driven Hierarchical Topic Architecture

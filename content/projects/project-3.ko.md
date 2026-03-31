@@ -49,6 +49,7 @@ math: true
     class1="w-2xl"
 
     class="max-w-full" 
+    nocrop="true"
 >}}
 
 
@@ -88,11 +89,11 @@ math: true
 
 {{< img-grid 
     src1="/images/project3/picture1.jpg" 
-    class1="w-3/4 mx-auto" 
+
 
     src2="/images/project3/picture2.jpg" 
 
-    class="max-w-full"
+
 >}}
 
 <br>

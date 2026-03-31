@@ -104,6 +104,7 @@ public readonly struct WorldState
     class1="w-3/4" 
     src2="/images/project2/stategraph.png" cap2="Figure 3. State Space Graph"
     class="max-w-full" 
+    nocrop="true"
 >}}
 
 ### 2. Utility-Based Real-time Decision Optimization
@@ -141,9 +142,9 @@ public abstract class GOBTEvaluatorSO : ScriptableObject
 * **Interface-Based Extensibility (Open-Closed Principle)**: The planner runtime (`GOBTPlanner`) and individual action logic (`GOBTAction`) are strictly decoupled via abstract base classes. Adding a new action type requires only implementing the interface—the planner requires no modification, fully adhering to the Open-Closed Principle.
 
 {{< img-grid-3
-    src1="/images/project2/unity1.png" cap1="Figure 5. Custom Planner Node in Behavior Designer" class1="w-full"
-    src2="/images/project2/action.png" cap2="Figure 6. Inspector for Action Classes with Pre/Post-conditions" class2="w-3/4"
-    src3="/images/project2/planner.png" cap3="Figure 7. Inspector for setting Goal States and Evaluation Variables" class3="w-1/2"
+    src1="/images/project2/unity1.png" cap1="Figure 5. Custom Planner Node in Behavior Designer" 
+    src2="/images/project2/action.png" cap2="Figure 6. Inspector for Action Classes with Pre/Post-conditions" 
+    src3="/images/project2/planner.png" cap3="Figure 7. Inspector for setting Goal States and Evaluation Variables" 
     class="max-w-full" 
 >}}
 
@@ -191,6 +192,7 @@ public IEnumerator PlanCoroutine(PlanRequest request)
     src2="/images/project2/after.png" cap2="Figure 9. Coroutine time-sharing method"
 
     class="max-w-full" 
+    nocrop="true"
 >}}
 
 
