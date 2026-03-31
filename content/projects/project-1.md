@@ -7,7 +7,7 @@ translationKey: "project-1"
 duration: "2025.08 ~ 2026.03"
 team_size: "1 Person"
 role: "Main Programmer"
-github: "[https://github.com/yoosunghong/GOBTv2.0](https://github.com/yoosunghong/GOBTv2.0)"
+github: "https://github.com/yoosunghong/Dynamic-EQS"
 math: true
 
 ---
