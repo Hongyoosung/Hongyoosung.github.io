@@ -17,9 +17,11 @@ math: true
 
 ## Overview
 
-This project features the development of Dynamic EQS, a plugin designed to dynamically tune UE5 EQS weights through Reinforcement Learning. It employs a hybrid AI approach where the RL model determines the optimal tactical positions while the EQS handles the underlying spatial queries and pathfinding. The solution was rigorously tested in a 5v5 tactical scenario using the MAPPO algorithm. 
+This project involved designing and implementing a Dynamic EQS plugin that automatically optimizes the EQS (Environment Query System) weights of UE5 agents through reinforcement learning, validated in a 5v5 team-based capture point environment using MAPPO. The result is a hybrid AI system in which the EQS handles agent spatial navigation and movement, while the reinforcement learning model is responsible for determining optimal positioning.
 
-To maximize utility, I abstracted the RL-EQS integration as a middleware on top of Schola (gRPC) for seamless reuse in other UE5 projects. I also managed the full-stack DevOps workflow, including building a distributed training pipeline via AWS.
+To ensure training stability, an attention mechanism was introduced at the architecture level rather than relying on cooperative reward scalar design to encourage team-based collaborative behavior. This allows each agent to perceive its teammates and selectively identify critical state information, enabling cooperative strategies to emerge naturally.
+
+The entire system was built around a RL-EQS integration middleware layer on top of Schola (gRPC), abstracted as a plugin for reusability across other UE5 projects. The full pipeline — from system design through to AWS-based parallel training infrastructure — was implemented end-to-end by a single developer.
 
 <div style="margin-top: 40px;"></div>
 
