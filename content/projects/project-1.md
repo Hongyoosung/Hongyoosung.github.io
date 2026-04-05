@@ -318,6 +318,31 @@ void UDynamicEQSExecutor::ApplyWeightsToRequest(FEnvQueryRequest& Request) const
 }
 {{< /code >}}
 
+
+---
+
+<div style="margin-top: 40px;"></div>
+
+<font size="4">**Evaluation Mode**</font>
+
+The **Live Evaluation** pipeline (`eval_live.py`) quantitatively validates the performance of checkpoints saved during training through matches against Scripted AI.
+
+<div style="margin-top: 40px;"></div>
+
+
+The `eval_live.py` pipeline is designed to quantitatively verify checkpoint performance against Scripted AI during the training process.
+
+By concurrently connecting two sub-environments in UE5, it evaluates two checkpoints (`best`, `latest`) in parallel. Episode outcomes are categorized into `win / loss / draw / timeout`, and the win rate based on 50 episodes is saved in `eval_results_<timestamp>.json`.
+
+The system is designed to run immediately via CPU inference by extracting only the Actor weights from `policy_state.pkl`, eliminating the need for a Ray runtime.
+
+
+
+{{< img src="/images/project1/eval.png"
+        alt=""
+        class="max-w-full"
+        caption="Fig 9. model eval result" >}}
+
 ---
 
 <div style="margin-top: 40px;"></div>
@@ -392,33 +417,8 @@ count_steps_by="agent_steps",
 
 Further details are covered in the **"Problem 2: Loss of Relationship Information Between Entities"** section.
 
-<hr style="border: 0; height: 1px; background: #b3b3b3;">
-
-<font size="4">**Evaluation Mode**</font>
-
-The **Live Evaluation** pipeline (`eval_live.py`) quantitatively validates the performance of checkpoints saved during training through matches against Scripted AI.
-
-<div style="margin-top: 40px;"></div>
-
-<font size="4">**Structural Overview**</font>
-
-The `eval_live.py` pipeline is designed to quantitatively verify checkpoint performance against Scripted AI during the training process.
-
-By concurrently connecting two sub-environments in UE5, it evaluates two checkpoints (`best`, `latest`) in parallel. Episode outcomes are categorized into `win / loss / draw / timeout`, and the win rate based on 50 episodes is saved in `eval_results_<timestamp>.json`.
-
-The system is designed to run immediately via CPU inference by extracting only the Actor weights from `policy_state.pkl`, eliminating the need for a Ray runtime.
 
 <hr style="border: 0; height: 1px; background: #b3b3b3;">
-
-
-
-{{< img src="/images/project1/eval.png"
-        alt=""
-        class="max-w-full"
-        caption="Fig 9. model eval result" >}}
-
-
------
 
 ### 3. AWS Parallel Training Environment
 
