@@ -106,9 +106,8 @@ RL 팀의 에피소드 승률이 일정 기간 동안 승격 임계값을 초과
 | Tier 1 → 2 | 25% 이상 |
 | Tier 2 → 3 | 40% 이상 |
 
-낮은 난이도 과적합(overfitting)을 방지하고 점진적으로 더 강한 상대에 노출시키기 위해
-도입했습니다. 티어 정보는 `scripted_ai_config.json`에 기록되며, UE5의
-`LoadTierFromConfig()`가 다음 에피소드 리셋 시 자동으로 적용합니다.
+낮은 난이도 과적합(overfitting)을 방지하고 점진적으로 더 강한 적을 상대시키기 위해
+도입했습니다. 티어 정보는 `scripted_ai_config.json`에 기록되며, UE5에서 다음 에피소드 리셋 시 자동으로 적용합니다.
 
 <div style="margin-top: 40px;"></div>
 
@@ -118,7 +117,7 @@ RL 팀의 에피소드 승률이 일정 기간 동안 승격 임계값을 초과
 ### 관측 공간
 
 
-`FDEObservationV2::ToFlatArray()`가 생성하는 218-dim 엔티티 중심(Entity-Centric) 벡터입니다. 아군·적·거점을 고정 크기 슬롯 토큰으로 인코딩하고, 패딩 마스크를 별도로 제공해 Python MultiheadAttention이 유효 엔티티만 처리하도록 합니다.
+218-dim 엔티티 중심(Entity-Centric) 벡터입니다. 아군·적·거점을 고정 크기 슬롯 토큰으로 인코딩하고, 패딩 마스크를 별도로 제공해 중앙 Attention이 유효 엔티티만 처리하도록 합니다.
 
 <div style="margin-top: 40px;"></div>
 
@@ -137,7 +136,7 @@ RL 팀의 에피소드 승률이 일정 기간 동안 승격 임계값을 초과
 | **TOTAL** | **218** |  |  |
 
 
-> **마스크 처리:** Python 정책의 `_safe_mask()`는 모든 슬롯이 패딩일 때 슬롯 0을 강제 언마스크하여 MultiheadAttention의 NaN을 방지합니다. 마스크 임계값은 `> 0.5` (float 비교)로, `0.0=유효 / 1.0=패딩` 의미론을 보존합니다.
+> **마스크 처리:** Python 정책의 `_safe_mask()`는 모든 슬롯이 패딩일 때 슬롯 0을 강제 언마스크하여 중앙 Attention의 NaN을 방지합니다. 마스크 임계값은 `> 0.5` (float 비교)로, `0.0=유효 / 1.0=패딩` 의미론을 보존합니다.
 
 ---
 
@@ -157,7 +156,7 @@ RL 팀의 에피소드 승률이 일정 기간 동안 승격 임계값을 초과
 | **[6]** | `AssignedBaseProximity` | [-1, 1] | 할당 거점 방향 인력 (양수: 할당 거점 접근, 음수: 이탈) |
 | **TOTAL** | **7-dim** | **[-1, 1]** | `FDEEQSWeightParameters` |
 
-정책 네트워크의 출력 레이어는 `tanh` 활성화를 사용하여 각 가중치를 자연스럽게 [-1, 1] 범위로 제한합니다. 전달받은 7개 가중치는 `UDynamicEQSExecutor::ApplyWeightsToRequest()`를 통해 EQS 쿼리 파라미터로 주입되고, EQS는 이를 바탕으로 48개 후보 위치에 대한 종합 점수를 산출하여 최적 이동 목표를 결정합니다.
+정책 네트워크의 출력 레이어는 `tanh` 활성화를 사용하여 각 가중치를 자연스럽게 [-1, 1] 범위로 제한합니다. 전달받은 7개 가중치는 프레임워크를 통해 EQS 쿼리 파라미터로 주입되고, EQS는 이를 바탕으로 48개 후보 위치에 대한 종합 점수를 산출하여 최적 이동 목표를 결정합니다.
 
 ---
 
@@ -350,6 +349,23 @@ void UDynamicEQSExecutor::ApplyWeightsToRequest(FEnvQueryRequest& Request) const
 
 
 
+<font size="4">**평가 모드 (Evaluation Mode)**</font>
+
+학습 중 저장된 체크포인트의 성능을 ScriptedAI 대전을 통해 정량적으로 검증하는 **Live Evaluation** 파이프라인(`eval_live.py`)입니다.
+
+
+UE5에 2개의 서브 환경을 동시 연결하여 두 개의 체크포인트(`best`, `latest`)를 병렬로 평가합니다. 에피소드 결과를 `win / loss / draw / timeout`으로 분류하고, 50회 에피소드 기준 승률을 `eval_results_<timestamp>.json`으로 저장합니다.
+
+Ray 런타임 없이 `policy_state.pkl`에서 Actor 가중치만 추출하여
+CPU 추론으로 즉시 실행 가능하도록 설계했습니다.
+
+{{< img src="/images/project1/eval.png"
+        alt=""
+        class="max-w-full"
+        caption="Fig 9. 모델 평가 결과" >}}
+
+
+<hr style="border: 0; height: 1px; background: #b3b3b3;">
 
 
 
@@ -387,7 +403,7 @@ if (Ctx)
 
 본 프로젝트는 **MAPPO(Multi-Agent PPO)** 를 채택하여 역할별 독립 정책(Actor) 3개(`strike_policy`, `vanguard_policy`, `support_policy`)와 공유 중앙집중식 Critic을 함께 학습합니다.
 
-**중앙집중식 Critic (Centralized Critic)** — `CentralizedCritic`은 71-dim 전역 팀 상태(`FDETeamWorldState`: 아군 5명 위치·체력·전략 + 적 5명 위치·신뢰도 + 맵 상태)를 입력받아 팀 전체의 가치를 추정합니다. 개별 에이전트 관측만으로는 알 수 없는 팀-레벨 정보(아군 분포, 전체 거점 점령 상황 등)를 Critic이 직접 참조하므로 Advantage 추정의 분산이 감소합니다.
+**중앙집중식 Critic (Centralized Critic)** — 71-dim 전역 팀 상태(아군 5명 위치·체력·전략 + 적 5명 위치·신뢰도 + 맵 상태)를 입력받아 팀 전체의 가치를 추정합니다. 개별 에이전트 관측만으로는 알 수 없는 팀-레벨 정보(아군 분포, 전체 거점 점령 상황 등)를 Critic이 직접 참조하므로 Advantage 추정의 분산이 감소합니다.
 
 ---
 
@@ -443,30 +459,6 @@ config = config.multi_agent(
 
 
 
-<font size="4">**평가 모드 (Evaluation Mode)**</font>
-
-학습 중 저장된 체크포인트의 성능을 ScriptedAI 대전을 통해 정량적으로 검증하는 **Live Evaluation** 파이프라인(`eval_live.py`)입니다.
-
-<div style="margin-top: 40px;"></div>
-
-<font size="4">**구조 개요**</font>
-
-
-학습 중 저장된 체크포인트 성능을 ScriptedAI 대전으로 정량 검증하는
-`eval_live.py` 파이프라인입니다. 
-
-UE5에 2개의 서브 환경을 동시 연결하여 두 개의 체크포인트(`best`, `latest`)를 병렬로 평가합니다. 에피소드 결과를 `win / loss / draw / timeout`으로 분류하고, 50회 에피소드 기준 승률을 `eval_results_<timestamp>.json`으로 저장합니다.
-
-Ray 런타임 없이 `policy_state.pkl`에서 Actor 가중치만 추출하여
-CPU 추론으로 즉시 실행 가능하도록 설계했습니다.
-
-{{< img src="/images/project1/eval.png"
-        alt=""
-        class="max-w-full"
-        caption="Fig 9. 모델 평가 결과" >}}
-
-
-<hr style="border: 0; height: 1px; background: #b3b3b3;">
 
 
 
@@ -512,7 +504,7 @@ UE5 헤드리스 인스턴스 구동 및 롤아웃 수집을 전담합니다.
 <font size="4">**학습 사이클 요약**</font>
 
 1. Docker 이미지 빌드 → ECR Push
-2. Ray 클러스터 기동 (`ray up`) → 학습 스크립트 제출
+2. Ray 클러스터 기동 (`ray up`) → 학습 스크립트 업로드
 3. Worker 4개가 병렬로 UE5 롤아웃 수집 → `train_batch_size=4096` 배치 구성
 4. Head GPU에서 PPO gradient 업데이트 → 10 이터레이션마다 S3 체크포인트 동기화
 5. 신규 최고 승률 달성 시 `best/` 경로에 즉시 추가 동기화
@@ -557,7 +549,7 @@ UE5 헤드리스 인스턴스 구동 및 롤아웃 수집을 전담합니다.
         class="max-w-full"
         caption="Fig 17. 프리징 현상의 원인과 해결" >}}
 
-**에피소드 멈춤(Episode Freeze)**: 특정 에이전트가 먼저 사망할 경우, RLlib은 해당 에이전트의 액션을 전송하지 않지만 Unreal Engine Schola는 모든 에이전트의 액션을 기다리며 대기 상태에 빠지는 통신 불일치 발생했습니다.
+**에피소드 멈춤(Episode Freeze)**: 특정 에이전트가 먼저 사망할 경우, RLlib은 해당 에이전트의 액션을 전송하지 않지만 Unreal Engine Schola는 모든 에이전트의 액션을 기다리며 대기 상태에 빠지는 통신 불일치가 발생했습니다.
 
 **부활 루프(Death-resurrection loop)**: SAME_STEP 모드에서 사망한 에이전트가 유효한 상태 없이 즉시 리셋되어 다시 사망하는 무한 루프 현상 발생했습니다.
 
@@ -629,26 +621,30 @@ C++ (Unreal Plugin):
         caption="Fig 19. 엔티티 관계 정보 손실과 어텐션 도입을 통한 해결" >}}
 
 
-초기에는 MAPPO 기반의 팀 협동 플레이 보상을 설계하여 협동성을 유도하려 했습니다. 그러나 Strike / Support / Vanguard 3가지 역할 간의 협동을 하나의 스칼라 보상으로 정의하는 것이 모호하고, 실제 학습에서는 의미 있는 협동이 나타나지 않으며 보상 해킹(Reward Hacking)이 빈번히 발생했습니다.
+초기에는 MAPPO 기반의 팀 협동 플레이 보상을 설계하여 협동성을 유도하려 했습니다. 그러나 Strike / Support / Vanguard 3가지 역할 간의 협동을 하나의 스칼라 보상으로 정의하는 것이 모호하고, 보상 해킹(Reward Hacking)이 빈번히 발생했습니다.
 
-협동성을 보상으로 강제하는 접근을 포기하고, 모델 아키텍처 차원에서 에이전트가 팀원 간의 관계를 자연스럽게 학습하도록 방향을 전환했습니다. 그 결과, 학습된 정책이 "적 2명이 같은 거점에 집결" 같은 엔티티 간 공간 패턴을 인식하지 못하는 근본 원인이 네트워크 구조에 있음을 발견했습니다. 에이전트가 아군이 이미 점령 중인 거점에 중복 배치되는 비효율이 반복되었고, 이는 보상 구조가 아닌 아키텍처 문제로 진단했습니다.
+따라서 협동성을 보상으로 강제하는 접근을 포기하고, 모델 아키텍처 차원에서 에이전트가 팀원 간의 관계를 자연스럽게 학습하도록 방향을 전환했습니다. 그 결과, Cross-Attention을 도입하여 에이전트에게 각 엔티티의 중요도를 인식하게 하였지만 "적 2명이 같은 거점에 집결" 같은 엔티티 간 공간 패턴을 인식하지 못하고 이미 점령 중인 거점에 중복 배치되는 현상이 발생하였습니다.
 
 ---
 
 <font size="4">**Cause**</font>
 
-
-218-dim 관측 벡터에서 각 엔티티 슬롯은 선형 인코더(`nn.Linear`)를 통해 독립적으로 임베딩됩니다. 이후 Self Token이 Cross-Attention으로 엔티티 집합을 조회하지만, Query가 Self Token 1개이므로 **엔티티 간 상대적 관계**(밀집도, 협공 패턴, 동일 거점 중복)는 Attention weight에 반영되지 않습니다. Cross-Attention의 출력은 "각 엔티티가 Self에게 얼마나 중요한가"의 가중합이지, "엔티티들이 서로 어떤 관계인가"의 정보는 아닙니다.
+218-dim 관측 벡터에서 각 엔티티 슬롯은 선형 인코더(`nn.Linear`)를 통해 독립적으로 임베딩됩니다. 이후 Self Token이 Cross-Attention으로 엔티티 집합을 조회하지만, Query가 Self Token 1개이므로 **엔티티 간 상대적 관계**(밀집도, 협공 패턴, 동일 거점 중복)는 Attention weight에 반영되지 않았습니다. Cross-Attention의 출력은 "각 엔티티가 Self에게 얼마나 중요한가"의 가중합이지, "엔티티들이 서로 어떤 관계인가"의 정보는 아니었습니다.
 
 ---
+
+<font size="4">**Goal**</font>
+
+Cross-Attention이 출력하는 "각 엔티티의 중요도" 이전에 "각 엔티티의 관계 정보" 등을 추가로 입력하는 레이어의 추가.
+
+---
+
 
 <font size="4">**Solution**</font>
 
 **Intra-Set Self-Attention (Zambaldi et al., 2018)**
 
 각 엔티티 그룹(아군 / 적 / 거점)에 대해, Cross-Attention 이전에 **Self-Attention 레이어**를 삽입하여 엔티티들이 서로를 참조하도록 했습니다. Self-Attention을 거친 엔티티 토큰은 "나와 같은 거점 근처에 있는 아군이 2명이다"와 같은 문맥 정보를 내포하게 되며, 이후 Cross-Attention에서 Self Token이 이 **문맥화된** 엔티티 정보를 집약합니다.
-
-
 
 {{< code lang="python" label="policy.py — Relational Self-Attention pipeline" width="100%" height="250px" align="right" >}}
 # 1. 선형 인코딩: 원본 특성 → hidden 차원
@@ -680,6 +676,10 @@ def _safe_mask(m: torch.Tensor) -> torch.Tensor:
 {{< /code >}}
 
 
+---
+
+<font size="4">**Result**</font>
+
 **설계 제약과 Trade-off**
 
 | 항목 | 값 |
@@ -705,8 +705,16 @@ def _safe_mask(m: torch.Tensor) -> torch.Tensor:
         class="max-w-full"
         caption="Fig 20. 스로틀링 제어" >}}
 
-학습 환경에서 `AGymConnectorManager`의 `Tick()`이 매 프레임(60Hz+) `Connector->Step()`을 호출하여, EQS 이동이 완료되기 전에 다음 스텝이 실행되는 문제가 발생했습니다. 에이전트가 목적지에 도달하기 전에 새로운 EQS 목표 위치가 덮어써지면서 이동이 취소되어 목표 지점에 도달하지 못한 채 관측이 수집되면서 학습 데이터의 품질이 저하되었습니다.
 
+에이전트가 이전 스텝에서 결정된 목적지에 도달하기 전에 새로운 스텝이 실행되어 
+이동이 취소되는 문제가 발생하여 학습의 품질이 크게 훼손되었습니다.
+
+---
+
+<font size="4">**Cause**</font>
+
+
+학습 환경에서 `AGymConnectorManager`의 `Tick()`이 매 프레임(60Hz+) `Connector->Step()`을 호출하였습니다.
 ---
 
 <font size="4">**Goal**</font>
@@ -717,7 +725,8 @@ def _safe_mask(m: torch.Tensor) -> torch.Tensor:
 
 <font size="4">**Solution**</font>
 
-**`AGymConnectorManager`를 오버라이드 대상으로 선택한 근거**
+**`AGymConnectorManager` 오버라이딩**
+
 
 Schola의 학습 루프 진입점 구조는 다음과 같습니다.
 
@@ -991,4 +1000,4 @@ Vanguard의 Cross-Attention 아군 가중치는 Self-Attention 결과와 정확�
 | Cross-Attention 엔티티 우선순위 | 적: 균등 위협 인식 / 거점: 역할별 상이 / 아군: Self-Attention과 일관 |
 | 파이프라인 일관성 | Self → Cross Attention 간 초점 대상 일치 — 파이프라인 정합성 확인 |
 
-보상 함수나 역할 레이블 외 별도의 귀납 편향 없이, Intra-Set Self-Attention 구조만으로 **역할 특화된 공간 추론의 자발적 분화**가 달성됐음을 두 단계의 Attention 패턴을 통해 실증했습니다.
+개별 역할 레이블 외 별도의 귀납 편향 없이, Intra-Set Self-Attention 구조만으로 **역할 특화된 공간 추론의 자발적 분화**가 달성됐음을 두 단계의 Attention 패턴을 통해 실증했습니다.
