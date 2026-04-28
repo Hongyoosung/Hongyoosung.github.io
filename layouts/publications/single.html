@@ -1,0 +1,29 @@
+{{ define "main" }}
+<main class="publication-single-main">
+
+    <article class="w-full max-w-none" style="animation: fadeUp 0.8s ease-out 0.2s forwards; opacity: 0;">
+        <header class="post-header publication-single-header">
+            <h1 class="publication-single-title">
+                {{ .Title }}
+            </h1>
+            <div class="publication-single-meta">
+                {{ with .Params.authors }}<p><strong>Authors</strong> {{ delimit . ", " }}</p>{{ end }}
+                {{ with .Params.conference }}<p><strong>Conference</strong> {{ . }}</p>{{ end }}
+                {{ with .Params.volume }}<p><strong>Volume</strong> {{ . }}</p>{{ end }}
+                {{ with .Params.status }}<p><strong>Status</strong> {{ . }}</p>{{ end }}
+            </div>
+            <hr class="publication-single-divider">
+            {{ with .Params.subtitle }}
+            <div class="publication-single-subtitle">
+                {{ . | markdownify }}
+            </div>
+            {{ end }}
+        </header>
+
+        <div class="post-content prose prose-slate dark:prose-invert max-w-none text-base leading-relaxed">
+            {{ .Content }}
+        </div>
+    </article>
+
+</main>
+{{ end }}

@@ -44,11 +44,12 @@
 [data-theme='dark'],
 .dark {
     /* --- 다크 모드 색상 --- */
-    --color-bg-base: #1a1b1e;
-    --color-text-title: #ffffff;
-    --color-text-subtitle: #e2e8f0;
-    --color-text-muted: #94a3b8;
-    --color-line: #334155;
+    --color-bg-base: #14161a;
+    --color-text-title: #f1f5f9;
+    --color-text-subtitle: #cbd5e1;
+    --color-text-muted: #8b98a8;
+    --color-line: #2a3038;
+    --color-accent: #aab4c2;
 
     /* Tailwind 공용 변수 연동 */
     --tw-bg: var(--color-bg-base);
@@ -57,7 +58,7 @@
 
     /* PaperMod 기본 변수 오버라이드 */
     --theme: var(--color-bg-base);
-    --entry: #25262b;
+    --entry: #191c21;
     --primary: var(--color-text-title);
     --secondary: var(--color-text-muted);
     --border: var(--color-line);

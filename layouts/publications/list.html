@@ -1,0 +1,88 @@
+{{ define "main" }}
+<main class="publication-main">
+
+    {{ partial "section_header.html" . }}
+
+    <hr class="journal-divider publication-divider">
+
+    <section class="journal-post-section publication-post-section">
+        <div class="publication-list-container">
+            {{ $paginator := .Paginate .RegularPages 8 }}
+            {{ range $paginator.Pages }}
+            <article class="publication-entry">
+                <div class="publication-entry-header">
+                    <a href="{{ .RelPermalink }}" class="publication-entry-title">
+                        {{ .Title }}
+                    </a>
+                </div>
+
+                <dl class="publication-meta-grid">
+                    {{ with .Params.authors }}
+                    <div class="publication-meta-item publication-meta-item-wide">
+                        <dt>Authors</dt>
+                        <dd>{{ delimit . ", " }}</dd>
+                    </div>
+                    {{ end }}
+                    {{ with .Params.conference }}
+                    <div class="publication-meta-item">
+                        <dt>Conference</dt>
+                        <dd>{{ . }}</dd>
+                    </div>
+                    {{ end }}
+                    {{ with .Params.volume }}
+                    <div class="publication-meta-item">
+                        <dt>Volume</dt>
+                        <dd>{{ . }}</dd>
+                    </div>
+                    {{ end }}
+                    {{ with .Params.status }}
+                    <div class="publication-meta-item">
+                        <dt>Status</dt>
+                        <dd>{{ . }}</dd>
+                    </div>
+                    {{ end }}
+                    {{ with .Params.keywords }}
+                    <div class="publication-meta-item publication-meta-item-wide">
+                        <dt>Keywords</dt>
+                        <dd class="publication-keywords">
+                            {{ range $index, $keyword := . }}
+                            {{ if $index }}<span class="publication-keyword-separator" aria-hidden="true">|</span>{{ end }}
+                            <span>{{ $keyword }}</span>
+                            {{ end }}
+                        </dd>
+                    </div>
+                    {{ end }}
+                </dl>
+            </article>
+            {{ end }}
+        </div>
+    </section>
+
+    {{ if gt .Paginator.TotalPages 1 }}
+    <nav class="pagination-container">
+        <ul class="pagination">
+            {{ if .Paginator.HasPrev }}
+            <li class="pagination-item">
+                <a class="pagination-link" href="{{ .Paginator.Prev.URL }}" aria-label="Previous">Prev</a>
+            </li>
+            {{ end }}
+
+            {{ range .Paginator.Pagers }}
+            <li class="pagination-item">
+                <a class="pagination-link{{ if eq . $.Paginator }} active{{ end }}" href="{{ .URL }}">
+                    {{ .PageNumber }}
+                </a>
+            </li>
+            {{ end }}
+
+            {{ if .Paginator.HasNext }}
+            <li class="pagination-item">
+                <a class="pagination-link" href="{{ .Paginator.Next.URL }}" aria-label="Next">Next</a>
+            </li>
+            {{ end }}
+        </ul>
+    </nav>
+    {{ end }}
+
+</main>
+{{ end }}

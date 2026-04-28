@@ -3,6 +3,7 @@ title: "V: VR FPS Shooting Game"
 description: "A scalable VR FPS framework built with UE5, leveraging design patterns and component-based architecture for enhanced maintainability."
 weight: 3
 translationKey: "project-v"
+keywords: ["Unreal Engine 5", "VR FPS", "AI Architecture", "Combat System", "Design Patterns"]
 
 duration: "2023.09 ~ 2024.05"
 team_size: "3 people"

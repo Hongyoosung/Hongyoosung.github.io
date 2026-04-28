@@ -30,6 +30,9 @@
                         {{ .Site.Params.profileMode.subtitle | safeHTML }}
                     </div>
                 </div>
+                {{ with .Site.Params.profileMode.experienceUrl }}
+                <a class="profile-experience-link opacity-0 animate-fade-in-up-delay-1" href="{{ . }}">Experience</a>
+                {{ end }}
                 <div class="social-icons flex gap-10 justify-center opacity-0 animate-fade-in-up-delay-1">
                     {{ range .Site.Params.socialIcons }}
                     <a class="group" href="{{ .url }}">

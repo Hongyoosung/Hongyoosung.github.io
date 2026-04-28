@@ -47,10 +47,29 @@
     font-size: 1.1rem;
     color: var(--color-text-subtitle);
     margin-top: 1.5rem;
-    margin-bottom: 3.5rem;
+    margin-bottom: 2.1rem;
     line-height: 1.6;
     letter-spacing: 0.05em;
     font-weight: 500 !important;
+}
+
+.profile-experience-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.6rem;
+    font-family: var(--font-cinzel);
+    font-size: 1.18rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    transition: color 0.25s ease, transform 0.25s ease;
+}
+
+.profile-experience-link:hover {
+    color: var(--primary);
+    transform: translateY(-1px);
 }
 
 .profile-meta-mono {

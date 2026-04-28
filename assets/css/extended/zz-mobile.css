@@ -72,6 +72,11 @@
         padding: 0 20px !important;
     }
 
+    .main.publication-shell {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+
     .post-content,
     .post-header,
     .post-footer {

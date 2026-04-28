@@ -3,6 +3,7 @@ title: "GOBT: Goal-Oriented Behavior Tree"
 description: "A hybrid decision-making framework combining the intuitiveness of Behavior Trees with the dynamic flexibility of GOAP and Utility Theory."
 weight: 2
 translationKey: "project-gobt"
+keywords: ["Behavior Tree", "GOAP", "Utility AI", "Unity", "NPC Decision Making"]
 
 duration: "2023.05 ~ 2024.02"
 team_size: "2 people"

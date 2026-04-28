@@ -3,6 +3,7 @@ title: "GOBT: Goal-Oriented Behavior Tree"
 description: "Behavior Tree의 구조적 직관성과 GOAP·Utility Theory의 동적 유연성을 결합한 하이브리드 AI 프레임워크"
 weight: 2
 translationKey: "project-gobt"
+keywords: ["Behavior Tree", "GOAP", "Utility AI", "Unity", "NPC Decision Making"]
 
 duration: "2023.05 ~ 2024.02"
 team_size: "2명"

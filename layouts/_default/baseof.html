@@ -22,7 +22,7 @@
 <body id="top">
 {{- end -}}
     {{ partialCached "header.html" . .Page -}}
-    <main class="main">
+    <main class="main{{ if and (eq .Kind `section`) (eq .Section `publications`) }} publication-shell{{ end }}">
         {{- block "main" . }}{{ end }}
     </main>
     {{ partial "footer.html" . -}}

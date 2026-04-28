@@ -3,6 +3,7 @@ title: "V: VR FPS Shooting Game"
 description: "디자인 패턴과 컴포넌트 기반 설계를 통해 확장성과 유지보수성을 확보한 UE5 VR FPS"
 weight: 3
 translationKey: "project-v"
+keywords: ["Unreal Engine 5", "VR FPS", "AI Architecture", "Combat System", "Design Patterns"]
 
 duration: "2023.09 ~ 2024.05"
 team_size: "3 people"

@@ -38,6 +38,17 @@
             {{ end }}
 
             <div class="project-meta-container">
+                {{ with .Params.keywords }}
+                <div class="project-keywords" aria-label="Project keywords">
+                    <div class="project-keyword-list">
+                        {{ range $index, $keyword := . }}
+                        {{ if gt $index 0 }}<span class="project-keyword-separator" aria-hidden="true">|</span>{{ end }}
+                        <span class="project-keyword">{{ $keyword }}</span>
+                        {{ end }}
+                    </div>
+                </div>
+                {{ end }}
+
                 {{ with .Params.duration }}
                 <div class="project-duration">{{ . }}</div>
                 {{ end }}

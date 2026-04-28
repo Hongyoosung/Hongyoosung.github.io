@@ -15,30 +15,31 @@
     line-height: 1.5;
 
     /* 글래스모피즘 효과는 투명도 기반이므로 테마 무관하게 유지 */
-    background: rgba(128, 128, 128, 0.25);
+    background: color-mix(in srgb, var(--color-bg-base) 72%, transparent);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.25);
+    border: 1px solid color-mix(in srgb, var(--color-line) 68%, transparent);
     border-radius: 50px;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-    transition: background 0.3s ease, box-shadow 0.3s ease, top 0.3s ease;
+    box-shadow: none;
+    transition: background 0.3s ease, border-color 0.3s ease, top 0.3s ease;
 }
 
 .sticky-bar:hover {
-    background: rgba(128, 128, 128, 0.15);
-    box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.3);
+    background: color-mix(in srgb, var(--color-bg-base) 56%, var(--color-line) 44%);
+    border-color: color-mix(in srgb, var(--color-text-muted) 55%, transparent);
+    box-shadow: none;
     top: 35px;
 }
 
 .sticky-bar-divider {
     width: 30px;
     height: 2px;
-    background: rgba(255, 255, 255, 0.2);
+    background: color-mix(in srgb, var(--color-text-muted) 42%, transparent);
     border-radius: 2px;
 }
 
 .dark .sticky-bar-divider {
-    background: rgba(255, 255, 255, 0.2);
+    background: color-mix(in srgb, var(--color-text-muted) 48%, transparent);
 }
 
 .sticky-bar-buttons {

@@ -3,6 +3,7 @@ title: "Blockchain-Enabled Metaverse IoT Communication Platform"
 description: "Ensuring Data Integrity and Real-time Synchronization between Virtual Environments and Physical IoT Devices"
 weight: 4
 translationKey: "project-4"
+keywords: ["Blockchain", "Metaverse", "IoT", "MQTT", "Data Integrity"]
 
 duration: "2022.10 ~ 2023.12"
 team_size: "1 people"

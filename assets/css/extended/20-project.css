@@ -22,6 +22,15 @@
     margin-right: calc(50% - 50vw);
 }
 
+.dark .project-nav {
+    background-color: #14161a;
+}
+
+.dark .project-bg-glow,
+[data-theme='dark'] .project-bg-glow {
+    display: none;
+}
+
 /* 구분선 설정 */
 .project-nav::after {
     content: '';
@@ -132,9 +141,85 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1rem;
+    gap: 1.25rem;
     margin-top: 3.0rem;
     margin-bottom: -1rem;
+}
+
+.project-keywords {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.55rem;
+    width: 100%;
+}
+
+.project-keywords-label {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+}
+
+.project-keyword-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.55rem;
+    align-items: center;
+}
+
+.project-keyword {
+    display: inline;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    font-family: var(--font-mono);
+    font-size: 0.86rem;
+    color: var(--color-text-subtitle);
+    background: transparent;
+}
+
+.project-keyword-separator {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--color-line);
+}
+
+.project-list-link {
+    color: var(--color-text-muted) !important;
+    box-shadow: none !important;
+}
+
+.project-list-link:hover {
+    color: var(--primary) !important;
+    background: color-mix(in srgb, var(--color-bg-base) 84%, var(--color-line) 16%) !important;
+    box-shadow: none !important;
+}
+
+.dark .project-list-link:hover {
+    background: #191c21 !important;
+}
+
+.dark .project-main,
+.dark .project-article,
+.dark .project-article .content {
+    color: var(--color-text-subtitle);
+    text-shadow: none !important;
+    filter: none !important;
+}
+
+.dark .project-article .content :where(h1, h2, h3, h4, strong) {
+    color: var(--color-text-title);
+}
+
+.dark .project-article .content :where(p, li, blockquote) {
+    color: var(--color-text-subtitle);
+}
+
+.dark .project-article .content :where(a) {
+    color: #b8c7dc;
 }
 
 /* 기간 표시 */

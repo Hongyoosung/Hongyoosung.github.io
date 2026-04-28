@@ -3,6 +3,7 @@ title: "블록체인 기반 메타버스 IoT 통신 플랫폼"
 description: "가상환경-IoT 디바이스 간 데이터 무결성 보장 및 실시간 최적화"
 weight: 4
 translationKey: "project-4"
+keywords: ["Blockchain", "Metaverse", "IoT", "MQTT", "Data Integrity"]
 
 duration: "2022.10 ~ 2023.12"
 team_size: "1 people"

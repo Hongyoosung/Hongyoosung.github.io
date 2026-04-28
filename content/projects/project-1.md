@@ -4,6 +4,7 @@ title: "Dynamic EQS:
 description: "Building an AWS Cloud-based Multi-Agent Parallel Reinforcement Learning Pipeline using Schola and Ray RLlib"
 weight: 1
 translationKey: "project-1"
+keywords: ["Unreal Engine 5", "Reinforcement Learning", "EQS", "Ray RLlib", "AWS"]
 duration: "2025.08 ~ 2026.03"
 team_size: "1 Person"
 role: "Main Programmer"

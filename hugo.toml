@@ -47,6 +47,7 @@ defaultContentLanguage = 'en'
         imageUrl = "https://github.com/yoosunghong.png" # (디자인상 숨김 처리되지만 데이터 유지)
         imageWidth = 120
         imageHeight = 120
+        experienceUrl = "/experience"
         
         # 네비게이션 버튼 (HTML 디자인의 Nav 항목)
         [[languages.en.params.profileMode.buttons]]
@@ -59,8 +60,8 @@ defaultContentLanguage = 'en'
             name = "Journal"
             url = "/journal"
         [[languages.en.params.profileMode.buttons]]
-            name = "Experience"
-            url = "/experience"
+            name = "Publications"
+            url = "/publications"
 
     # 소셜 아이콘 (FontAwesome 클래스명 매핑: github, linkedin 등)
     [[languages.en.params.socialIcons]]
@@ -88,6 +89,7 @@ defaultContentLanguage = 'en'
         """
         
         imageUrl = "https://github.com/yoosunghong.png"
+        experienceUrl = "/ko/experience"
         
         # 네비게이션 버튼 (한글)
         [[languages.ko.params.profileMode.buttons]]
@@ -97,11 +99,11 @@ defaultContentLanguage = 'en'
             name = "아카이브"
             url = "/ko/archives"
         [[languages.ko.params.profileMode.buttons]]
-            name = "글 목록"
+            name = "Journal"
             url = "/ko/journal"
         [[languages.ko.params.profileMode.buttons]]
-            name = "이력"
-            url = "/ko/experience"
+            name = "Publications"
+            url = "/ko/publications"
 
     [[languages.ko.params.socialIcons]]
         name = "github"
