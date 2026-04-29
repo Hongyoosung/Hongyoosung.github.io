@@ -96,6 +96,14 @@
     color: var(--color-text-subtitle);
 }
 
+.publication-paper-link,
+.publication-single-meta a {
+    color: var(--primary);
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+    overflow-wrap: anywhere;
+}
+
 .publication-keywords {
     display: flex;
     flex-wrap: wrap;
@@ -120,7 +128,7 @@
 
 .publication-single-main {
     --publication-single-max-width: 62rem;
-    --publication-single-inline-padding: 1.25rem;
+    --publication-single-inline-padding: 0.5rem;
 
     display: flex;
     flex-direction: column;

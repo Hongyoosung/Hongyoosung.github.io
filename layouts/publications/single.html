@@ -11,6 +11,7 @@
                 {{ with .Params.conference }}<p><strong>Conference</strong> {{ . }}</p>{{ end }}
                 {{ with .Params.volume }}<p><strong>Volume</strong> {{ . }}</p>{{ end }}
                 {{ with .Params.status }}<p><strong>Status</strong> {{ . }}</p>{{ end }}
+                {{ with .Params.paperLink }}<p><strong>Link</strong> <a href="{{ . }}" target="_blank" rel="noopener noreferrer">{{ . }}</a></p>{{ end }}
             </div>
             <hr class="publication-single-divider">
             {{ with .Params.subtitle }}

@@ -44,19 +44,11 @@ math: true
 
 ## 기술 스택 (Tech Stack)
 
-| Category | Technologies |
-|---|---|
-| **Game Engine** | Unreal Engine 5.6 (C++17) |
-| **RL Framework** | Ray RLlib 2.7, PyTorch |
-| **UE5-Python Bridge** | Schola Plugin (gRPC-based) |
-| **Neural Network Inference** | ONNX Runtime via UE5 NNE (Neural Network Engine) |
-| **Ability System** | UE5 Gameplay Ability System (GAS) — GameplayAbility, GameplayEffect, GameplayTag |
-| **Cloud & Infra** | AWS (EC2, EKS), Docker (Linux) |
-| **Communication** | gRPC (Schola protocol) |
-| **Monitoring** | TensorBoard |
 
-
-
+{{< img src="/images/project1/teckstack.png"
+        alt=""
+        class="max-w-full"
+        caption="" >}}
 
 
 <hr style="border: 0; height: 1px; background: #b3b3b3;">
@@ -88,29 +80,18 @@ math: true
 ---
 
 
-### ScriptedAI 상대 학습
-
-Blue 팀(RL)은 하드코딩 EQS 가중치 + 상태 머신으로 구동되는 **Red 팀(ScriptedAI)** 을
-상대로 학습합니다.
-
-현재 환경은 3가지 클래스의 에이전트들이 복합적으로 섞여있어 Self-Play를 사용하기에 적합하지 않아, ScriptedAI를 선택했습니다. ScriptedAI를 통해 고정된 난이도 기준점을 제공하여 RL 에이전트가 안정적으로
-기초 전략을 학습할 수 있었습니다.
-
----
 
 ### 커리큘럼 티어 시스템
 
-ScriptedAI는 **3단계 난이도 티어**(1=Basic, 2=Standard, 3=Aggressive)로 구분됩니다.
-RL 팀의 에피소드 승률이 일정 기간 동안 승격 임계값을 초과하면 자동으로 다음 티어로
-전환됩니다.
+**3단계 난이도 티어**(1=Basic, 2=Standard, 3=Aggressive)를 도입하여 초중반은 RL 에이전트의 기본 게임 규칙 학습을 위해 EQS 가중치가 하드코딩된 스크립트 AI를 상대로 학습하고, 이후에는 ONNX 로컬 추론 에이전트와 스크립트 AI를 **3:2 비율로 믹싱**한 대결을 통해 학습 성능을 극대화하고 **과적합 문제, 가위바위보 문제**를 해결하려 하였습니다.
 
-| 티어 전환 | 승격 임계값 |
+| 티어 | 승격 임계값 |
 |---|---|
-| Tier 1 → 2 | 25% 이상 |
-| Tier 2 → 3 | 40% 이상 |
+| Tier 1(Script) | 승률 25% 이하 |
+| Tier 2(Script) | 승률 40% 이하 |
+| Tier 3(Self-Play) | 승률 40% 초과 |
 
-낮은 난이도 과적합(overfitting)을 방지하고 점진적으로 더 강한 적을 상대시키기 위해
-도입했습니다. 티어 정보는 `scripted_ai_config.json`에 기록되며, UE5에서 다음 에피소드 리셋 시 자동으로 적용합니다.
+티어 정보는 `scripted_ai_config.json`에 기록되며, UE5에서 다음 에피소드 리셋 시 자동으로 적용합니다.
 
 <div style="margin-top: 40px;"></div>
 
@@ -160,6 +141,10 @@ RL 팀의 에피소드 승률이 일정 기간 동안 승격 임계값을 초과
 | **TOTAL** | **7-dim** | **[-1, 1]** | `FDEEQSWeightParameters` |
 
 정책 네트워크의 출력 레이어는 `tanh` 활성화를 사용하여 각 가중치를 자연스럽게 [-1, 1] 범위로 제한합니다. 전달받은 7개 가중치는 프레임워크를 통해 EQS 쿼리 파라미터로 주입되고, EQS는 이를 바탕으로 48개 후보 위치에 대한 종합 점수를 산출하여 최적 이동 목표를 결정합니다.
+
+※ 향후에는 Continous 대신 Discrete를 사용하여 액션 스페이스 최적화를 고려할 예정입니다.
+
+
 
 ---
 
@@ -296,7 +281,7 @@ DynamicEQS의 주요 클래스는 4가지로, **환경**, **에이전트**, **�
 {{< img src="/images/project1/pluginarchi.png"
         alt=""
         class="max-w-3xl"
-        caption="Fig 3. 플러그인 계층 구조" >}}
+        caption="Fig 3. 플러그인 계층 구조. 붉은 박스가 실제 구현한 부분입니다" >}}
 
 {{< img src="/images/project1/flow3.png"
         alt=""
@@ -359,8 +344,6 @@ void UDynamicEQSExecutor::ApplyWeightsToRequest(FEnvQueryRequest& Request) const
 
 UE5에 2개의 서브 환경을 동시 연결하여 두 개의 체크포인트(`best`, `latest`)를 병렬로 평가합니다. 에피소드 결과를 `win / loss / draw / timeout`으로 분류하고, 50회 에피소드 기준 승률을 `eval_results_<timestamp>.json`으로 저장합니다.
 
-Ray 런타임 없이 `policy_state.pkl`에서 Actor 가중치만 추출하여
-CPU 추론으로 즉시 실행 가능하도록 설계했습니다.
 
 {{< img src="/images/project1/eval.png"
         alt=""
@@ -403,8 +386,8 @@ if (Ctx)
 
 <div style="margin-top: 40px;"></div>
 
+MAPPO(Multi-Agent PPO)를 채택하여 Continuous 액션 스페이스를 처리하고, Intra-Set Self Attention + Cross Attention을 통해 중앙 집중식으로 신뢰 할당 문제(Credit Assignment Problem)를 해결하고자 했습니다. 
 
-본 프로젝트는 **MAPPO(Multi-Agent PPO)** 를 채택하여 역할별 독립 정책(Actor) 3개(`strike_policy`, `vanguard_policy`, `support_policy`)와 공유 중앙집중식 Critic을 함께 학습합니다.
 
 **중앙집중식 Critic (Centralized Critic)** — 71-dim 전역 팀 상태(아군 5명 위치·체력·전략 + 적 5명 위치·신뢰도 + 맵 상태)를 입력받아 팀 전체의 가치를 추정합니다. 개별 에이전트 관측만으로는 알 수 없는 팀-레벨 정보(아군 분포, 전체 거점 점령 상황 등)를 Critic이 직접 참조하므로 Advantage 추정의 분산이 감소합니다.
 
@@ -413,10 +396,10 @@ if (Ctx)
 
 <font size="4">**Dual Value Estimation**</font>
 
-각 `EntityCentricRLlibModel`은 로컬 Critic(`V_local`, 226-dim 에이전트 관측)과 중앙 Critic(`V_central`, 71-dim 전역 상태)을 학습 가능한 혼합 계수 α로 결합합니다.
+각 `EntityCentricRLlibModel`은 로컬 Critic(`V_local`, 218-dim 에이전트 관측)과 중앙 Critic(`V_central`, 71-dim 전역 상태)을 학습 가능한 혼합 계수 α로 결합합니다.
 
 
-$$V = \alpha \cdot V_{\text{local}}(\text{agent\_obs}[0:226]) + (1 - \alpha) \cdot V_{\text{central}}(\text{global\_state}[226:297])$$
+$$V = \alpha \cdot V_{\text{local}}(\text{agent\_obs}[0:218]) + (1 - \alpha) \cdot V_{\text{central}}(\text{global\_state}[218:289])$$
 
 
 α는 `sigmoid(_value_mix_logit)`로 초기화되며(초기값 0.5), 학습을 통해 각 역할에 최적인 로컬/전역 비중을 자동으로 결정합니다.
@@ -718,6 +701,7 @@ def _safe_mask(m: torch.Tensor) -> torch.Tensor:
 
 
 학습 환경에서 `AGymConnectorManager`의 `Tick()`이 매 프레임(60Hz+) `Connector->Step()`을 호출하였습니다.
+
 ---
 
 <font size="4">**Goal**</font>
@@ -873,9 +857,9 @@ void ADEGymConnectorManager::Tick(float DeltaTime)
 
 **2. 셀프 플레이 — 복잡한 환경에서의 정책 붕괴**
 
-MuZero에서 영감을 받아 초기에는 셀프 플레이(Self-Play) 방식으로 학습을 시도했습니다. 그러나 3가지 역할 타입(Strike / Support / Vanguard), 변동하는 아군·적 수, 거점 점령 상태 등 환경 복잡도가 높은 상황에서는 양측이 동시에 발전하는 과정에서 보상이 수렴하지 않고 정책 붕괴(Policy Collapse)가 반복적으로 발생했습니다.
+MuZero에서 영감을 받아 초기에는 셀프 플레이(Self-Play) 방식으로 처음부터 학습을 시도했습니다. 그러나 3가지 역할 타입(Strike / Support / Vanguard), 변동하는 아군·적 수, 거점 점령 상태 등 환경 복잡도가 높은 상황에서는 양측이 동시에 발전하는 과정에서 보상이 수렴하지 않고 정책 붕괴(Policy Collapse)가 반복적으로 발생했습니다.
 
-셀프 플레이는 환경 복잡도가 낮고 행동 공간이 명확하게 정의된 게임(예: 바둑, 체스)에서는 강점을 발휘할 수 있으나, 현재와 같이 이종(Heterogeneous) 에이전트와 동적 목표가 혼재하는 환경에 적용하기 위해서는 커리큘럼 셀프 플레이(Curriculum Self-Play)나 리그 학습(League Training) 등의 추가적인 안정화 기법을 탐색해야 할 것으로 판단했습니다.
+이를 해결하기 위해 초반 게임 규칙의 학습을 담당할 고정된 스크립트 AI 대전으로 학습을 수행하고, 이후에 셀프 플레이와 스크립트 AI를 믹싱하여 성능을 극대화했습니다.
 
 
 ---
@@ -885,12 +869,11 @@ MuZero에서 영감을 받아 초기에는 셀프 플레이(Self-Play) 방식으
 **RL 에이전트의 난이도 구현**
 
 - RL 에이전트의 난이도를 구현하기 위해 다양한 방법의 실험 예정(학습시간으로 조정할지, Temperature를 부여할지)
-- 난이도별 모델을 별도로 학습해야하는지, 하나의 모델에 난이도별 파라미터를 부여할지 실험 예정
+- 난이도별 모델을 별도로 학습해야하는지, 하나의 모델에 난이도별 파라미터를 부여할지 실험하여 비교할 예정입니다.
 
 **AWS 클라우드에서의 다중 EC2 인스턴스 활용**
 
-- 현재는 하나의 EC2 인스턴스에서 4개의 UE5를 실행하여 학습하는 상황
-- 다중 EC2 인스턴스와 Ray 클러스터를 통한 분산 학습 환경 구축 예정
+- 현재는 하나의 EC2 인스턴스에서 4개의 UE5를 실행하여 학습하는 상황입니다. Ray 클러스터를 활용하여 다중 EC2 인스턴스 분산 학습 환경을 구축할 예정입니다.
 
 
 <div style="margin-top: 40px;"></div>

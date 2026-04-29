@@ -7,7 +7,8 @@
 
     <section class="journal-post-section publication-post-section">
         <div class="publication-list-container">
-            {{ $paginator := .Paginate .RegularPages 8 }}
+            {{ $pages := (sort .RegularPages "Params.weight" "asc").Reverse }}
+            {{ $paginator := .Paginate $pages 8 }}
             {{ range $paginator.Pages }}
             <article class="publication-entry">
                 <div class="publication-entry-header">
@@ -39,6 +40,12 @@
                     <div class="publication-meta-item">
                         <dt>Status</dt>
                         <dd>{{ . }}</dd>
+                    </div>
+                    {{ end }}
+                    {{ with .Params.paperLink }}
+                    <div class="publication-meta-item">
+                        <dt>Link</dt>
+                        <dd><a class="publication-paper-link" href="{{ . }}" target="_blank" rel="noopener noreferrer">{{ . }}</a></dd>
                     </div>
                     {{ end }}
                     {{ with .Params.keywords }}

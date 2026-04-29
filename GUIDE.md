@@ -10,7 +10,8 @@ This guide covers how to add new content and modify styles for this Hugo + Paper
 2. [Adding Content](#2-adding-content)
    - [Blog Posts](#21-blog-posts)
    - [Projects](#22-projects)
-   - [Bilingual Content](#23-bilingual-content)
+   - [Publications](#23-publications)
+   - [Bilingual Content](#24-bilingual-content)
 3. [Modifying Styles](#3-modifying-styles)
    - [CSS Custom Properties (Variables)](#31-css-custom-properties-variables)
    - [Typography](#32-typography)
@@ -162,7 +163,56 @@ To change the order projects appear on the list page, adjust the `weight` values
 
 ---
 
-### 2.3 Bilingual Content
+### 2.3 Publications
+
+Publications live in `content/publications/`. Each publication is a Markdown file.
+
+**Create a new publication file** at `content/publications/my-paper.md`:
+
+```markdown
+---
+title: "My Paper Title"
+date: 2026-04-29T09:00:00+09:00
+draft: false
+weight: 3
+authors: ["Yoosung Hong", "Co-author Name"]
+conference: "Conference or Journal Name"
+volume: "Vol. 1, No. 1"
+status: "Published"
+paperLink: "https://example.com/paper.pdf"
+keywords: ["Game AI", "Simulation"]
+translationKey: "publication-my-paper"
+subtitle: |
+  Optional short summary shown near the top of the detail page.
+---
+
+Write the paper summary or abstract here.
+
+[Paper link](https://example.com/paper.pdf)
+```
+
+**Front matter fields for publications:**
+
+| Field | Purpose |
+|-------|---------|
+| `title` | Publication title |
+| `date` | Publication date |
+| `draft` | Set `false` to publish |
+| `weight` | Sort order on the list page (larger = earlier) |
+| `authors` | Author list shown on list/detail pages |
+| `conference` | Conference or journal name |
+| `volume` | Volume/issue information |
+| `status` | Publication status |
+| `paperLink` | Original paper URL shown below Status |
+| `keywords` | Keyword list shown on the list page |
+| `translationKey` | Shared key between English and Korean versions |
+| `subtitle` | Optional detail-page summary |
+
+To change publication order, adjust `weight`. Larger weight renders first; smaller weight moves toward the bottom.
+
+---
+
+### 2.4 Bilingual Content
 
 This site supports English and Korean. For any content file, create a parallel `.ko.md` version.
 
