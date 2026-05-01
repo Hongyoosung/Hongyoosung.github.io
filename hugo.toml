@@ -99,10 +99,10 @@ defaultContentLanguage = 'en'
             name = "아카이브"
             url = "/ko/archives"
         [[languages.ko.params.profileMode.buttons]]
-            name = "Journal"
+            name = "저널"
             url = "/ko/journal"
         [[languages.ko.params.profileMode.buttons]]
-            name = "Publications"
+            name = "출판"
             url = "/ko/publications"
 
     [[languages.ko.params.socialIcons]]

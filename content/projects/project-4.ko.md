@@ -20,7 +20,7 @@ math: true
 본 프로젝트는 메타버스 환경과 실제 IoT 기기 간의 안전하고 효율적인 데이터 통신을 위한 분산형 플랫폼을 목표로 합니다. DID(Decentralized Identifier)를 활용한 신원 검증과 MQTT 프로토콜을 통한 실시간 데이터 전송을 결합하여, 데이터의 무결성을 보장하면서도 낮은 지연 시간으로 상호작용을 구현했습니다. 또한 탈중앙 신원 관리를 위해 Hyperledger Indy 기반의 DID 원장을 활용하여 참여 주체의 신뢰 가능한 식별과 검증 가능한 자격 증명 관리를 구현했습니다.
 
 
-{{< img src="/images/project3/overview.png" 
+{{< img src="/images/project4/overview.png" 
         alt="개요 이미지" 
         class="max-w-3xl" 
         caption="Fig 1. 아키텍처 다이어그램" >}}
