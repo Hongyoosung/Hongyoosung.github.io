@@ -1,4 +1,4 @@
-name: Deploy Hugo site to Pages
+name: Deploy Vite portfolio to Pages
 
 on:
   push:
@@ -21,25 +21,29 @@ defaults:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      HUGO_VERSION: 0.146.0
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          submodules: recursive
-          fetch-depth: 0
-      - name: Setup Hugo
-        uses: peaceiris/actions-hugo@v2
-        with:
-          hugo-version: ${{ env.HUGO_VERSION }}
-          extended: true
-      - name: Build with Hugo
-        run: hugo --minify
+          node-version: 22
+          cache: npm
+          cache-dependency-path: portfolio/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./portfolio
+        run: npm ci
+
+      - name: Build with Vite
+        working-directory: ./portfolio
+        run: npm run build
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./public
+          path: ./portfolio/dist
 
   deploy:
     environment:
