@@ -1,5 +1,5 @@
 ---
-title: "A Research on Generalized NPC Behavior Control Framework via LLM-Persona Conditioning"
+title: "Research on Information-Conditioned Behavior Control in Multi-Entity Environments"
 date: 2026-04-29T09:00:00+09:00
 draft: false
 weight: 4
@@ -13,4 +13,4 @@ translationKey: "publication-persona"
 ---
 
 
-This research explores a reinforcement learning methodology designed to control a vast array of NPCs with diverse personalities and backgrounds using a single, unified policy. By leveraging persona-based textual information from Large Language Models (LLMs) as a conditioning factor, we propose a generalized framework where agents can execute distinct behaviors aligned with their given descriptions without task-specific retraining. The study focuses on maximizing the scalability and diversity of NPC interactions in life simulation environments, providing an efficient architecture for persona-driven agent behavior.
+This research examines methods for managing diverse behavior patterns in virtual entities using structured information as a control signal. We explore how high-dimensional descriptive data can be integrated into a unified control framework to produce varied responses without redundant architectural changes. The study focuses on enhancing the diversity of entity interactions, proposing an efficient structure for information-driven behavior adaptation.

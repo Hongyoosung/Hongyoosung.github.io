@@ -1,0 +1,285 @@
+export const skills = [
+    {
+        category: 'AI',
+        items: [
+            { name: 'RL' },
+            { name: 'LLM' },
+        ],
+    },
+    {
+        category: 'Engines',
+        items: [
+            { name: 'Unreal Engine 5' },
+            { name: 'Unity' },
+        ],
+    },
+    {
+        category: 'Languages',
+        items: [
+            { name: 'C++' },
+            { name: 'Python' },
+            { name: 'C#' },
+        ],
+    },
+    {
+        category: 'Frameworks',
+        items: [
+            { name: 'RLlib' },
+            { name: 'PyTorch' },
+        ],
+    },
+    {
+        category: 'Cloud & Tools',
+        items: [
+            { name: 'AWS' },
+            { name: 'Git' },
+            { name: 'Docker' },
+            { name: 'Terraform' },
+        ],
+    },
+    {
+        category: 'Others',
+        items: [
+            { name: 'Linux' },
+        ],
+    },
+]
+
+export const credentials = [
+    {
+        title: {
+            ko: '수상 내역',
+            en: 'Awards',
+        },
+        items: [
+            {
+                name: {
+                    ko: 'Best Paper Award',
+                    en: 'Best Paper Award',
+                },
+                proofImage: '/images/experience/award1.png',
+                date: 'May 2024',
+                details: {
+                    ko: [
+                        '"게임 에이전트 의사결정에서 대규모 언어모델(LLM)의 잠재력 평가"',
+                        '2024 한국멀티미디어학회(KMMS) 춘계학술발표대회',
+                    ],
+                    en: [
+                        '"Evaluating the Potential of Large Language Models (LLMs) in Game Agent Decision-Making"',
+                        '2024 Korea Multimedia Society (KMMS) Spring Conference',
+                    ],
+                },
+            },
+            {
+                name: {
+                    ko: 'Outstanding Paper Award',
+                    en: 'Outstanding Paper Award',
+                },
+                proofImage: '/images/experience/award2.png',
+                date: 'Nov 2023',
+                details: {
+                    ko: [
+                        '"탈중앙 디지털 생태계를 위한 디지털 신원확인 기술에 관한 연구"',
+                        '2023 한국디지털콘텐츠학회(DCS) 추계종합학술대회',
+                    ],
+                    en: [
+                        '"A Study on Digital Identity Verification Technology for a Decentralized Digital Ecosystem"',
+                        '2023 Korea Digital Contents Society (DCS) Autumn Conference',
+                    ],
+                },
+            },
+            {
+                name: {
+                    ko: 'Bronze Prize',
+                    en: 'Bronze Prize',
+                },
+                proofImage: '/images/experience/award3.png',
+                date: 'Nov 2023',
+                details: {
+                    ko: [
+                        '"신뢰할 수 있는 탈중앙 메타버스를 위한 IoT 통신기술 개발"',
+                        '2023 한국디지털콘텐츠학회(DCS) 추계종합학술대회',
+                    ],
+                    en: [
+                        '"Development of IoT Communication Technology for a Trustworthy Decentralized Metaverse"',
+                        '2023 Korea Digital Contents Society (DCS) Autumn Conference',
+                    ],
+                },
+            },
+            {
+                name: {
+                    ko: 'Participation Award',
+                    en: 'Participation Award',
+                },
+                date: '2024',
+                details: {
+                    ko: [
+                        '2024 동의대학교 하계 캡스톤디자인 경진대회',
+                    ],
+                    en: [
+                        '2024 Dong-eui University Summer Capstone Design Competition',
+                    ],
+                },
+            },
+            {
+                name: {
+                    ko: '기타 교내상 8개',
+                    en: '8 Additional Campus Awards',
+                },
+                date: '',
+                details: {
+                    ko: [
+                        '취업 및 창업 동아리 활동',
+                    ],
+                    en: [
+                        'Career and Entrepreneurship Club Activities',
+                    ],
+                },
+            },
+        ],
+    },
+    {
+        title: {
+            ko: '자격증',
+            en: 'Certifications',
+        },
+        items: [
+            {
+                name: {
+                    ko: 'AWS Certified Solutions Architect - Associate',
+                    en: 'AWS Certified Solutions Architect - Associate',
+                },
+                proofImage: '/images/experience/aws.png',
+                date: '2026.01',
+                details: {
+                    ko: ['Amazon Web Services (AWS)'],
+                    en: ['Amazon Web Services (AWS)'],
+                },
+            },
+            {
+                name: {
+                    ko: '정보처리기사',
+                    en: 'Engineer Information Processing',
+                },
+                proofImage: '/images/experience/information_processer.png',
+                date: '2025.09',
+                details: {
+                    ko: ['한국산업인력공단'],
+                    en: ['Human Resources Development Service of Korea'],
+                },
+            },
+            {
+                name: {
+                    ko: '리눅스마스터 2급',
+                    en: 'Linux Master Level 2',
+                },
+                proofImage: '/images/experience/linux_master.png',
+                date: '2025.10',
+                details: {
+                    ko: ['한국정보통신진흥협회(KAIT)'],
+                    en: ['Korea Association for ICT Promotion (KAIT)'],
+                },
+            },
+            {
+                name: {
+                    ko: '지식재산능력시험(IPAT)',
+                    en: 'Intellectual Property Ability Test (IPAT)',
+                },
+                proofImage: '/images/experience/ipat.png',
+                date: '2024.06',
+                details: {
+                    ko: ['한국발명진흥회(KIPA)'],
+                    en: ['Korea Invention Promotion Association (KIPA)'],
+                },
+            },
+        ],
+    },
+    {
+        title: {
+            ko: '연구 및 학술 활동',
+            en: 'Research & Academic',
+        },
+        items: [
+            {
+                name: {
+                    ko: '논문 게재 및 발표',
+                    en: 'Published and Presented Papers',
+                },
+                date: 'May 2022 - Present',
+                details: {
+                    ko: [
+                        '"GOBT: A Synergistic Approach to Game AI Using Goal-Oriented and Utility-Based Planning in Behavior Trees", Journal of Multimedia Information System (JMIS), Vol. 4, Oct 2023',
+                        '"IoT 가상환경 플랫폼에서의 무결성 보장 시스템: Hyperledger Indy와 MQTT를 통하여", 한국스마트미디어학회, Vol. 4, Apr 2024',
+                        '"게임 에이전트 의사결정에서 대규모 언어모델(LLM)의 잠재력 평가", 2024 한국멀티미디어학회 춘계학술발표대회',
+                        '"신뢰할 수 있는 탈중앙 메타버스를 위한 IoT 통신기술 개발", 2023 한국디지털콘텐츠학회 추계종합학술대회',
+                        '"탈중앙 디지털 생태계를 위한 디지털 신원확인 기술에 관한 연구", 2023 한국디지털콘텐츠학회 추계종합학술대회',
+                        '"메타버스와 IoT 디바이스 연동 기술 개발", 2023 한국통신학회 하계종합학술발표회',
+                    ],
+                    en: [
+                        '"GOBT: A Synergistic Approach to Game AI Using Goal-Oriented and Utility-Based Planning in Behavior Trees", Journal of Multimedia Information System (JMIS), Vol. 4, Oct 2023',
+                        '"Integrity Assurance System in an IoT Virtual Environment Platform: Through Hyperledger Indy and MQTT", Korea Smart Media Society, Vol. 4, Apr 2024',
+                        '"Evaluating the Potential of Large Language Models (LLMs) in Game Agent Decision-Making", 2024 Korea Multimedia Society Spring Conference',
+                        '"Development of IoT Communication Technology for a Trustworthy Decentralized Metaverse", 2023 Korea Digital Contents Society (DCS) Autumn Conference',
+                        '"A Study on Digital Identity Verification Technology for a Decentralized Digital Ecosystem", 2023 Korea Digital Contents Society (DCS) Autumn Conference',
+                        '"Development of Technology for Connecting the Metaverse and IoT Devices", 2023 Korea Institute of Communications and Information Sciences (KICS) Summer Conference',
+                    ],
+                },
+            },
+            {
+                name: {
+                    ko: '학부연구생',
+                    en: 'Undergraduate Researcher',
+                },
+                date: 'May 2022 - Dec 2023',
+                details: {
+                    ko: [
+                        '탈중앙화 웹 기술 기반의 신뢰할 수 있는 사이버-물리-사회 플랫폼 연구',
+                        '블록체인 인프라를 활용한 탈중앙화 웹 3.0 기술 연구',
+                        '블록체인 네트워크 기반 IoT 제어 플랫폼 연구 및 개발',
+                    ],
+                    en: [
+                        'Studied trustworthy cyber-physical-social platforms based on decentralized web technologies',
+                        'Researched decentralized Web 3.0 technologies using blockchain infrastructure',
+                        'Researched and developed blockchain-network-based IoT control platforms',
+                    ],
+                },
+            },
+            {
+                name: {
+                    ko: '비교과 활동',
+                    en: 'Extracurricular Activities',
+                },
+                date: 'Nov 2023 - Present',
+                details: {
+                    ko: [
+                        '2023 G-STAR 전시 참가',
+                        '2024 ORANGE SUMMER GAME JAM 참가',
+                    ],
+                    en: [
+                        '2023 G-STAR exhibition participation',
+                        '2024 ORANGE SUMMER GAME JAM participation',
+                    ],
+                },
+            },
+            {
+                name: {
+                    ko: '리더십 및 교내 활동',
+                    en: 'Leadership & Campus Involvement',
+                },
+                date: 'Nov 2022 - Feb 2025',
+                details: {
+                    ko: [
+                        '학과 게임개발 동아리 대표',
+                        '게임 개발 및 대외 행사 참여',
+                    ],
+                    en: [
+                        'Led the department game development club',
+                        'Participated in game development projects and external events',
+                    ],
+                },
+            },
+        ],
+    },
+]
+
+export default skills

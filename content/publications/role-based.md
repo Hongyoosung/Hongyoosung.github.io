@@ -1,9 +1,9 @@
 ---
-title: "A Research on Analyzing Role-Based Coordination Structures and Legibility in Cooperative Multi-Agent Reinforcement Learning"
+title: "A Study on Inter-Agent Interaction Analysis in Cooperative Systems"
 date: 2026-04-29T09:10:00+09:00
 draft: false
 weight: 3
-authors: ["Yoosung Hong"]
+authors: ["Admin"]
 conference: 
 volume: 
 status: "In Preparation"
@@ -13,4 +13,4 @@ translationKey: "publication-role-based"
 ---
 
 
-This research analyzes the cooperation rules formed by agents through learning in a cooperative multi-agent reinforcement learning (MARL) environment. It proposes an analytical framework capable of quantifying and visualizing strategic dependencies between agents, specifically measuring how clearly the roles of each agent are distinguished within specific structural constraints. Through this, the research aims to derive the complex coordination structures existing within black-box multi-agent policies into an interpretable form.
+This project explores the fundamental interaction patterns formed within multi-agent environments. The primary focus is on developing a methodology to observe and interpret the decision-making processes of distributed autonomous agents when performing collective tasks. By analyzing the underlying structural dependencies, this study aims to provide a clearer understanding of how complex coordination emerges in multi-agent systems.
