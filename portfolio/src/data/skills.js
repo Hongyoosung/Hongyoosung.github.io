@@ -208,6 +208,8 @@ export const credentials = [
                 date: 'May 2022 - Present',
                 details: {
                     ko: [
+                        '"Learned Coordination Conventions in Cooperative MARL: Measuring the Translation Gap Between Theory-Informed Roles and Learned Routing", ICML 2026 Workshop 2026 결과 대기 중',
+                        '"One Policy, Infinite NPCs: Scalable Persona-Conditioned NPC Control via Shared Reinforcement Learning Policies", arxiv 등재 대기 중',
                         '"GOBT: A Synergistic Approach to Game AI Using Goal-Oriented and Utility-Based Planning in Behavior Trees", Journal of Multimedia Information System (JMIS), Vol. 4, Oct 2023',
                         '"IoT 가상환경 플랫폼에서의 무결성 보장 시스템: Hyperledger Indy와 MQTT를 통하여", 한국스마트미디어학회, Vol. 4, Apr 2024',
                         '"게임 에이전트 의사결정에서 대규모 언어모델(LLM)의 잠재력 평가", 2024 한국멀티미디어학회 춘계학술발표대회',
@@ -216,6 +218,8 @@ export const credentials = [
                         '"메타버스와 IoT 디바이스 연동 기술 개발", 2023 한국통신학회 하계종합학술발표회',
                     ],
                     en: [
+                        '"Learned Coordination Conventions in Cooperative MARL: Measuring the Translation Gap Between Theory-Informed Roles and Learned Routing, ICML 2026 Workshop Awaiting Results',
+                        '"One Policy, Infinite NPCs: Scalable Persona-Conditioned NPC Control via Shared Reinforcement Learning Policies", arxiv Awaiting Publication',
                         '"GOBT: A Synergistic Approach to Game AI Using Goal-Oriented and Utility-Based Planning in Behavior Trees", Journal of Multimedia Information System (JMIS), Vol. 4, Oct 2023',
                         '"Integrity Assurance System in an IoT Virtual Environment Platform: Through Hyperledger Indy and MQTT", Korea Smart Media Society, Vol. 4, Apr 2024',
                         '"Evaluating the Potential of Large Language Models (LLMs) in Game Agent Decision-Making", 2024 Korea Multimedia Society Spring Conference',
