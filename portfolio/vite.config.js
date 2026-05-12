@@ -5,7 +5,7 @@ import { cpSync, createReadStream, existsSync, statSync } from 'node:fs'
 import { dirname, extname, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const staticAssetDirs = ['gifs', 'images', 'js']
+const staticAssetDirs = ['gifs', 'images', 'js', 'papers']
 
 function copyHugoStaticAssets() {
   const projectRoot = dirname(fileURLToPath(import.meta.url))
@@ -42,6 +42,7 @@ function copyHugoStaticAssets() {
           '.jpg': 'image/jpeg',
           '.jpeg': 'image/jpeg',
           '.png': 'image/png',
+          '.pdf': 'application/pdf',
           '.svg': 'image/svg+xml',
           '.webp': 'image/webp',
           '.js': 'text/javascript',

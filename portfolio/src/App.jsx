@@ -14,6 +14,7 @@ import Contact from './components/sections/Contact'
 import ProjectDetail from './components/pages/ProjectDetail'
 import PublicationsPage from './components/pages/PublicationsPage'
 import { getProjectBySlug } from './data/projects'
+import { getPublicationById } from './data/publications'
 
 const normalizePath = () => window.location.pathname.replace(/\/+$/, '') || '/'
 
@@ -76,6 +77,9 @@ function App() {
     const route = useMemo(() => {
         const clean = path.replace(/^\/ko(?=\/|$)/, '') || '/'
         if (clean === '/publications') return { type: 'publications' }
+        if (clean.startsWith('/publications/')) {
+            return { type: 'publication', id: clean.split('/')[2] }
+        }
         if (clean.startsWith('/projects/')) {
             return { type: 'project', slug: clean.split('/')[2] }
         }
@@ -85,6 +89,16 @@ function App() {
     const renderMain = () => {
         if (route.type === 'publications') {
             return <PublicationsPage lang={lang} navigate={navigate} />
+        }
+
+        if (route.type === 'publication') {
+            return (
+                <PublicationsPage
+                    lang={lang}
+                    navigate={navigate}
+                    selectedPaper={getPublicationById(route.id)}
+                />
+            )
         }
 
         if (route.type === 'project') {

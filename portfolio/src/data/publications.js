@@ -1,5 +1,24 @@
 export const publications = [
     {
+        id: 'pcsp',
+        title: 'One Policy, Infinite NPCs: Scalable Persona-Conditioned NPC Control via Shared Reinforcement Learning Policies',
+        authors: 'Yoosung Hong',
+        venue: 'Expected to be listed on arXiv',
+        date: '2026.05',
+        image: '/papers/images/pcsp-first-page.png',
+        url: '/papers/pdfs/main.pdf',
+        pdfUrl: '/papers/pdfs/main.pdf',
+        keywords: ['Game AI', 'NPC Personalization', 'Reinforcement Learning', 'Persona Conditioning', 'Large Language Models'],
+        description: {
+            ko: '단일 공유 강화학습 정책으로 자연어 페르소나에 맞춘 NPC 행동을 실시간으로 제어하는 연구.',
+            en: 'A shared reinforcement learning policy for real-time NPC control conditioned on natural-language personas.',
+        },
+        abstract: {
+            ko: '300개 페르소나 기반 라이프 시뮬레이션 벤치마크에서 PCSP는 우연 수준보다 11배 높은 zero-shot 페르소나 식별 성능, Spearman ρ = 0.73의 의미-행동 정렬, LLM-as-policy 기준선보다 22배 빠른 추론 속도를 달성했습니다. 라이프 시뮬레이션 게임은 서로 다른 성격을 일관되게 표현하면서도 디자이너가 작성한 자연어로 제어 가능한 수백에서 수천 명의 NPC를 필요로 합니다. 본 논문은 자유 형식 페르소나 설명의 고정 LLM 임베딩을 조건으로 사용하는 단일 강화학습 정책인 PCSP(Persona-Conditioned Shared Policy)를 제안합니다. PCSP는 NPC별 1회 페르소나 인코딩, 저랭크 페르소나 투영, 신경망 페르소나 조건화, PPO + InfoNCE 일관성 + KL 다양성 학습 목표를 결합합니다. 세 가지 Mini-Inzoi 실험 설정에서 InfoNCE trajectory-consistency 목표가 zero-shot 페르소나 식별과 행동 추적 가능성에 핵심적임을 확인했습니다.',
+            en: 'On a 300-persona life-simulation benchmark, PCSP achieves zero-shot persona identification 11x above chance, Spearman rho = 0.73 semantic-behavioral alignment, and 22x faster inference than an LLM-as-policy baseline. Life simulation games require hundreds to thousands of NPCs that behave consistently with distinct personalities while remaining controllable through designer-authored natural language. This paper introduces PCSP (Persona-Conditioned Shared Policy), a single reinforcement learning policy conditioned on frozen LLM embeddings of free-form persona descriptions. PCSP combines once-per-NPC persona encoding, low-rank persona projection, neural persona conditioning, and a PPO + InfoNCE consistency + KL diversity training objective. Across three Mini-Inzoi experimental settings, the results show that the InfoNCE trajectory-consistency objective is central to zero-shot persona identification and recoverable behavior traces.',
+        },
+    },
+    {
         id: 'gobt-framework',
         title: 'GOBT: A Synergistic Approach to Game AI Using Goal-Oriented and Utility-Based Planning in Behavior Trees',
         authors: 'Yoosung Hong, Tianhao Yan, Jinseok Seo',
@@ -7,9 +26,15 @@ export const publications = [
         date: '2023.10.04',
         image: '/images/experience/paper1.png',
         url: 'https://www.jmis.org/archive/view_article?pid=jmis-10-4-321',
+        pdfUrl: '/papers/pdfs/gobt.pdf',
+        keywords: ['Behavior Tree', 'GOAP', 'Utility AI', 'NPC AI'],
         description: {
             ko: 'Behavior Tree, GOAP, Utility AI를 통합한 게임 AI 의사결정 프레임워크 연구.',
             en: 'A game AI decision-making framework integrating Behavior Trees, GOAP, and Utility AI.',
+        },
+        abstract: {
+            ko: '본 논문에서는 Unity 게임 엔진을 이용한 시뮬레이션을 통해 새로운 게임 AI 프레임워크인 목표 지향 행동 트리(Goal-Oriented Behavior Tree, GOBT)를 제안합니다. 이 프레임워크는 목표 지향 행동 계획(GOAP) 아키텍처와 효용 이론의 장점을 기존 행동 트리와 통합하여 다양한 상황에 대한 에이전트의 유연한 반응을 가능하게 합니다. 시뮬레이션 환경에는 순찰, 공격, 후퇴 등의 행동을 수행할 수 있는 사용자 정의 가능한 게임 캐릭터가 포함됩니다. GOBT를 통해 개발자는 기존 행동 트리의 논리를 적용하면서 필요에 따라 GOAP의 동적 계획 기능과 효용 기반 행동 선택을 활용할 수 있습니다. GOBT 프레임워크의 성능은 변화하는 환경 요인에 대한 에이전트 행동 합성 데이터셋을 사용한 시뮬레이션을 통해 검증되었습니다.',
+            en: 'This paper proposes the Goal-Oriented Behavior Tree, a novel game AI framework verified through simulations in the Unity game engine. The framework integrates the advantages of Goal-Oriented Action Planning and Utility Theory with traditional Behavior Trees, enabling agents to respond more flexibly to changing situations. The simulated environment contains customizable game characters capable of actions such as patrol, attack, and retreat. GOBT lets developers design agent decision-making by applying traditional BT logic while using dynamic GOAP planning and utility-based action selection when needed. The framework is verified with a synthetic dataset of agent behaviors under changing environmental factors.',
         },
     },
     {
@@ -20,9 +45,17 @@ export const publications = [
         date: '2024.04.22',
         image: '/images/experience/paper2.png',
         url: 'https://kism.or.kr/file/memoir/13_4_8.pdf',
+        pdfUrl: '/papers/pdfs/iot.pdf',
+        keywords: ['Blockchain', 'Metaverse', 'IoT', 'MQTT', 'Data Integrity'],
         description: {
             ko: 'Hyperledger Indy와 MQTT를 활용한 IoT 가상환경 플랫폼의 데이터 무결성 보장 시스템.',
             en: 'A data integrity guarantee system for IoT virtual environment platforms using Hyperledger Indy and MQTT.',
         },
+        abstract: {
+            ko: '본 논문에서는 Hyperledger Indy와 MQTT를 결합하여 가상환경에서 IoT 디바이스의 데이터 무결성을 높이는 시스템을 제안합니다. 이 시스템은 발행-구독 통신 패턴에서 분산형 네트워크를 활용한 DPKI 구조를 구현하여 중앙집중형 시스템의 한계를 보완합니다. IoT 디바이스의 데이터 무결성을 보장하기 위해 디지털 서명 기술을 적용했으며, 클라이언트, IoT 디바이스, 브로커, 블록체인이라는 네 가지 핵심 요소 간 통신 시나리오와 분산 식별자를 활용한 토픽 구조를 제시합니다. 제안 시스템은 네 가지 시나리오 실험과 가상환경 통신 성능 평가를 통해 신뢰성 있는 IoT 데이터 통신 구조를 제공함을 확인했습니다.',
+            en: 'This paper proposes a system that enhances the data integrity of IoT devices in a virtual environment by combining Hyperledger Indy and MQTT. The system complements the limitations of centralized systems by implementing a Decentralized Public Key Infrastructure structure in pub/sub communication patterns. Digital signatures are applied to guarantee IoT data integrity, and the paper presents communication scenarios among four core elements: client, IoT device, broker, and blockchain. It also introduces a topic structure using Decentralized Identifiers for secure and transparent data exchange. Experiments across four scenarios confirm that the proposed system provides a reliable IoT data communication structure in a virtual environment.',
+        },
     },
 ]
+
+export const getPublicationById = (id) => publications.find((paper) => paper.id === id)
