@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { ArrowLeft, ExternalLink, FileText, Github, Play } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import ImageLightbox from '../ui/ImageLightbox'
 
 const createHeadingId = (text, index) => {
@@ -207,7 +207,7 @@ function ProjectDetail({ project, lang, navigate }) {
                 style={{ backgroundImage: `linear-gradient(rgba(8,10,14,0.62), rgba(8,10,14,0.82)), url(${project.gif || project.image})` }}
             >
                 <div className="container-max">
-                    <button className="back-button light" onClick={() => navigate(lang === 'ko' ? '/ko' : '/')}>
+                    <button className="back-button light" onClick={() => navigate(lang === 'ko' ? '/ko#projects' : '/#projects')}>
                         <ArrowLeft size={16} />
                         {lang === 'ko' ? '프로젝트 목록' : 'Projects'}
                     </button>
@@ -231,29 +231,10 @@ function ProjectDetail({ project, lang, navigate }) {
                         </div>
                     </div>
 
-                    <div className="project-detail-actions">
-                        {project.github && (
-                            <a href={project.github} target="_blank" rel="noopener noreferrer">
-                                <Github size={15} />
-                                GitHub
-                            </a>
-                        )}
-                        {project.paper && (
-                            <a href={project.paper} target="_blank" rel="noopener noreferrer">
-                                <FileText size={15} />
-                                Paper
-                            </a>
-                        )}
-                        {project.youtube && (
-                            <a href={project.youtube} target="_blank" rel="noopener noreferrer">
-                                <Play size={15} />
-                                Video
-                            </a>
-                        )}
-                        <a href={lang === 'ko' ? `/ko/projects/${project.slug}` : `/projects/${project.slug}`} target="_blank" rel="noopener noreferrer">
-                            <ExternalLink size={15} />
-                            URL
-                        </a>
+                    <div className="project-keyword-row" aria-label="Project keywords">
+                        {project.tags.map((tag) => (
+                            <span key={tag}>{tag}</span>
+                        ))}
                     </div>
                 </div>
             </section>

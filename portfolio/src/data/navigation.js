@@ -5,5 +5,6 @@ export const navLinks = [
     { id: 'activation', label: { ko: 'Activation', en: 'Activation' }, type: 'section' },
     { id: 'experience', label: { ko: 'Experience', en: 'Experience' }, type: 'section' },
     { id: 'publications', label: { ko: 'Research', en: 'Research' }, type: 'page', path: '/publications' },
+    { id: 'news', label: { ko: '뉴스', en: 'News' }, type: 'page', path: '/news' },
     { id: 'contact', label: { ko: 'Contact', en: 'Contact' }, type: 'section' },
 ]

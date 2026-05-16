@@ -50,6 +50,8 @@ function Header({ isDark, lang, onToggleTheme, onToggleLanguage, navigate }) {
         ? isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)'
         : isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.16)'
     const languageLabel = lang === 'ko' ? 'Ko' : 'En'
+    const sectionLinks = navLinks.filter((link) => link.type === 'section')
+    const pageLinks = navLinks.filter((link) => link.type === 'page')
 
     const iconButtonStyle = {
         display: 'flex',
@@ -101,7 +103,7 @@ function Header({ isDark, lang, onToggleTheme, onToggleLanguage, navigate }) {
                 </button>
 
                 <div className="hidden md:flex items-center gap-7">
-                    {navLinks.map((link) => (
+                    {sectionLinks.map((link) => (
                         <button
                             key={link.id}
                             onClick={() => handleNavClick(link)}
@@ -123,6 +125,41 @@ function Header({ isDark, lang, onToggleTheme, onToggleLanguage, navigate }) {
                             {link.label[lang]}
                         </button>
                     ))}
+
+                    <span
+                        aria-hidden="true"
+                        style={{
+                            width: '1px',
+                            height: '18px',
+                            backgroundColor: borderTone,
+                            marginLeft: '-8px',
+                            marginRight: '-8px',
+                        }}
+                    />
+
+                    <div className="nav-page-group">
+                        {pageLinks.map((link) => (
+                            <button
+                                key={link.id}
+                                className="nav-page-link"
+                                onClick={() => handleNavClick(link)}
+                                style={{
+                                    color: fgMuted,
+                                    borderColor: borderTone,
+                                }}
+                                onMouseEnter={e => {
+                                    e.currentTarget.style.color = fgColor
+                                    e.currentTarget.style.borderColor = fgColor
+                                }}
+                                onMouseLeave={e => {
+                                    e.currentTarget.style.color = fgMuted
+                                    e.currentTarget.style.borderColor = borderTone
+                                }}
+                            >
+                                {link.label[lang]}
+                            </button>
+                        ))}
+                    </div>
 
                     <div className="flex items-center gap-1">
                         <button
@@ -171,7 +208,7 @@ function Header({ isDark, lang, onToggleTheme, onToggleLanguage, navigate }) {
                     }}
                     role="menu"
                 >
-                    {navLinks.map((link) => (
+                    {[...sectionLinks, ...pageLinks].map((link) => (
                         <button
                             key={link.id}
                             onClick={() => handleNavClick(link)}

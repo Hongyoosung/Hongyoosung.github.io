@@ -79,7 +79,7 @@ function ProjectCard({ project, index, lang, onOpen, animStyle }) {
                 style={{
                     position: 'relative',
                     width: '100%',
-                    aspectRatio: '16 / 9',
+                    aspectRatio: '16 / 10',
                     overflow: 'hidden',
                     backgroundColor: 'var(--color-bg-alt)',
                     border: 'none',
@@ -158,10 +158,10 @@ function Projects({ lang, navigate }) {
     const canGoPrev = currentStartIndex > 0
     const canGoNext = currentStartIndex < maxStartIndex
     const carouselMetrics = cardsPerView === 1
-        ? { visible: 1.12, gap: 14, gapCount: 1 }
+        ? { visible: 1.04, gap: 14, gapCount: 1 }
         : cardsPerView === 2
-            ? { visible: 2.25, gap: 20, gapCount: 2 }
-            : { visible: 3.3, gap: 20, gapCount: 3 }
+            ? { visible: 1.92, gap: 20, gapCount: 2 }
+            : { visible: 2.85, gap: 20, gapCount: 3 }
     const offsetPercent = currentStartIndex * (100 / carouselMetrics.visible)
     const offsetPixels = currentStartIndex * (
         carouselMetrics.gap - ((carouselMetrics.gap * carouselMetrics.gapCount) / carouselMetrics.visible)

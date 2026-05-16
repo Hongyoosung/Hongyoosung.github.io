@@ -6,11 +6,12 @@ import { dirname, extname, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const staticAssetDirs = ['gifs', 'images', 'js', 'papers']
+const portfolioRoot = dirname(fileURLToPath(import.meta.url))
+const repositoryRoot = resolve(portfolioRoot, '..')
 
 function copyHugoStaticAssets() {
-  const projectRoot = dirname(fileURLToPath(import.meta.url))
-  const staticRoot = resolve(projectRoot, '../static')
-  const distRoot = resolve(projectRoot, 'dist')
+  const staticRoot = resolve(repositoryRoot, 'static')
+  const distRoot = resolve(portfolioRoot, 'dist')
 
   return {
     name: 'copy-hugo-static-assets',
@@ -70,4 +71,9 @@ export default defineConfig({
     copyHugoStaticAssets(),
   ],
   base: '/',
+  server: {
+    fs: {
+      allow: [repositoryRoot],
+    },
+  },
 })

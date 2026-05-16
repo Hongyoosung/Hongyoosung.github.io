@@ -11,10 +11,13 @@ import Skills from './components/sections/Skills'
 import Activation from './components/sections/Activation'
 import Experience from './components/sections/Experience'
 import Contact from './components/sections/Contact'
+import News from './components/sections/News'
 import ProjectDetail from './components/pages/ProjectDetail'
 import PublicationsPage from './components/pages/PublicationsPage'
+import NewsPage from './components/pages/NewsPage'
 import { getProjectBySlug } from './data/projects'
 import { getPublicationById } from './data/publications'
+import { getJournalBySlug } from './data/journals'
 
 const normalizePath = () => window.location.pathname.replace(/\/+$/, '') || '/'
 
@@ -51,10 +54,26 @@ function App() {
     }, [path])
 
     const navigate = (to) => {
-        const nextPath = to === '/' && lang === 'ko' ? '/ko' : to
-        window.history.pushState({}, '', nextPath)
-        setPath(normalizePath())
-        window.scrollTo({ top: 0, behavior: 'smooth' })
+        const target = new URL(to, window.location.origin)
+        const targetPath = target.pathname.replace(/\/+$/, '') || '/'
+        const nextPath = targetPath === '/' && lang === 'ko' ? '/ko' : targetPath
+        const nextUrl = `${nextPath}${target.hash}`
+
+        window.history.pushState({}, '', nextUrl)
+        setPath(nextPath)
+        setLang(nextPath.startsWith('/ko') ? 'ko' : 'en')
+
+        window.requestAnimationFrame(() => {
+            window.requestAnimationFrame(() => {
+                if (target.hash) {
+                    document.getElementById(decodeURIComponent(target.hash.slice(1)))
+                        ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                    return
+                }
+
+                window.scrollTo({ top: 0, behavior: 'smooth' })
+            })
+        })
     }
 
     const toggleLanguage = () => {
@@ -77,6 +96,10 @@ function App() {
     const route = useMemo(() => {
         const clean = path.replace(/^\/ko(?=\/|$)/, '') || '/'
         if (clean === '/publications') return { type: 'publications' }
+        if (clean === '/news') return { type: 'news' }
+        if (clean.startsWith('/news/')) {
+            return { type: 'journal', slug: clean.split('/')[2] }
+        }
         if (clean.startsWith('/publications/')) {
             return { type: 'publication', id: clean.split('/')[2] }
         }
@@ -101,6 +124,20 @@ function App() {
             )
         }
 
+        if (route.type === 'news') {
+            return <NewsPage lang={lang} navigate={navigate} />
+        }
+
+        if (route.type === 'journal') {
+            return (
+                <NewsPage
+                    lang={lang}
+                    navigate={navigate}
+                    selectedEntry={getJournalBySlug(lang, route.slug)}
+                />
+            )
+        }
+
         if (route.type === 'project') {
             return (
                 <ProjectDetail
@@ -116,6 +153,7 @@ function App() {
                 <Hero lang={lang} />
                 <About lang={lang} />
                 <Projects lang={lang} navigate={navigate} />
+                <News lang={lang} navigate={navigate} />
                 <Skills lang={lang} />
                 <Activation lang={lang} />
                 <Experience lang={lang} />
