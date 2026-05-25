@@ -1410,6 +1410,7 @@ button, input, textarea, select {
         font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
         font-size: 14px;
         line-height: 1.7;
+        text-align: center;
         white-space: pre;
     }
 

@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowLeft } from 'lucide-react'
+import katex from 'katex'
+import 'katex/dist/katex.min.css'
 import ImageLightbox from '../ui/ImageLightbox'
 
 const createHeadingId = (text, index) => {
@@ -72,6 +74,32 @@ const getTocHeadings = (root, project) => {
     return allHeadings.filter((heading) => !shouldHideProject1Heading(heading, allHeadings, project))
 }
 
+const removeMathDelimiters = (element) => {
+    const previous = element.previousSibling
+    const next = element.nextSibling
+
+    if (previous?.nodeType === Node.TEXT_NODE) {
+        previous.textContent = previous.textContent.replace(/\$\s*$/, '')
+    }
+
+    if (next?.nodeType === Node.TEXT_NODE) {
+        next.textContent = next.textContent.replace(/^\s*\$/, '')
+    }
+}
+
+const renderProjectMath = (root) => {
+    root?.querySelectorAll('.project-math, .project-inline-math').forEach((element) => {
+        const tex = element.textContent.replace(/[\u200B-\u200D\uFEFF]/g, '').trim()
+        if (!tex) return
+
+        removeMathDelimiters(element)
+        katex.render(tex, element, {
+            displayMode: element.classList.contains('project-math'),
+            throwOnError: false,
+        })
+    })
+}
+
 function ProjectDetail({ project, lang, navigate }) {
     const contentRef = useRef(null)
     const detailSectionRef = useRef(null)
@@ -135,6 +163,14 @@ function ProjectDetail({ project, lang, navigate }) {
             window.removeEventListener('resize', updateActiveHeading)
         }
     }, [project, lang])
+
+    useEffect(() => {
+        const root = contentRef.current
+        if (!project || !root) return undefined
+
+        const frameId = window.requestAnimationFrame(() => renderProjectMath(root))
+        return () => window.cancelAnimationFrame(frameId)
+    }, [project, lang, tocItems.length])
 
     useEffect(() => {
         const section = detailSectionRef.current

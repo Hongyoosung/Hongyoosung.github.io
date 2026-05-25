@@ -7,7 +7,7 @@ authors: ["Yoosung Hong"]
 conference: ""
 volume: ""
 status: "In Preparation"
-paperLink: ""
+paperLink: "https://arxiv.org/abs/2605.23652"
 keywords: ["Large Language Models (LLM)", "Reinforcement Learning", "NPC Generalization", "Persona-driven Agents, Game AI"]
 translationKey: "publication-persona"
 ---

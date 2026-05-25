@@ -6,7 +6,7 @@ export const publications = [
         venue: 'Expected to be listed on arXiv',
         date: '2026.05',
         image: '/papers/images/pcsp-first-page.png',
-        url: '/papers/pdfs/main.pdf',
+        url: 'https://arxiv.org/abs/2605.23652',
         pdfUrl: '/papers/pdfs/main.pdf',
         keywords: ['Game AI', 'NPC Personalization', 'Reinforcement Learning', 'Persona Conditioning', 'Large Language Models'],
         description: {

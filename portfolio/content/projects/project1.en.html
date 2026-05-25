@@ -1,0 +1,1203 @@
+<hr class="project-divider" />
+<h3>Overview</h3>
+<p>This project involved designing and implementing a Dynamic EQS plugin that automatically optimizes the EQS (Environment Query System) weights of UE5 agents through reinforcement learning, validated in a 5v5 team-based capture point environment using MAPPO. The result is a hybrid AI system in which the EQS handles agent spatial navigation and movement, while the reinforcement learning model is responsible for determining optimal positioning.</p>
+<p>To ensure training stability, an attention mechanism was introduced at the architecture level rather than relying on cooperative reward scalar design to encourage team-based collaborative behavior. This allows each agent to perceive its teammates and selectively identify critical state information, enabling cooperative strategies to emerge naturally.</p>
+<p>The entire system was built around a RL-EQS integration middleware layer on top of Schola (gRPC), abstracted as a plugin for reusability across other UE5 projects. The full pipeline — from system design through to AWS-based parallel training infrastructure — was implemented end-to-end by a single developer.</figure>
+</div>
+<hr class="project-divider" />
+<h3>System Architecture</h3>
+<figure class="project-media">
+<img src="/images/project1/archi.png" alt="System Architecture" loading="lazy" />
+<figcaption>Fig 1. System Architecture and Hierarchical Positioning Workflow</figcaption>
+</figure>
+<h3>Tech Stack</h3>
+<div class="project-table-wrap">
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Technologies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<strong>Game Engine</strong>
+</td>
+<td>Unreal Engine 5.6 (C++17)</td>
+</tr>
+<tr>
+<td>
+<strong>RL Framework</strong>
+</td>
+<td>Ray RLlib 2.7, PyTorch</td>
+</tr>
+<tr>
+<td>
+<strong>UE5-Python Bridge</strong>
+</td>
+<td>Schola Plugin (gRPC-based)</td>
+</tr>
+<tr>
+<td>
+<strong>Neural Network Inference</strong>
+</td>
+<td>ONNX Runtime via UE5 NNE (Neural Network Engine)</td>
+</tr>
+<tr>
+<td>
+<strong>Ability System</strong>
+</td>
+<td>UE5 Gameplay Ability System (GAS) — GameplayAbility, GameplayEffect, GameplayTag</td>
+</tr>
+<tr>
+<td>
+<strong>Cloud & Infra</strong>
+</td>
+<td>AWS (EC2, EKS), Docker (Linux)</td>
+</tr>
+<tr>
+<td>
+<strong>Communication</strong>
+</td>
+<td>gRPC (Schola protocol)</td>
+</tr>
+<tr>
+<td>
+<strong>Monitoring</strong>
+</td>
+<td>TensorBoard</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr class="project-divider" />
+<h3>Training Environment</h3>
+<p>The environment is a <strong>5v5 team-based Capture the Point</strong> mode featuring 5 capture points across the map. The team that captures and holds more points to reach the target score first wins the match.</p>
+
+<h4>Class Role Design</h4>
+<p>Each agent is assigned a specific class—<strong>Strike, Vanguard, or Support</strong>—at the start of every episode. Since each class requires a fundamentally different positioning strategy, I assigned <strong>independent policy networks</strong> to each class and applied role-specific reward functions.</p>
+<div class="project-media-grid">
+<figure class="project-media">
+<img src="/gifs/project1/project1_strike.gif" alt="" loading="lazy" />
+</figure>
+<figure class="project-media">
+<img src="/gifs/project1/project1_vanguard.gif" alt="" loading="lazy" />
+</figure>
+<figure class="project-media">
+<img src="/gifs/project1/project1_support.gif" alt="" loading="lazy" />
+</figure>
+</div>
+<div class="project-table-wrap">
+<table>
+<thead>
+<tr>
+<th>Class</th>
+<th>Role</th>
+<th>Core Positioning Objective</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<strong>Strike</strong>
+</td>
+<td>Ranged DPS</td>
+<td>Approach enemy points + Maintain optimal firing range</td>
+</tr>
+<tr>
+<td>
+<strong>Vanguard</strong>
+</td>
+<td>Melee Tank</td>
+<td>Maintain front-line presence + Close-quarters engagement</td>
+</tr>
+<tr>
+<td>
+<strong>Support</strong>
+</td>
+<td>Backline Healer</td>
+<td>Track injured allies + Maintain safe rear positioning</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h4>Training Against Scripted AI</h4>
+<p>The Blue Team (RL) trains against the <strong>Red Team (Scripted AI)</strong>, which operates using hardcoded EQS weights and State Machines.</p>
+<p>Due to the complex mix of the three agent classes, which makes Self-Play less effective in the early stages, Scripted AI was chosen to provide a consistent difficulty baseline. This allowed the RL agents to learn foundational strategies reliably.</p>
+
+<h4>Curriculum Tier System</h4>
+<p>The Scripted AI is divided into <strong>three difficulty tiers</strong>: 1 (Basic), 2 (Standard), and 3 (Aggressive). When the RL team's win rate exceeds a specific promotion threshold over a set period, the system automatically transitions to the next tier.</p>
+<div class="project-table-wrap">
+<table>
+<thead>
+<tr>
+<th>Tier Transition</th>
+<th>Promotion Threshold</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tier 1 → 2</td>
+<td>25% or higher</td>
+</tr>
+<tr>
+<td>Tier 2 → 3</td>
+<td>40% or higher</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>This system was implemented to prevent overfitting to lower difficulties and to gradually expose the agents to stronger opponents. Tier information is stored in <code>scripted_ai_config.json</code>, and UE5’s <code>LoadTierFromConfig()</code> applies the update automatically during the next episode reset.</p>
+
+</div>
+<hr class="project-divider" />
+<h4>Observation Space</h4>
+<p>A <strong>218-dimensional Entity-Centric vector</strong> generated by <code>FDEObservationV2::ToFlatArray()</code>. It encodes allies, enemies, and strategic bases into fixed-size slot tokens. A separate padding mask is provided to ensure the Python-based <strong>MultiheadAttention</strong> mechanism processes only valid entities.</p>
+<div class="project-spacer" style="--space:40px">
+</div>
+<p>
+<strong>Agent Input State Configuration</strong>
+</p>
+<div class="project-table-wrap">
+<table>
+<thead>
+<tr>
+<th>Index</th>
+<th>Dim</th>
+<th>Token Content</th>
+<th>Normalization & Details</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<strong>[0 : 7]</strong>
+</td>
+<td>7</td>
+<td>Self Token</td>
+<td>Pos/7500(3) + Vel/600(3) + Health(1)</td>
+</tr>
+<tr>
+<td>
+<strong>[7 : 71]</strong>
+</td>
+<td>64</td>
+<td>Ally Tokens (8×8)</td>
+<td>Rel\_Pos/8000(3) + HP(1) + Alive(1) + Class One-hot(3)</td>
+</tr>
+<tr>
+<td>
+<strong>[71 : 135]</strong>
+</td>
+<td>64</td>
+<td>Enemy Tokens (8×8)</td>
+<td>Rel\_Pos/8000(3) + HP(1) + Visibility(1) + Class One-hot(3)</td>
+</tr>
+<tr>
+<td>
+<strong>[135 : 191]</strong>
+</td>
+<td>56</td>
+<td>Base Tokens (8×7)</td>
+<td>Rel\_Pos/15000(2) + Height/1000(1) + Occupancy(1) + Progress(1) + Assigned(1) + Strat\_Value(1)</td>
+</tr>
+<tr>
+<td>
+<strong>[191 : 199]</strong>
+</td>
+<td>8</td>
+<td>Ally Mask</td>
+<td>0 = Valid, 1 = Padding</td>
+</tr>
+<tr>
+<td>
+<strong>[199 : 207]</strong>
+</td>
+<td>8</td>
+<td>Enemy Mask</td>
+<td>0 = Valid, 1 = Padding</td>
+</tr>
+<tr>
+<td>
+<strong>[207 : 215]</strong>
+</td>
+<td>8</td>
+<td>Base Mask</td>
+<td>0 = Valid, 1 = Padding</td>
+</tr>
+<tr>
+<td>
+<strong>[215 : 218]</strong>
+</td>
+<td>3</td>
+<td>Class One-hot</td>
+<td>[strike, vanguard, support]</td>
+</tr>
+<tr>
+<td>
+<strong>TOTAL</strong>
+</td>
+<td>
+<strong>218</strong>
+</td>
+<td>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<blockquote>
+<strong>Mask Handling:</strong> The <code>_safe_mask()</code> function in the Python policy prevents <strong>NaN</strong> errors in MultiheadAttention by forcibly unmasking Slot 0 when all slots are padded. The mask threshold is set to <code>&gt; 0.5</code> (float comparison), preserving the <code>0.0=Valid / 1.0=Padding</code> semantics.</blockquote>
+<hr class="project-divider" />
+<h4>Action Space</h4>
+<p>The policy network output is a <strong>7-dimensional Continuous Box Action</strong>. Each dimension corresponds to a weight parameter for an individual test within the <strong>EQS (Environment Query System)</strong> query. These weights dynamically adjust the contribution of each test when the EQS evaluates 48 candidate positions.</p>
+
+</div>
+<div class="project-table-wrap">
+<table>
+<thead>
+<tr>
+<th>Index</th>
+<th>Parameter Name</th>
+<th>Range</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<strong>[0]</strong>
+</td>
+<td>
+<code>EnemyObjectiveProximity</code>
+</td>
+<td>[-1, 1]</td>
+<td>Drive to move toward enemy objectives (Positive: approach, Negative: evade).</td>
+</tr>
+<tr>
+<td>
+<strong>[1]</strong>
+</td>
+<td>
+<code>AllyObjectiveProximity</code>
+</td>
+<td>[-1, 1]</td>
+<td>Drive to defend allied objectives (Positive: return, Negative: advance).</td>
+</tr>
+<tr>
+<td>
+<strong>[2]</strong>
+</td>
+<td>
+<code>CoverDensity</code>
+</td>
+<td>[-1, 1]</td>
+<td>Preference for areas with high cover (Positive: prioritize cover, Negative: prefer open terrain).</td>
+</tr>
+<tr>
+<td>
+<strong>[3]</strong>
+</td>
+<td>
+<code>EnemyVisibility</code>
+</td>
+<td>[-1, 1]</td>
+<td>Drive to maintain line-of-sight with enemies (Positive: maintain vision, Negative: conceal).</td>
+</tr>
+<tr>
+<td>
+<strong>[4]</strong>
+</td>
+<td>
+<code>AllyProximity</code>
+</td>
+<td>[-1, 1]</td>
+<td>Drive to maintain proximity to allies (Positive: cluster, Negative: disperse).</td>
+</tr>
+<tr>
+<td>
+<strong>[5]</strong>
+</td>
+<td>
+<strong>
+<code>CombatRange</code>
+</strong>
+</td>
+<td>[-1, 1]</td>
+<td>Adjustment of preferred engagement distance (Positive: maintain distance, Negative: close in).</td>
+</tr>
+<tr>
+<td>
+<strong>[6]</strong>
+</td>
+<td>
+<code>AssignedBaseProximity</code>
+</td>
+<td>[-1, 1]</td>
+<td>Attraction toward the assigned objective (Positive: approach, Negative: depart).</td>
+</tr>
+<tr>
+<td>
+<strong>TOTAL</strong>
+</td>
+<td>
+<strong>7-dim</strong>
+</td>
+<td>
+<strong>[-1, 1]</strong>
+</td>
+<td>
+<code>FDEEQSWeightParameters</code>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The output layer of the policy network utilizes a <code>tanh</code> activation function to naturally constrain each weight within the <strong>[-1, 1]</strong> range. These seven weights are injected into the EQS query parameters via <code>UDynamicEQSExecutor::ApplyWeightsToRequest()</code>. Based on these inputs, the EQS calculates a comprehensive score for <strong>48 candidate positions</strong> to determine the optimal movement target.</p>
+<div class="project-spacer" style="--space:40px">
+</div>
+<hr class="project-divider" />
+<h4>Reward Structure</h4>
+
+</div>
+<h4>S T R I K E</h4>
+<p>The objective is to capture bases while maintaining high damage output from a distance. An <strong>approach reward</strong> is granted per step proportional to the distance closed toward the target base, with an additional <strong>presence bonus</strong> upon entering the capture radius. To ensure role adherence, a penalty is applied if the agent gets too close to enemies.</p>
+<figure class="project-code-block">
+<figcaption>Strike reward (per step)</figcaption>
+<pre>
+<code class="language-cpp">reward = 0
+if distance_to_target_base decreased:
+    reward += approach_reward * delta_distance
+if agent inside target_base radius:
+    reward += zone_presence_bonus
+if base just captured:
+    activate momentum_bonus for PostCaptureMomentumDuration steps
+    reward += capture_bonus
+if momentum active:
+    reward += momentum_bonus  # encourages moving to next base
+if distance_to_enemy &lt; MinCombatRange:
+    reward -= too_close_enemy_penalty  # ranged: maintain combat distance</code>
+</pre>
+</figure>
+<hr class="project-divider" />
+<h4>V A N G U A R D</h4>
+<p>The objective is to capture bases while engaging in frontline melee combat. The base approach and capture logic follow the same principles as the Strike class. A <strong>melee engagement bonus</strong> is awarded when enemies are within close range inside a base, reinforcing frontline tanking behavior.</p>
+<figure class="project-code-block">
+<figcaption>Vanguard reward (per step)</figcaption>
+<pre>
+<code class="language-cpp">reward = 0
+if distance_to_target_base decreased:
+    reward += approach_reward * delta_distance
+if agent inside target_base radius:
+    reward += zone_presence_bonus
+    if enemy within melee range:
+        reward += melee_range_bonus  # frontline tank: reward close engagement
+if base just captured:
+    activate momentum_bonus for PostCaptureMomentumDuration steps
+    reward += capture_bonus
+if momentum active:
+    reward += momentum_bonus</code>
+</pre>
+</figure>
+<hr class="project-divider" />
+<h4>S U P P O R T</h4>
+<p>The objective is to track, heal, and maintain rear-guard positioning for wounded allies. To prevent "jittery" behavior (oscillating between targets), a <strong>5-step target cache</strong> is implemented. Agents receive a <strong>rear-positioning bonus</strong> for staying behind non-support allies.</p>
+<figure class="project-code-block">
+<figcaption>Support reward (per step)</figcaption>
+<pre>
+<code class="language-cpp">reward = 0
+if staleness_counter &gt;= 5 or no cached_target:
+    cached_target = ally with lowest health
+    staleness_counter = 0
+else:
+    staleness_counter++
+
+if distance_to_cached_target decreased:
+    reward += approach_reward * delta_distance
+if heal applied to ally:
+    reward += heal_reward * heal_amount
+if agent positioned behind cached_target (rear arc):
+    reward += rear_positioning_bonus
+if cached_target.health &lt; threshold and agent attempted kill:
+    reward -= role_deviation_penalty</code>
+</pre>
+</figure>
+<hr class="project-divider" />
+<h4>Team Reward Mixing (MAPPO Cooperative Signal)</h4>
+<p>To enhance cooperation in team-based environments, we implement a <strong>Reward Mixing</strong> strategy that blends individual and team-average rewards.</p>
+<div class="project-spacer" style="--space:40px">
+</div>
+<p>$<span class="project-inline-math">\text{final\_reward} = (1 - \alpha) \times r_{\text{individual}} + \alpha \times r_{\text{team\_avg}}</span>$</p>
+<div class="project-spacer" style="--space:40px">
+</div>
+<div class="project-table-wrap">
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Value</th>
+<th>Design Intent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>TeamRewardMixingRatio</code> (α)</td>
+<td>
+<strong>0.2</strong>
+</td>
+<td>Maintains individual role optimization as the primary signal while preventing selfish behavior through a 20% cooperative signal.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The ratio is set to <strong>
+<span class="project-inline-math">\alpha = 0.2</span>
+</strong> to allow agents to first converge on basic role-specific behaviors (positioning, range maintenance) before refining team-level coordination. The team average is calculated based on the <code>LastIndividualStepReward</code> of teammates (excluding the self). Mixing is automatically disabled for solo agents. This calculation occurs every step in <code>DERewardSubsystem.cpp</code> via the <code>CalculateStepReward()</code> function.</p>
+<hr class="project-divider" />
+<h4>UE5 → Python Reward Pipeline</h4>
+<p>Rewards are calculated in <strong>C++ (UE5)</strong>, normalized in <strong>Python (RLlib)</strong>, and then utilized for PPO updates.</p>
+<figure class="project-media">
+<img src="/images/project1/rewardpipeline.png" alt="Fig 2. Reward Pipeline" loading="lazy" />
+<figcaption>Fig 2. Reward Pipeline</figcaption>
+</figure>
+<p>
+<strong>Workflow:</strong>
+</p>
+<ol>
+<li>
+<strong>C++ Calculation:</strong> <code>DERewardSubsystem</code> computes per-step rewards (approach, objective, combat), applies 80:20 team mixing, and performs initial normalization via <code>RewardScale</code> and <code>Clamp</code>.</li>
+<li>
+<strong>gRPC Transmission:</strong> The <strong>Schola plugin</strong> transmits reward data to the Python environment (<code>DEEntityCentricEnv</code>) via gRPC.</li>
+<li>
+<strong>Python Normalization:</strong> <code>process_reward()</code> applies a <code>reward_scale=0.01</code> and clips the value to <code>±5.0</code> to ensure PPO training stability.</li>
+<li>
+<strong>Dual Critic Evaluation:</strong> The <code>EntityCentricRLlibModel</code> value function utilizes a learnable mixing coefficient (α, initial sigmoid 0.5) to combine <strong>
+<span class="project-inline-math">V_{local}</span>
+</strong> (226-dim Attention Critic) and <strong>
+<span class="project-inline-math">V_{central}</span>
+</strong> (71-dim Global MLP Critic). All three role policies share the centralized critic.</li>
+</ol>
+<hr class="project-divider" />
+<h3>Key Features</h3>
+<h4>1. Dynamic-EQS Plugin</h4>
+<p>
+<strong>DynamicEQS</strong> is a <strong>reusable UE5-exclusive RL-EQS integration layer</strong> built upon the Schola plugin. Game projects using DynamicEQS can inherit EQS-specific abstract classes instead of directly handling Schola's low-level gRPC/ONNX processing.</p>
+<p>DynamicEQS consists of four primary classes responsible for <strong>Environment</strong>, <strong>Agent</strong>, <strong>Action</strong>, and <strong>Observation</strong>. It serves as a middleware layer between Schola and the game project, configuring EQS weights and mapping them to the policy network.</p>
+<figure class="project-media">
+<img src="/images/project1/pluginarchi.png" alt="Fig 3. Plugin Hierarchy" loading="lazy" />
+<figcaption>Fig 3. Plugin Hierarchy</figcaption>
+</figure>
+<figure class="project-media">
+<img src="/images/project1/flow3.png" alt="Fig 4. Training/Inference Runtime Data Flow" loading="lazy" />
+<figcaption>Fig 4. Training/Inference Runtime Data Flow</figcaption>
+</figure>
+<hr class="project-divider" />
+
+</div>
+<h4>EQS Weight Injection</h4>
+<p>The following flow describes how the policy network's output (7-dim Box action) is injected as actual EQS query parameters.</p>
+<p>
+<strong>Editor Setup</strong>
+</p>
+<ol>
+<li>Add the <code>UDynamicEQSExecutor</code> component to the <code>BP_Agent</code> (ADECharacter).</li>
+<li>Enter the parameter names used in each EQS Query test into the <code>WeightParamNames</code> array in order (e.g., <code>EnemyObjectiveProximity</code>, <code>AllyObjectiveProximity</code>, etc.).</li>
+<li>Set the <code>Actuator</code> to <code>UDETacticalParameterActuator</code> within the <code>UDEScholaAgent</code> component.</li>
+</ol>
+<div class="project-media-grid">
+<figure class="project-media">
+<img src="/images/project1/eqs1.png" alt="Fig 5. DynamicEQSExecutor Component" loading="lazy" />
+<figcaption>Fig 5. DynamicEQSExecutor Component</figcaption>
+</figure>
+<figure class="project-media">
+<img src="/images/project1/eqs2.png" alt="Fig 6. EQS Asset Configuration" loading="lazy" />
+<figcaption>Fig 6. EQS Asset Configuration</figcaption>
+</figure>
+</div>
+<div class="project-media-grid">
+<figure class="project-media">
+<img src="/images/project1/eqsdebug1.png" alt="Fig 7. EQS Debugging 1" loading="lazy" />
+<figcaption>Fig 7. EQS Debugging 1</figcaption>
+</figure>
+<figure class="project-media">
+<img src="/images/project1/eqsdebug2.png" alt="Fig 8. EQS Debugging 2" loading="lazy" />
+<figcaption>Fig 8. EQS Debugging 2</figcaption>
+</figure>
+</div>
+<figure class="project-code-block">
+<figcaption>EQS Parameter Injection</figcaption>
+<pre>
+<code class="language-cpp">// DynamicEQSExecutor.cpp — EQS Parameter Injection
+void UDynamicEQSExecutor::ApplyWeightsToRequest(FEnvQueryRequest&amp; Request) const
+{
+    for (int32 i = 0; i &lt; Weights.Num(); ++i)
+    {
+        const FName ParamName = (WeightParamNames.IsValidIndex(i) &amp;&amp; !WeightParamNames[i].IsNone())
+            ? WeightParamNames[i]
+            : FName(*FString::Printf(TEXT("Weight%d"), i));
+        Request.SetFloatParam(ParamName, Weights[i]);
+    }
+}</code>
+</pre>
+</figure>
+<hr class="project-divider" />
+<div class="project-spacer" style="--space:40px">
+</div>
+<h4>Evaluation Mode</h4>
+<p>The <strong>Live Evaluation</strong> pipeline (<code>eval_live.py</code>) quantitatively validates the performance of checkpoints saved during training through matches against Scripted AI.</p>
+
+</div>
+<p>The <code>eval_live.py</code> pipeline is designed to quantitatively verify checkpoint performance against Scripted AI during the training process.</p>
+<p>By concurrently connecting two sub-environments in UE5, it evaluates two checkpoints (<code>best</code>, <code>latest</code>) in parallel. Episode outcomes are categorized into <code>win / loss / draw / timeout</code>, and the win rate based on 50 episodes is saved in <code>eval_results_&lt;timestamp&gt;.json</code>.</p>
+<p>The system is designed to run immediately via CPU inference by extracting only the Actor weights from <code>policy_state.pkl</code>, eliminating the need for a Ray runtime.</p>
+<figure class="project-media">
+<img src="/images/project1/eval.png" alt="Fig 9. model eval result" loading="lazy" />
+<figcaption>Fig 9. model eval result</figcaption>
+</figure>
+<hr class="project-divider" />
+<div class="project-spacer" style="--space:40px">
+</div>
+<h4>Decoupling Game Logic via FInstancedStruct</h4>
+<p>To prevent the plugin from having direct members of game-specific types (such as <code>AssignedBaseIndex</code>), external parameters are stored opaquely using <code>FInstancedStruct</code>.</p>
+<p>If a plugin has a <strong>compile-time dependency</strong> on the game module, it becomes impossible to reuse in other projects. Therefore, a method was needed to break dependencies between modules while preserving runtime type information. <code>void*</code> lacks type safety, and the interface pattern (<code>IExternalContext</code>) forces implementation on the game side, compromising the plugin's independence. UE5's <code>FInstancedStruct</code> met these requirements by allowing opaque storage while preserving USTRUCT metadata.</p>
+<figure class="project-code-block">
+<figcaption>DynamicEQSAgentComponent.h</figcaption>
+<pre>
+<code class="language-cpp">UPROPERTY(BlueprintReadWrite)
+FInstancedStruct ExternalParams; // Can store any USTRUCT
+
+// DETacticalParameterActuator.cpp — Casting to game type at the point of use
+const FDEAgentExternalContext* Ctx =
+    AgentComponent-&gt;ExternalParams.GetPtr\&lt;FDEAgentExternalContext\&gt;(); 
+if (Ctx)
+    Weights.AssignedBaseProximity = ComputeBaseProximityWeight(Ctx-&gt;AssignedBaseIndex);</code>
+</pre>
+</figure>
+<p>Thanks to this pattern, the plugin does not include any game headers and can be reused as-is in other projects.</p>
+<hr class="project-divider" />
+<h4>2. MAPPO (Multi-Agent PPO)</h4>
+<div class="project-spacer" style="--space:40px">
+</div>
+<p>This project adopts <strong>MAPPO (Multi-Agent PPO)</strong> to train three role-specific independent actors (<code>strike_policy</code>, <code>vanguard_policy</code>, <code>support_policy</code>) alongside a shared centralized critic.</p>
+<p>
+<strong>Centralized Critic</strong> — The <code>CentralizedCritic</code> estimates the overall team value by taking a 71-dim global team state (<code>FDETeamWorldState</code>: positions/HP/strategy of 5 allies + positions/reliability of 5 enemies + map state) as input. By directly referencing team-level information that cannot be captured by individual agent observations alone (e.g., ally distribution, overall capture progress), the critic significantly reduces the variance of Advantage estimation.</p>
+<hr class="project-divider" />
+</div>
+<p>
+<strong>Dual Value Estimation</strong> Each <code>EntityCentricRLlibModel</code> combines a local critic (<span class="project-inline-math">V_{local}</span>, 226-dim agent observation) and a centralized critic (<span class="project-inline-math">V_{central}</span>, 71-dim global state) using a learnable mixing coefficient <span class="project-inline-math">\alpha</span>.</p>
+<div class="project-math">V = \alpha \cdot V_{\text{local}}(\text{agent\_obs}[0:226]) + (1 - \alpha) \cdot V_{\text{central}}(\text{global\_state}[226:297])</div>
+<p>
+<span class="project-inline-math">\alpha</span> is initialized via <code>sigmoid(_value_mix_logit)</code> (initial value of 0.5) and automatically determines the optimal weight between local and global signals for each role through training.</p>
+<div class="project-spacer" style="--space:50px">
+</div>
+<h4>Role of Self-Attention</h4>
+<p>Intra-Set Self-Attention is applied to each entity group (allies, enemies, bases) within the Actor's encoder (Zambaldi et al., 2018). This allows entity tokens to reference one another and learn spatial relationships within the set, such as <strong>"Slot 3 and Slot 5 are clustering near the same base."</strong> This contextualized representation then serves as the input for Cross-Attention.</p>
+<div class="project-spacer" style="--space:50px">
+</div>
+<h4>Role of Cross-Attention</h4>
+<p>The Self Token (embedding of the 7-dim self-observation) acts as the <strong>Query</strong>, while the ally, enemy, and base tokens processed via Self-Attention serve as <strong>Keys/Values</strong>. Cross-Attention aggregates the importance of each entity relative to the agent's current state into a weighted sum, which is then used to determine the action (7-dim EQS weights).</p>
+<figure class="project-code-block">
+<figcaption>train.py</figcaption>
+<pre>
+<code class="language-python"># Independent policy routing by role
+
+STRATEGY_POLICY_NAMES = {0: "strike_policy", 1: "vanguard_policy", 2: "support_policy"}
+
+config = config.multi_agent(
+policies={
+name: PolicySpec(config={"model": model_cfg})
+for name in STRATEGY_POLICY_NAMES.values()
+},
+policy_mapping_fn=_policy_mapping_fn,  # agent_id → class → policy
+count_steps_by="agent_steps",
+)</code>
+</pre>
+</figure>
+<p>Further details are covered in the <strong>"Problem 2: Loss of Relationship Information Between Entities"</strong> section.</p>
+<hr class="project-divider" />
+<h4>3. AWS Parallel Training Environment</h4>
+<p>To overcome the scaling limitations of a single local UE5 instance, I developed an <strong>AWS-based distributed training pipeline</strong>. UE5 is packaged as a Linux binary and uploaded to S3, while training scripts are executed via Docker images on EC2 instances to enable high-throughput parallel learning.</p>
+
+<h4>Overall Infrastructure Architecture</h4>
+<figure class="project-media">
+<img src="/images/project1/aws_archi.png" alt="Fig 10. AWS Parallel Training Infrastructure Overview" loading="lazy" />
+<figcaption>Fig 10. AWS Parallel Training Infrastructure Overview</figcaption>
+</figure>
+
+<h4>Infrastructure Components</h4>
+<div class="project-table-wrap">
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<strong>Amazon ECR</strong>
+</td>
+<td>Docker image registry for training scripts; pulls UE5 binaries from S3</td>
+</tr>
+<tr>
+<td>
+<strong>EC2 Ray Cluster</strong>
+</td>
+<td>Ray Head + 4 concurrent env\_runners; performs PPO training via GPU</td>
+</tr>
+<tr>
+<td>
+<strong>Amazon S3</strong>
+</td>
+<td>Persistent storage for UE5 binaries, checkpoints, and training data; integrated with W\&B</td>
+</tr>
+<tr>
+<td>
+<strong>W\&B</strong>
+</td>
+<td>Real-time monitoring of rewards, win rates, and loss metrics per iteration</td>
+</tr>
+<tr>
+<td>
+<strong>Terraform</strong>
+</td>
+<td>Provisioning of VPC, IAM roles, and Security Groups</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h4>Cluster Design Rationale</h4>
+<p>The <strong>Head Node (GPU)</strong> manages policy gradient updates, while <strong>Worker Nodes (CPU Spot)</strong> are dedicated to running headless UE5 instances and collecting rollouts. Since rollout collection is a stateless task that supports interruption and resumption, I utilized <strong>Spot Instances</strong> for workers to optimize cost efficiency.</p>
+
+<h4>Training Cycle Summary</h4>
+<ol>
+<li>Build Docker image → Push to ECR</li>
+<li>Initialize Ray cluster (<code>ray up</code>) → Submit training script</li>
+<li>4 Workers collect UE5 rollouts in parallel → Build batch with <code>train_batch_size=4096</code>
+</li>
+<li>PPO gradient updates on Head GPU → Sync checkpoints to S3 every 10 iterations</li>
+<li>Automatically sync to the <code>best/</code> path upon achieving a new record win rate</li>
+</ol>
+<p>Executing <code>ray down</code> terminates all instances immediately, while S3 checkpoints are preserved to ensure seamless training resumption upon restart.</p>
+<div class="project-media-grid">
+<figure class="project-media">
+<img src="/images/project1/aws_ec2.png" alt="Fig 11. AWS EC2 Instances" loading="lazy" />
+<figcaption>Fig 11. AWS EC2 Instances</figcaption>
+</figure>
+<figure class="project-media">
+<img src="/images/project1/aws_ps.png" alt="Fig 12. 4 PIDs (UE5 Processes) verified via 'ps aux'" loading="lazy" />
+<figcaption>Fig 12. 4 PIDs (UE5 Processes) verified via 'ps aux'</figcaption>
+</figure>
+</div>
+<div class="project-media-grid">
+<figure class="project-media">
+<img src="/images/project1/aws_s3.png" alt="Fig 13. Amazon S3 Bucket" loading="lazy" />
+<figcaption>Fig 13. Amazon S3 Bucket</figcaption>
+</figure>
+<figure class="project-media">
+<img src="/images/project1/aws_log.png" alt="Fig 14. CloudWatch Logs" loading="lazy" />
+<figcaption>Fig 14. CloudWatch Logs</figcaption>
+</figure>
+</div>
+<div class="project-media-grid">
+<figure class="project-media">
+<img src="/images/project1/wan_spec.png" alt="Fig 15. W\&amp;B Dashboard Specs" loading="lazy" />
+<figcaption>Fig 15. W\&B Dashboard Specs</figcaption>
+</figure>
+<figure class="project-media">
+<img src="/images/project1/wan_log.png" alt="Fig 16. W\&amp;B Training Logs" loading="lazy" />
+<figcaption>Fig 16. W\&B Training Logs</figcaption>
+</figure>
+</div>
+<hr class="project-divider" />
+<h3>Problem Solving</h3>
+<h4>Problem 1: Agent Death Handling Defects in Multi-Agent Reinforcement Learning (Schola + RLlib)</h4>
+<figure class="project-media">
+<img src="/images/project1/problem1.png" alt="Fig 17. Cause and Resolution of the Freezing Phenomenon" loading="lazy" />
+<figcaption>Fig 17. Cause and Resolution of the Freezing Phenomenon</figcaption>
+</figure>
+<p>
+<strong>Episode Freeze</strong>: A communication mismatch occurred where RLlib stopped sending actions for an agent that died early, while Unreal Engine (Schola) remained in a wait-state, expecting actions for all agents.</p>
+<p>
+<strong>Death-resurrection loop</strong>: In <code>SAME_STEP</code> mode, deceased agents were immediately reset without a valid state, falling into an infinite loop of repeated deaths.</p>
+<hr class="project-divider" />
+<h4>Cause</h4>
+<p>
+<strong>Conflict between two termination systems</strong>
+</p>
+<p>There was a contradiction in episode termination signals between Schola (<code>AutoResetType::SAME_STEP</code>) and the Python side (RLlib).</p>
+<ul>
+<li>
+<strong>Schola</strong>: Triggered an immediate auto-reset upon agent death per the <code>SAME_STEP</code> policy.</li>
+<li>
+<strong>Python</strong>: RLlib suppressed individual termination signals (<code>done</code>) to prevent mixed trajectories (data from different episodes mixing in a single batch).</li>
+</ul>
+<p>Consequently, the Schola engine would revive the agent only for it to die again instantly, consuming the entire "step budget." Surviving agents were then blocked by Schola's multi-agent step barrier, failing to receive subsequent actions indefinitely.</p>
+<hr class="project-divider" />
+<h4>Goal</h4>
+<p>Establish a stable training environment that operates without interruption even during staggered agent deaths.</p>
+<ul>
+<li>Ensure the entire episode terminates correctly (<code>__all__=True</code>) regardless of individual death timings.</li>
+<li>Implement a filtering system to prevent deceased agents' observations or rewards from contaminating training data (e.g., preventing NaN values).</li>
+</ul>
+<hr class="project-divider" />
+<h4>Solution</h4>
+<p>
+<strong>Dual-layer modifications in Python (Communication) and C++ (Engine)</strong>
+</p>
+<p>Python (Schola Wrapper):</p>
+<ul>
+<li>
+<strong>No-op Padding</strong>: Inserted no-op actions for deceased agents to ensure Unreal always receives actions for the full agent count.</li>
+<li>
+<strong>Data Filtering</strong>: Filtered observations, rewards, and info for already-deceased agents from the Unreal response before passing data to RLlib.</li>
+</ul>
+<p>C++ (Unreal Plugin):</p>
+<ul>
+<li>
+<strong>Dead Agent Snapshot</strong>: Recorded the state of deceased agents before <code>Step()</code> execution and restored terminal flags afterward to prevent state overwriting and resurrection loops.</li>
+<li>
+<strong>Action Filter</strong>: Excluded actions of deceased agents from affecting the physics engine and game logic.</li>
+</ul>
+<hr class="project-divider" />
+<h4>Result</h4>
+<ul>
+<li>
+<strong>Unit Tests Passed</strong>: 100% pass rate across 10 standalone tests (No-op generation, padding protocols, etc.).</li>
+<li>
+<strong>Training Stability</strong>: Resolved episode freezes in integrated Unreal environments and confirmed normal episode reset cycles.</li>
+<li>
+<strong>Data Integrity</strong>: Verified the elimination of NaN values in rewards and prevented trajectory leakage.</li>
+<li>
+<strong>Open Source Contribution</strong>: Submitted a Pull Request to the Schola repository regarding these fixes.</li>
+</ul>
+<figure class="project-media">
+<img src="/images/project1/pr.png" alt="Fig 18. Pull Request" loading="lazy" />
+<figcaption>Fig 18. Pull Request</figcaption>
+</figure>
+<hr class="project-divider" />
+<h4>Problem 2: Loss of Relational Information Between Entities</h4>
+<figure class="project-media">
+<img src="/images/project1/problem2.png" alt="Fig 19. Solving Entity Relation Loss through Attention Implementation" loading="lazy" />
+<figcaption>Fig 19. Solving Entity Relation Loss through Attention Implementation</figcaption>
+</figure>
+<p>Initially, I attempted to induce cooperation by designing a MAPPO-based team reward structure. However, defining the synergy between three distinct roles—Strike, Support, and Vanguard—as a single scalar reward proved ambiguous. This led to frequent reward hacking without producing meaningful cooperative behavior.</p>
+<p>Shifting away from enforcing cooperation through rewards, I pivoted to an architectural approach that allows agents to naturally learn inter-agent relationships. I identified that the root cause of the agents' inability to recognize spatial patterns—such as 'two enemies gathering at a specific point'—lay in the network structure itself. Specifically, the recurring inefficiency of agents clustering at already captured points was diagnosed as an architectural limitation rather than a flaw in the reward function.</p>
+<hr class="project-divider" />
+<h4>Cause</h4>
+<p>In the 218-dim observation vector, each entity slot is embedded independently via a linear encoder (<code>nn.Linear</code>). While the Self Token subsequently queries the entity set via Cross-Attention, the single-query nature means <strong>relative relationships between entities</strong> (density, flanking patterns, overlap) are not reflected in the Attention weights. The Cross-Attention output is merely a weighted sum of "how important each entity is to Self," lacking information on "how entities relate to one another."</p>
+<hr class="project-divider" />
+<h4>Solution</h4>
+<p>
+<strong>Intra-Set Self-Attention (Zambaldi et al., 2018)</strong>
+</p>
+<p>I inserted a <strong>Self-Attention layer</strong> for each entity group (Ally / Enemy / Point) prior to Cross-Attention, allowing entities to reference each other. Entity tokens processed through Self-Attention now carry contextual information (e.g., "There are two allies near the same point as me"). The Self Token then aggregates this <strong>contextualized</strong> entity information during Cross-Attention.</p>
+<figure class="project-code-block">
+<figcaption>policy.py — Relational Self-Attention pipeline</figcaption>
+<pre>
+<code class="language-python"># 1. Linear Encoding: Raw features → Hidden dimension
+a_enc = self.ally_enc(allies)                  # (B, 8, 64)
+
+# 2. Self-Attention: Mutual reference between ally tokens
+#    → Learns relations like "Slot 3 and Slot 5 are near the same point"
+a_rel, _ = self.ally_self_attn(a_enc, a_enc, a_enc,
+                                key_padding_mask=ally_mask)
+
+# 3. Residual + LayerNorm: Preserve original info + Stability
+a_enc = self.ally_ln(a_enc + a_rel)             # (B, 8, 64)
+
+# 4. Cross-Attention: Self Token aggregates contextualized ally info
+a_ctx, _ = self.ally_attn(q, a_enc, a_enc,
+                          key_padding_mask=ally_mask)  # (B, 1, 64)</code>
+</pre>
+</figure>
+<p>
+<strong>Padding Mask Handling</strong>: The C++ observation layout's <code>0=Valid, 1=Padding</code> mask is applied identically to both Self-Attention and Cross-Attention. A <code>_safe_mask()</code> function forces an unmask of Slot 0 if all slots are padded to prevent NaN. This is completed within the Python policy without requiring C++ modifications.</p>
+<figure class="project-code-block">
+<figcaption>policy.py — safe mask</figcaption>
+<pre>
+<code class="language-python">def _safe_mask(m: torch.Tensor) -&gt; torch.Tensor:
+    all_masked = m.all(dim=1, keepdim=True)   # (B, 1)
+    return m &amp; ~all_masked                     # Unmask Slot 0 if all slots are padding</code>
+</pre>
+</figure>
+<p>
+<strong>Design Constraints & Trade-offs</strong>
+</p>
+<div class="project-table-wrap">
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Parameter Increase</td>
+<td>168K → 268K (+60%)</td>
+</tr>
+<tr>
+<td>Inference Latency</td>
+<td>
+< 2ms (0.7% of the 0.3s step budget)</td>
+</tr>
+<tr>
+<td>ONNX Compatibility</td>
+<td>opset 14 — No changes required for UE5 NNE</td>
+</tr>
+<tr>
+<td>C++ Modification</td>
+<td>None (reused padding mask layout)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The empirical results can be found in <strong>"Results: Empirical Analysis of Attention Patterns"</strong>.</p>
+<hr class="project-divider" />
+<h4>Problem 3: Timing Mismatch Between Step Speed and Agent Movement</h4>
+<figure class="project-media">
+<img src="/images/project1/problem3.png" alt="Fig 20. Throttling Control" loading="lazy" />
+<figcaption>Fig 20. Throttling Control</figcaption>
+</figure>
+<p>In the training environment, <code>AGymConnectorManager::Tick()</code> called <code>Connector-&gt;Step()</code> every frame (60Hz+), causing the next step to execute before EQS-based movement was complete. This caused new EQS goals to overwrite existing ones, canceling movement and resulting in poor-quality training data where observations were collected before reaching targets.</p>
+<hr class="project-divider" />
+<h4>Goal</h4>
+<p>Coordinate the step cycle with the agent's EQS movement completion time to ensure observations are collected only after the agent has reached its destination.</p>
+<hr class="project-divider" />
+<h4>Solution</h4>
+<p>
+<strong>Rationale for overriding <code>AGymConnectorManager</code>
+</strong>
+</p>
+<p>The entry point for Schola's training loop is structured as follows:</p>
+<figure class="project-code-block">
+<pre>
+<code>AGymConnectorManager::Tick()
+    └─ UAbstractGymConnector::Step()           ← Single training step
+            ├─ ResolveEnvironmentStateUpdate()  ← Receive action from Python (gRPC, ~10ms blocking)
+            ├─ HandleStep() / HandleReset()     ← Apply action to environment
+            └─ SubmitState()                    ← Send observation/reward to Python</code>
+</pre>
+</figure>
+<p>
+<code>UAbstractGymConnector::Step()</code> processes a full cycle atomically, with <code>ResolveEnvironmentStateUpdate()</code> blocking for gRPC responses. Therefore, the <strong>sole point to control step frequency</strong> is <code>AGymConnectorManager::Tick()</code>, which calls <code>Step()</code>. I determined that step speed could be controlled externally by overriding <code>Tick()</code> without modifying the internal connector implementation.</p>
+<hr class="project-divider" />
+<p>
+<strong>
+<code>ADEGymConnectorManager</code> Implementation</strong>
+</p>
+<p>I implemented a custom class <code>ADEGymConnectorManager</code> inheriting from <code>AGymConnectorManager</code>. Instead of the default behavior, I call <code>AActor::Tick()</code> directly and control the frequency of <code>Connector-&gt;Step()</code> using a <code>StepInterval</code> variable.</p>
+<figure class="project-code-block">
+<figcaption>ADEGymConnectorManager.h</figcaption>
+<pre>
+<code class="language-cpp">// Step interval adjustable in Editor
+UPROPERTY(EditAnywhere, Category = "Schola|Throttling",
+    meta = (ClampMin = "0.01", ClampMax = "10.0"))
+float StepInterval = 0.3f;  // Seconds, Default 2Hz</code>
+</pre>
+</figure>
+<p>The <code>StepInterval = 0.3s</code> value was determined by profiling the minimum cycle required: EQS 48-sample query time (~5ms) + NavMesh path calculation (~2ms) + Agent travel time (~1s for 600cm at 600cm/s).</p>
+<figure class="project-code-block">
+<figcaption>ADEGymConnectorManager.cpp — Implementation of Tick throttling</figcaption>
+<pre>
+<code class="language-cpp">void ADEGymConnectorManager::Tick(float DeltaTime)
+{
+    // Bypass AGymConnectorManager::Tick to prevent per-frame Step calls
+    AActor::Tick(DeltaTime);
+
+    if (!Connector) return;
+
+    // Connection Phase: Step internally executes CheckForStart() without blocking
+    if (Connector-&gt;IsNotStarted())
+    {
+        Connector-&gt;Step();
+        return;
+    }
+
+    // Running Phase: Execute Step once per StepInterval
+    if (Connector-&gt;IsRunning())
+    {
+        // Prevent burst steps caused by DeltaTime spikes when switching to background
+        const float ClampedDelta = FMath::Min(DeltaTime, StepInterval);
+        StepAccumulator += ClampedDelta;
+        if (StepAccumulator &gt;= StepInterval)
+        {
+            StepAccumulator = 0.0f;
+            Connector-&gt;Step();
+        }
+    }
+}</code>
+</pre>
+</figure>
+<p>Implementation is finalized by changing the parent class of <code>BP_GymConnectorManager</code> to <code>ADEGymConnectorManager</code> in the Editor. The <code>StepInterval</code> can be tuned in the Details panel without requiring a rebuild.</p>
+<hr class="project-divider" />
+<h4>Result</h4>
+<p>With <code>StepInterval = 0.3s</code>, training data quality improved as observations were collected after agents fully reached their EQS targets. Burst steps caused by <code>DeltaTime</code> spikes during editor background transitions were eliminated via <code>FMath::Min</code> clamping. This architecture allows for real-time balancing of training speed and movement completion rates through a single variable.</p>
+<hr class="project-divider" />
+<h3>Results</h3>
+<h4>Training Results</h4>
+<p>Performed MAPPO-based training against Scripted AI over 2.5 million timesteps.</p>
+<figure class="project-media">
+<img src="/images/project1/result_reward.png" alt="Fig 21. Reward" loading="lazy" />
+<figcaption>Fig 21. Reward</figcaption>
+</figure>
+<figure class="project-media">
+<img src="/images/project1/result_vf.png" alt="Fig 22. VF Explained" loading="lazy" />
+<figcaption>Fig 22. VF Explained</figcaption>
+</figure>
+<figure class="project-media">
+<img src="/images/project1/result_entropy.png" alt="Fig 23. Entropy" loading="lazy" />
+<figcaption>Fig 23. Entropy</figcaption>
+</figure>
+<div class="project-spacer" style="--space:40px">
+</div>
+<h4>Key Metrics Summary</h4>
+<div class="project-table-wrap">
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Value</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<strong>episode_mean</strong>
+</td>
+<td>0 → 40, Converged at 14</td>
+<td>Successful policy improvement</td>
+</tr>
+<tr>
+<td>
+<strong>vf/explained_var</strong>
+</td>
+<td>> 0.8</td>
+<td>Critic explains >80% of future rewards — High state-value prediction accuracy</td>
+</tr>
+<tr>
+<td>
+<strong>entropy</strong>
+</td>
+<td>Initial rise then falling</td>
+<td>Confirmed transition from exploration to exploitation</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>
+<strong>Termination Rationale:</strong> Training was concluded at 2.5M steps as the learning rate scheduler reached zero and the reward hit a plateau.</p>
+
+</div>
+<hr class="project-divider" />
+<h4>Win Rate</h4>
+<p>The win rate against Scripted AI increased from an initial 0% to around 70%. The intermediate drop in win rate was a temporary phenomenon caused by the increase in the Scripted AI's tier; as the win rate subsequently recovered, it was confirmed that the RL agent had successfully learned the game rules.</p>
+<figure class="project-media">
+<img src="/images/project1/win_rate.png" alt="Fig 24. win rate" loading="lazy" />
+<figcaption>Fig 24. win rate</figcaption>
+</figure>
+<hr class="project-divider" />
+<h4>Miscellaneous Trials & Errors</h4>
+<p>
+<strong>1. Redefining RL Action Space: From Low-level Control to Strategic Positioning</strong>
+</p>
+<p>Initially, I attempted to directly control <strong>low-level actions</strong> such as movement direction, speed, and aiming via Reinforcement Learning. However, local experiments revealed that the number of samples required for convergence was unattainable within a realistic training timeframe.</p>
+<p>To resolve this, I delegated low-level behaviors to Unreal Engine's existing <strong>Navigation and EQS (Environment Query System)</strong> and pivoted the RL agent’s role to focus solely on <strong>strategic positioning</strong>. Specifically, I defined a <strong>7-dimensional weight vector</strong> for EQS queries as the RL policy output. This allowed the policy to decide "where to be," while delegating the execution of movement to the UE5 system, leading to successful convergence.</p>
+<div class="project-spacer" style="--space:40px">
+</div>
+<p>
+<strong>2. Self-Play: Policy Collapse in Complex Environments</strong>
+</p>
+<p>Inspired by MuZero, I initially attempted training via <strong>Self-Play</strong>. However, given the high environmental complexity—characterized by heterogeneous roles (<strong>Strike, Support, Vanguard</strong>), fluctuating agent counts, and dynamic objective states—the rewards failed to converge. Instead, the agents suffered from repeated <strong>policy collapse</strong> as both sides attempted to evolve simultaneously.</p>
+<p>I concluded that while Self-Play excels in environments with lower complexity and well-defined action spaces (e.g., Go or Chess), applying it to environments with heterogeneous agents and dynamic goals requires additional stabilization techniques, such as <strong>Curriculum Self-Play</strong> or <strong>League Training</strong>.</p>
+<hr class="project-divider" />
+<h4>Future Plans</h4>
+<p>
+<strong>Implementing Difficulty Tiers for RL Agents</strong>
+</p>
+<ul>
+<li>I plan to experiment with various methods to implement agent difficulty levels (e.g., adjusting total training time vs. applying <strong>Temperature</strong> scaling to the output distribution).</li>
+<li>I will investigate whether to train separate models for each difficulty level or to utilize a single model conditioned on <strong>difficulty-specific parameters</strong>.</li>
+</ul>
+<p>
+<strong>Distributed Training via Multi-EC2 Instances on AWS</strong>
+</p>
+<ul>
+<li>Currently, training is conducted on a single EC2 instance running four UE5 environments simultaneously.</li>
+<li>I aim to establish a <strong>distributed training environment</strong> utilizing multiple EC2 instances and <strong>Ray clusters</strong> to scale the learning process.</li>
+</ul>
+<hr class="project-divider" />
+<h4>Empirical Analysis of Attention Patterns</h4>
+<p>We verified whether the entire pipeline (Self-Attention → Cross-Attention) operates according to the design intent by directly extracting attention weights from the trained checkpoints.</p>
+<hr class="project-divider" />
+<h4>Experimental Design</h4>
+<p>We observed changes in attention distribution by inputting two contrasting scenarios under the same training policy.</p>
+<div class="project-table-wrap">
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<strong>Clustered</strong>
+</td>
+<td>4 allies concentrated within the same base radius (position difference ≈ 0.01)</td>
+</tr>
+<tr>
+<td>
+<strong>Spread</strong>
+</td>
+<td>4 allies distributed across 4 corners of the map (position difference ≈ 0.6)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The attention weights for slots 4–7 were 0.00 across all roles and scenarios, confirming that the padding mask was correctly applied and focus was restricted to valid entities (slots 0–3).</p>
+<hr class="project-divider" />
+<h4>Step 1 — Intra-Set Self-Attention: Capturing Spatial Relationships Between Entities</h4>
+<p>Self-Attention serves as a preprocessing stage for Cross-Attention, where entity tokens reference each other to generate contextualized representations. The key metric is the <strong>fluctuation range of weight distribution (Δmax)</strong> in response to formation changes (Clustered → Spread).</p>
+<div class="project-table-wrap">
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Formation Sensitivity</th>
+<th>Key Observations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<strong>Strike</strong>
+</td>
+<td>Medium (Δmax ≈ 0.19)</td>
+<td>Clustered: Even distribution across 4 slots → Spread: Concentrated on Slot 1 (Assault) (0.47)</td>
+</tr>
+<tr>
+<td>
+<strong>Support</strong>
+</td>
+<td>Low (Δmax ≈ 0.06)</td>
+<td>Regardless of formation, maintains even distribution across all slots — Consistent with role characteristics</td>
+</tr>
+<tr>
+<td>
+<strong>Vanguard</strong>
+</td>
+<td>High (Δmax ≈ 0.29)</td>
+<td>Clustered: Concentrated on Slot 3 (0.53) → Spread: Concentrated on Slot 1 (0.54)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<figure class="project-media">
+<img src="/images/project1/attn_comparison_strike.png" alt="Fig 25. STRIKE Self-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<figcaption>Fig 25. STRIKE Self-Attention, Clustered vs Spread vs Difference</figcaption>
+</figure>
+<figure class="project-media">
+<img src="/images/project1/attn_comparison_support.png" alt="Fig 26. SUPPORT Self-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<figcaption>Fig 26. SUPPORT Self-Attention, Clustered vs Spread vs Difference</figcaption>
+</figure>
+<figure class="project-media">
+<img src="/images/project1/attn_comparison_vanguard.png" alt="Fig 27. VANGUARD Self-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<figcaption>Fig 27. VANGUARD Self-Attention, Clustered vs Spread vs Difference</figcaption>
+</figure>
+<p>The fact that Support shows the lowest sensitivity is not a bug, but a <strong>natural internalization of role characteristics</strong>. The healer role must monitor all allies equally regardless of team formation, and the training reflected this. In contrast, Vanguard showed the highest sensitivity, indicating that the frontline anchor role has differentiated to react most sensitively to changes in team positioning.</p>
+<hr class="project-divider" />
+<h4>Step 2 — Cross-Attention: Final Information Aggregation Before Action</h4>
+<p>In Cross-Attention, the Self Token (one's own observation embedding) acts as the Query to look up each of the three entity sets: Allies, Enemies, and Bases. Since this weighted sum leads directly to EQS weights (actions), it most directly reveals "what the agent looks at when making actual behavioral decisions."</p>
+<div class="project-spacer" style="--space:40px">
+</div>
+<p>
+<strong>Enemy Cross-Attention</strong>
+</p>
+<p>Across all roles, weights are distributed almost equally between active enemy slots 0 and 1 (≈ 0.48–0.52). This is a consistent pattern of perceiving both enemies as equal threats, while slots 2–7 (padding) are accurately suppressed to 0.</p>
+<div class="project-spacer" style="--space:40px">
+</div>
+<p>
+<strong>Base Cross-Attention</strong>
+</p>
+<p>Priority bases differ clearly by role. Strike and Support concentrate on bases 0 and 1 (≈ 0.40–0.42), whereas Vanguard shows more distributed weights across bases 1 and 2. This is interpreted as a result of differentiation, where the Vanguard, as a frontline maintenance role, references neutral and rear bases in a balanced manner.</p>
+<div class="project-spacer" style="--space:40px">
+</div>
+<p>
+<strong>Ally Cross-Attention — Consistency Verification with Self-Attention</strong>
+</p>
+<div class="project-media-grid">
+<figure class="project-media">
+<img src="/images/project1/attn_cross_strike_clustered.png" alt="Fig 28. STRIKE Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<figcaption>Fig 28. STRIKE Cross-Attention, Clustered vs Spread vs Difference</figcaption>
+</figure>
+<figure class="project-media">
+<img src="/images/project1/attn_cross_strike_spread.png" alt="Fig 29. STRIKE Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<figcaption>Fig 29. STRIKE Cross-Attention, Clustered vs Spread vs Difference</figcaption>
+</figure>
+</div>
+<div class="project-media-grid">
+<figure class="project-media">
+<img src="/images/project1/attn_cross_vanguard_clustered.png" alt="Fig 30. VANGUARD Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<figcaption>Fig 30. VANGUARD Cross-Attention, Clustered vs Spread vs Difference</figcaption>
+</figure>
+<figure class="project-media">
+<img src="/images/project1/attn_cross_vanguard_spread.png" alt="Fig 31. VANGUARD Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<figcaption>Fig 31. VANGUARD Cross-Attention, Clustered vs Spread vs Difference</figcaption>
+</figure>
+</div>
+<div class="project-media-grid">
+<figure class="project-media">
+<img src="/images/project1/attn_cross_support_clustered.png" alt="Fig 32. SUPPORT Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<figcaption>Fig 32. SUPPORT Cross-Attention, Clustered vs Spread vs Difference</figcaption>
+</figure>
+<figure class="project-media">
+<img src="/images/project1/attn_cross_support_spread.png" alt="Fig 33. SUPPORT Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<figcaption>Fig 33. SUPPORT Cross-Attention, Clustered vs Spread vs Difference</figcaption>
+</figure>
+</div>
+<div class="project-spacer" style="--space:40px">
+</div>
+<p>Vanguard's Cross-Attention ally weights correspond exactly with the Self-Attention results. In the Clustered scenario, Self-Attention dominantly selected Slot 3, and Cross-Attention also referenced Slot 3 most highly (0.50). In the Spread scenario, the focus shifted to Slot 1 in both cases (Self: 0.54, Cross: 0.42). This demonstrates that Cross-Attention consistently utilizes the contextualized representations generated by Self-Attention, <strong>confirming that the two-stage pipeline is connected and functioning as intended.</strong>
+</p>
+<hr class="project-divider" />
+<h4>Summary</h4>
+<div class="project-table-wrap">
+<table>
+<thead>
+<tr>
+<th>Verification Item</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Padding Mask Suppression</td>
+<td>Slots 4–7 completely suppressed — Normal</td>
+</tr>
+<tr>
+<td>Role-specific Self-Attention Differentiation</td>
+<td>Support (Equal) / Strike (Medium) / Vanguard (High Sensitivity) — Consistent with role characteristics</td>
+</tr>
+<tr>
+<td>Cross-Attention Entity Priority</td>
+<td>Enemy: Equal threat perception / Base: Varies by role / Ally: Consistent with Self-Attention</td>
+</tr>
+<tr>
+<td>Pipeline Consistency</td>
+<td>Matching focus targets between Self → Cross Attention — Pipeline integrity confirmed</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Through the two-stage attention patterns, we empirically demonstrated that <strong>spontaneous differentiation of role-specific spatial reasoning</strong> was achieved using only the Intra-Set Self-Attention structure, without any additional inductive biases such as reward functions or role labels.</p>
