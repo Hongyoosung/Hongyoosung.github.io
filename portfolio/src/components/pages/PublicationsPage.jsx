@@ -48,6 +48,12 @@ function PublicationDetail({ lang, navigate, paper }) {
                             <dt>{lang === 'ko' ? '제출 학회' : 'Venue'}</dt>
                             <dd>{paper.venue}</dd>
                         </div>
+                        {paper.status && (
+                            <div>
+                                <dt>{lang === 'ko' ? '상태' : 'Status'}</dt>
+                                <dd>{paper.status[lang]}</dd>
+                            </div>
+                        )}
                     </dl>
 
                     <div className="publication-actions">
@@ -109,6 +115,7 @@ function PublicationsPage({ lang, navigate, selectedPaper }) {
                                     <h2>{paper.title}</h2>
                                     <p className="publication-authors">{paper.authors}</p>
                                     <p className="publication-venue">{paper.venue}</p>
+                                    {paper.status && <p className="publication-venue">{paper.status[lang]}</p>}
                                     <p className="card-copy">{paper.description[lang]}</p>
                                     <span className="mini-link">
                                         <ExternalLink size={13} />

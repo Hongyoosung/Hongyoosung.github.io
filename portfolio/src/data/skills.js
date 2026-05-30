@@ -208,7 +208,7 @@ export const credentials = [
                 date: 'May 2022 - Present',
                 details: {
                     ko: [
-                        '"Decoding the Translation Gap: How Cooperative MARL Agents Learn Coordination", ICML 2026 Workshop 2026 결과 대기 중',
+                        '"Learned Coordination Conventions in Cooperative MARL: Measuring the Translation Gap Between Theory-Informed Roles and Learned Routing", NExT-Game 2026: NEw frontiers in GAME-Theoretic learning - ICML 2026 Workshop, 포스터 승인',
                         '"One Policy, Infinite NPCs: Scalable Persona-Conditioned NPC Control via Shared Reinforcement Learning Policies", arxiv 등재',
                         '"GOBT: A Synergistic Approach to Game AI Using Goal-Oriented and Utility-Based Planning in Behavior Trees", Journal of Multimedia Information System (JMIS), Vol. 4, Oct 2023',
                         '"IoT 가상환경 플랫폼에서의 무결성 보장 시스템: Hyperledger Indy와 MQTT를 통하여", 한국스마트미디어학회, Vol. 4, Apr 2024',
@@ -218,7 +218,7 @@ export const credentials = [
                         '"메타버스와 IoT 디바이스 연동 기술 개발", 2023 한국통신학회 하계종합학술발표회',
                     ],
                     en: [
-                        '"Decoding the Translation Gap: How Cooperative MARL Agents Learn Coordination", ICML 2026 Workshop Awaiting Results',
+                        '"Learned Coordination Conventions in Cooperative MARL: Measuring the Translation Gap Between Theory-Informed Roles and Learned Routing", NExT-Game 2026: NEw frontiers in GAME-Theoretic learning - ICML 2026 Workshop, Poster Accepted',
                         '"One Policy, Infinite NPCs: Scalable Persona-Conditioned NPC Control via Shared Reinforcement Learning Policies", arxiv Publication',
                         '"GOBT: A Synergistic Approach to Game AI Using Goal-Oriented and Utility-Based Planning in Behavior Trees", Journal of Multimedia Information System (JMIS), Vol. 4, Oct 2023',
                         '"Integrity Assurance System in an IoT Virtual Environment Platform: Through Hyperledger Indy and MQTT", Korea Smart Media Society, Vol. 4, Apr 2024',

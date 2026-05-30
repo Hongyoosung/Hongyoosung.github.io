@@ -1,5 +1,28 @@
 export const publications = [
     {
+        id: 'learned-coordination-conventions',
+        title: 'Learned Coordination Conventions in Cooperative MARL: Measuring the Translation Gap Between Theory-Informed Roles and Learned Routing',
+        authors: 'Yoosung Hong',
+        venue: 'NExT-Game 2026: NEw frontiers in GAME-Theoretic learning - ICML 2026 Workshop',
+        status: {
+            ko: '포스터 승인',
+            en: 'Poster Accepted',
+        },
+        date: '2026',
+        image: '/papers/images/learned-coordination-first-page.png',
+        url: '/papers/pdfs/50_Learned_Coordination_Conven.pdf',
+        pdfUrl: '/papers/pdfs/50_Learned_Coordination_Conven.pdf',
+        keywords: ['Cooperative MARL', 'Game-Theoretic Learning', 'Role-Conditioned Attention', 'Coordination', 'Equilibrium Selection'],
+        description: {
+            ko: '협력 MARL 에이전트가 학습으로 선택한 조정 관습이 이론 기반 역할 의미와 어떻게 어긋나거나 정렬되는지 측정하는 연구.',
+            en: 'An empirical framework for measuring how learned cooperative MARL coordination conventions align with theory-informed role semantics.',
+        },
+        abstract: {
+            ko: '역할 의미 기반 할당은 이질적 에이전트가 어떻게 협력할 수 있는지에 대한 사전 지식을 제공하지만, 협력 MARL 에이전트는 분산적이고 비정상적인 학습 과정에서 자체적인 조정 관습을 선택합니다. 이 논문은 학습된 관습이 정책 구조에서 얼마나 판독 가능한지, 그리고 이론 기반 역할 의미 사전 지식과 어떤 관계를 갖는지 분석합니다. 역할 라우팅 행렬, formation sensitivity, gradient/occlusion attribution을 결합한 진단 프레임워크를 통해 MiniGrid와 SMACv2 Terran 환경, 다섯 가지 MAPPO 조건, 3v3-9v9 스케일링 설정을 평가했습니다. 결과적으로 label-conditioned attention은 flat MLP 기준선보다 더 집중적이고 역할 특화된 라우팅을 보였고, 스케일 확장과 zero-shot transfer, ally-slot padding에 대해서도 안정적인 신호를 유지했습니다. 본 연구는 새로운 해법 개념을 제안하기보다, 협력 MARL에서 학습된 조정 구조를 실증적으로 측정하는 평가 프레임워크를 제시합니다.',
+            en: 'Role-semantic assignments provide priors for how heterogeneous agents may coordinate, while cooperative MARL agents settle on conventions through decentralized, non-stationary learning. This paper asks whether the selected convention is legible from the policy architecture and how it relates to a theory-informed role-semantic prior. Using a diagnostic framework that combines a role-routing matrix, formation sensitivity, and gradient/occlusion attribution across three-role MiniGrid and SMACv2 Terran settings, five MAPPO conditions, and a 3v3-9v9 scaling study, the work finds that label-conditioned attention yields more concentrated and role-specific routing than flat MLP baselines. The routing signature remains stable under scaling, transfers zero-shot from 3v3 to 9v9 above the from-scratch baseline, and is invariant to ally-slot padding. The contribution is an empirical evaluation framework for learned coordination structure in cooperative MARL, not a new solution concept.',
+        },
+    },
+    {
         id: 'pcsp',
         title: 'One Policy, Infinite NPCs: Scalable Persona-Conditioned NPC Control via Shared Reinforcement Learning Policies',
         authors: 'Yoosung Hong',
