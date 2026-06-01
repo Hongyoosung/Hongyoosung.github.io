@@ -50,6 +50,7 @@ const localized = (paths) => paths.flatMap((path) => [path, `/ko${path === '/' ?
 
 const routes = unique([
   '/',
+  '/ko',
   ...localized(['/publications', '/news']),
   ...localized(getProjectSlugs().map((slug) => `/projects/${slug}`)),
   ...localized(getPublicationIds().map((id) => `/publications/${id}`)),
