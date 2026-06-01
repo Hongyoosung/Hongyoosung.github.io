@@ -672,41 +672,43 @@ config = config.multi_agent(
 <hr class="project-divider" />
 <h4>Solution</h4>
 <p>
-<strong>Python(통신 계층)과 C++(엔진 계층)의 이중 레이어 수정</strong>
+<strong>Unreal과 RLlib 양쪽에서 terminal state 보존 및 stale-agent 데이터 필터링</strong>
 </p>
-<p>Python (Schola Wrapper):</p>
+<p>Unreal 측:</p>
 <ul>
-<li>No-op Padding: 사망한 에이전트의 빈자리에 무효 액션(noop)을 삽입하여 Unreal이 항상 전체 에이전트의 액션을 수신하도록 보정.</li>
-<li>Data Filtering: Unreal로부터 받은 응답 중, 이미 사망한 에이전트의 관측값/보상/정보를 필터링하여 RLlib에 전달.</li>
+<li><strong>Terminal State Preservation</strong>: <code>Step()</code> 이전에 이미 사망한 에이전트의 terminal/truncated 상태를 보존하여, 환경 스텝 로직이 최종 상태를 덮어쓰지 않도록 했습니다.</li>
+<li><strong>Dead-Agent Action Filtering</strong>: 환경 스텝 실행 전에 이미 사망한 에이전트를 action map에서 제거해 stale action이 물리나 게임 로직에 영향을 주지 않도록 했습니다.</li>
+<li><strong>Revival Prevention</strong>: 이후 스텝/업데이트 로직이 이미 사망한 에이전트를 실수로 부활시키지 않도록 방지했습니다.</li>
 </ul>
-<p>C++ (Unreal Plugin):</p>
+<p>Python / RLlib 측:</p>
 <ul>
-<li>Dead Agent Snapshot: Step() 실행 전 사망한 에이전트 상태를 기록하고, 실행 후 터미널 플래그(Terminal Flags)를 재복구하여 상태 덮어쓰기 및 부활 루프 방지.</li>
-<li>Action Filter: 사망한 에이전트의 액션이 물리 엔진 및 로직에 영향을 주지 않도록 제외 처리.</li>
+<li><strong>Shared Dead-Agent Filter</strong>: <code>BaseRayEnv._filter_dead_agents()</code>를 추가해, 현재 스텝 이전에 이미 done 상태였던 에이전트의 observation, reward, terminated, truncated, info를 제거했습니다.</li>
+<li><strong>RayEnv / RayVecEnv Consistency</strong>: 동일한 필터링을 <code>RayEnv.step()</code>와 <code>RayVecEnv.step()</code> 양쪽에 적용했습니다.</li>
+<li><strong>Reset Safety</strong>: <code>_reset_on_next_step</code> 중에는 필터링을 건너뛰어, 다음 에피소드의 fresh initial observation이 보존되도록 했습니다.</li>
 </ul>
 <hr class="project-divider" />
 <h4>Result</h4>
 <ul>
-<li>단위 테스트 통과: 총 10종의 Standalone 테스트(No-op 생성, 패딩 프로토콜 등) 100% 통과.</li>
+<li><strong>Upstream PR 머지 완료</strong>: 시차 사망(staggered death) 처리 수정이 <a href="https://github.com/GPUOpen-LibrariesAndSDKs/Schola/pull/2" target="_blank" rel="noopener noreferrer">GPUOpen-LibrariesAndSDKs/Schola#2</a>를 통해 Schola에 반영되었고, 현재 main / Schola v2.1.1 기준으로 rebase되었습니다.</li>
+<li><strong>학습 안정성 확보</strong>: 에이전트별 종료 시점이 달라 RLlib이 이미 사망한 에이전트의 액션을 더 이상 보내지 않는 <code>NEXT_STEP</code> 멀티 에이전트 환경에서 프리징을 해결했습니다.</li>
+<li><strong>데이터 무결성</strong>: RLlib으로 observation과 reward를 반환하기 전에 stale dead-agent 데이터를 제거하여, mixed/invalid agent 데이터가 학습 배치에 섞이지 않도록 했습니다.</li>
+<li><strong>검증</strong>: <code>RayEnv</code>와 <code>RayVecEnv</code>의 시차 사망 처리 동작에 대한 집중 테스트와 실제 Unreal/RLlib 연동 검증 스크립트를 추가했습니다.</li>
 </ul>
-<ul>
-<li>학습 안정성 확보: 실제 Unreal 통합 환경에서 에피소드 정지 현상 해결 및 정상적인 에피소드 리셋 주기 확인.</li>
-</ul>
-<ul>
-<li>데이터 무결성: 보상 체계에서의 NaN 발생 및 Trajectory 누수 차단 확인.</li>
-</ul>
-<ul>
-<li>관련 문제 Schola 오픈소스에 PR 제출.</li>
-</ul>
+<div class="project-media-grid">
 <figure class="project-media">
-<img src="/images/project1/pr.png" alt="Fig 18. Pull Request" loading="lazy" />
-<figcaption>Fig 18. Pull Request</figcaption>
+<img src="/images/project1/pr1.png" alt="Fig 18. 머지된 Schola Pull Request" loading="lazy" />
+<figcaption>Fig 18. 머지된 Schola Pull Request</figcaption>
 </figure>
+<figure class="project-media">
+<img src="/images/project1/pr2.png" alt="Fig 19. Schola PR 변경 사항 및 테스트" loading="lazy" />
+<figcaption>Fig 19. Schola PR 변경 사항 및 테스트</figcaption>
+</figure>
+</div>
 <hr class="project-divider" />
 <h4>Problem 2: 엔티티 간 관계 정보 손실</h4>
 <figure class="project-media">
-<img src="/images/project1/problem2.png" alt="Fig 19. 엔티티 관계 정보 손실과 어텐션 도입을 통한 해결" loading="lazy" />
-<figcaption>Fig 19. 엔티티 관계 정보 손실과 어텐션 도입을 통한 해결</figcaption>
+<img src="/images/project1/problem2.png" alt="Fig 20. 엔티티 관계 정보 손실과 어텐션 도입을 통한 해결" loading="lazy" />
+<figcaption>Fig 20. 엔티티 관계 정보 손실과 어텐션 도입을 통한 해결</figcaption>
 </figure>
 <p>초기에는 MAPPO 기반의 팀 협동 플레이 보상을 설계하여 협동성을 유도하려 했습니다. 그러나 Strike / Support / Vanguard 3가지 역할 간의 협동을 하나의 스칼라 보상으로 정의하는 것이 모호하고, 보상 해킹(Reward Hacking)이 빈번히 발생했습니다.</p>
 <p>따라서 협동성을 보상으로 강제하는 접근을 포기하고, 모델 아키텍처 차원에서 에이전트가 팀원 간의 관계를 자연스럽게 학습하도록 방향을 전환했습니다. 그 결과, Cross-Attention을 도입하여 에이전트에게 각 엔티티의 중요도를 인식하게 하였지만 "적 2명이 같은 거점에 집결" 같은 엔티티 간 공간 패턴을 인식하지 못하고 이미 점령 중인 거점에 중복 배치되는 현상이 발생하였습니다.</p>
@@ -789,8 +791,8 @@ a_ctx, _ = self.ally_attn(q, a_enc, a_enc,
 <hr class="project-divider" />
 <h4>Problem 3: 스텝 속도와 에이전트 이동 간의 타이밍 불일치</h4>
 <figure class="project-media">
-<img src="/images/project1/problem3.png" alt="Fig 20. 스로틀링 제어" loading="lazy" />
-<figcaption>Fig 20. 스로틀링 제어</figcaption>
+<img src="/images/project1/problem3.png" alt="Fig 21. 스로틀링 제어" loading="lazy" />
+<figcaption>Fig 21. 스로틀링 제어</figcaption>
 </figure>
 <p>에이전트가 이전 스텝에서 결정된 목적지에 도달하기 전에 새로운 스텝이 실행되어 이동이 취소되는 문제가 발생하여 학습의 품질이 크게 훼손되었습니다.</p>
 <hr class="project-divider" />
@@ -877,16 +879,16 @@ float StepInterval = 0.3f;  // 초 단위, 기본 2Hz</code>
 <h4>학습 결과</h4>
 <p>총 2.5M(250만) 타임스텝에 걸쳐 MAPPO 기반 ScriptedAI 대전 학습을 수행했습니다.</p>
 <figure class="project-media">
-<img src="/images/project1/result_reward.png" alt="Fig 21. reward" loading="lazy" />
-<figcaption>Fig 21. reward</figcaption>
+<img src="/images/project1/result_reward.png" alt="Fig 22. reward" loading="lazy" />
+<figcaption>Fig 22. reward</figcaption>
 </figure>
 <figure class="project-media">
-<img src="/images/project1/result_vf.png" alt="Fig 22. vf explained" loading="lazy" />
-<figcaption>Fig 22. vf explained</figcaption>
+<img src="/images/project1/result_vf.png" alt="Fig 23. vf explained" loading="lazy" />
+<figcaption>Fig 23. vf explained</figcaption>
 </figure>
 <figure class="project-media">
-<img src="/images/project1/result_entropy.png" alt="Fig 23. entropy" loading="lazy" />
-<figcaption>Fig 23. entropy</figcaption>
+<img src="/images/project1/result_entropy.png" alt="Fig 24. entropy" loading="lazy" />
+<figcaption>Fig 24. entropy</figcaption>
 </figure>
 <div class="project-spacer" style="--space:40px">
 </div>
@@ -931,8 +933,8 @@ float StepInterval = 0.3f;  // 초 단위, 기본 2Hz</code>
 <h4>승률</h4>
 <p>스크립티드 AI와의 승률은 초기 0%에서 70% 수준으로 상승했습니다. 중간의 승률 저하는 스크립티드 AI의 티어가 상승하면서 발생한 일시적인 현상으로, 이후 다시 승률을 회복하면서 RL 에이전트가 정상적으로 게임 규칙을 학습했음을 확인했습니다.</p>
 <figure class="project-media">
-<img src="/images/project1/win_rate.png" alt="Fig 24. win rate" loading="lazy" />
-<figcaption>Fig 24. win rate</figcaption>
+<img src="/images/project1/win_rate.png" alt="Fig 25. win rate" loading="lazy" />
+<figcaption>Fig 25. win rate</figcaption>
 </figure>
 </div>
 <hr class="project-divider" />
@@ -1035,16 +1037,16 @@ float StepInterval = 0.3f;  // 초 단위, 기본 2Hz</code>
 </table>
 </div>
 <figure class="project-media">
-<img src="/images/project1/attn_comparison_strike.png" alt="Fig 25. STRIKE Self-Attention, Clustered vs Spread vs Difference" loading="lazy" />
-<figcaption>Fig 25. STRIKE Self-Attention, Clustered vs Spread vs Difference</figcaption>
+<img src="/images/project1/attn_comparison_strike.png" alt="Fig 26. STRIKE Self-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<figcaption>Fig 26. STRIKE Self-Attention, Clustered vs Spread vs Difference</figcaption>
 </figure>
 <figure class="project-media">
-<img src="/images/project1/attn_comparison_support.png" alt="Fig 26. SUPPORT Self-Attention, Clustered vs Spread vs Difference" loading="lazy" />
-<figcaption>Fig 26. SUPPORT Self-Attention, Clustered vs Spread vs Difference</figcaption>
+<img src="/images/project1/attn_comparison_support.png" alt="Fig 27. SUPPORT Self-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<figcaption>Fig 27. SUPPORT Self-Attention, Clustered vs Spread vs Difference</figcaption>
 </figure>
 <figure class="project-media">
-<img src="/images/project1/attn_comparison_vanguard.png" alt="Fig 27. VANGUARD Self-Attention, Clustered vs Spread vs Difference" loading="lazy" />
-<figcaption>Fig 27. VANGUARD Self-Attention, Clustered vs Spread vs Difference</figcaption>
+<img src="/images/project1/attn_comparison_vanguard.png" alt="Fig 28. VANGUARD Self-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<figcaption>Fig 28. VANGUARD Self-Attention, Clustered vs Spread vs Difference</figcaption>
 </figure>
 <p>Support가 가장 낮은 민감도를 보이는 것은 버그가 아닌 <strong>역할 특성의 자연스러운 내재화</strong>입니다. 회복 역할은 팀 대형에 관계없이 전체 아군을 동등하게 모니터링해야 하며, 학습이 이를 반영했습니다. 반면 Vanguard는 가장 높은 민감도를 보여, 전선 앵커 역할이 팀 배치 변화에 가장 민감하게 반응하도록 분화됐음을 나타냅니다.</p>
 <hr class="project-divider" />
@@ -1069,32 +1071,32 @@ float StepInterval = 0.3f;  // 초 단위, 기본 2Hz</code>
 </p>
 <div class="project-media-grid">
 <figure class="project-media">
-<img src="/images/project1/attn_cross_strike_clustered.png" alt="Fig 28. STRIKE Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
-<figcaption>Fig 28. STRIKE Cross-Attention, Clustered vs Spread vs Difference</figcaption>
+<img src="/images/project1/attn_cross_strike_clustered.png" alt="Fig 29. STRIKE Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<figcaption>Fig 29. STRIKE Cross-Attention, Clustered vs Spread vs Difference</figcaption>
 </figure>
 <figure class="project-media">
-<img src="/images/project1/attn_cross_strike_spread.png" alt="Fig 29. SUPPORT Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
-<figcaption>Fig 29. SUPPORT Cross-Attention, Clustered vs Spread vs Difference</figcaption>
-</figure>
-</div>
-<div class="project-media-grid">
-<figure class="project-media">
-<img src="/images/project1/attn_cross_vanguard_clustered.png" alt="Fig 30. VANGUARD Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
-<figcaption>Fig 30. VANGUARD Cross-Attention, Clustered vs Spread vs Difference</figcaption>
-</figure>
-<figure class="project-media">
-<img src="/images/project1/attn_cross_vanguard_spread.png" alt="Fig 31. SUPPORT Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
-<figcaption>Fig 31. SUPPORT Cross-Attention, Clustered vs Spread vs Difference</figcaption>
+<img src="/images/project1/attn_cross_strike_spread.png" alt="Fig 30. SUPPORT Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<figcaption>Fig 30. SUPPORT Cross-Attention, Clustered vs Spread vs Difference</figcaption>
 </figure>
 </div>
 <div class="project-media-grid">
 <figure class="project-media">
-<img src="/images/project1/attn_cross_support_clustered.png" alt="Fig 32. SUPPORT Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<img src="/images/project1/attn_cross_vanguard_clustered.png" alt="Fig 31. VANGUARD Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<figcaption>Fig 31. VANGUARD Cross-Attention, Clustered vs Spread vs Difference</figcaption>
+</figure>
+<figure class="project-media">
+<img src="/images/project1/attn_cross_vanguard_spread.png" alt="Fig 32. SUPPORT Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
 <figcaption>Fig 32. SUPPORT Cross-Attention, Clustered vs Spread vs Difference</figcaption>
 </figure>
+</div>
+<div class="project-media-grid">
 <figure class="project-media">
-<img src="/images/project1/attn_cross_support_spread.png" alt="Fig 33. SUPPORT Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<img src="/images/project1/attn_cross_support_clustered.png" alt="Fig 33. SUPPORT Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
 <figcaption>Fig 33. SUPPORT Cross-Attention, Clustered vs Spread vs Difference</figcaption>
+</figure>
+<figure class="project-media">
+<img src="/images/project1/attn_cross_support_spread.png" alt="Fig 34. SUPPORT Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<figcaption>Fig 34. SUPPORT Cross-Attention, Clustered vs Spread vs Difference</figcaption>
 </figure>
 </div>
 <div class="project-spacer" style="--space:40px">

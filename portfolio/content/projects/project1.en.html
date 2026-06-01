@@ -750,43 +750,53 @@ count_steps_by="agent_steps",
 <hr class="project-divider" />
 <h4>Solution</h4>
 <p>
-<strong>Dual-layer modifications in Python (Communication) and C++ (Engine)</strong>
+<strong>Terminal-state preservation and stale-agent filtering across Unreal and RLlib</strong>
 </p>
-<p>Python (Schola Wrapper):</p>
+<p>Unreal side:</p>
 <ul>
 <li>
-<strong>No-op Padding</strong>: Inserted no-op actions for deceased agents to ensure Unreal always receives actions for the full agent count.</li>
+<strong>Terminal State Preservation</strong>: Preserved terminal/truncated state for agents that were already dead before <code>Step()</code>, preventing environment step logic from overwriting their final state.</li>
 <li>
-<strong>Data Filtering</strong>: Filtered observations, rewards, and info for already-deceased agents from the Unreal response before passing data to RLlib.</li>
+<strong>Dead-Agent Action Filtering</strong>: Removed already-dead agents from the action map before executing the environment step, so stale actions could not affect physics or game logic.</li>
+<li>
+<strong>Revival Prevention</strong>: Prevented already-dead agents from being accidentally revived by downstream step/update logic.</li>
 </ul>
-<p>C++ (Unreal Plugin):</p>
+<p>Python / RLlib side:</p>
 <ul>
 <li>
-<strong>Dead Agent Snapshot</strong>: Recorded the state of deceased agents before <code>Step()</code> execution and restored terminal flags afterward to prevent state overwriting and resurrection loops.</li>
+<strong>Shared Dead-Agent Filter</strong>: Added <code>BaseRayEnv._filter_dead_agents()</code> to remove stale observations, rewards, terminateds, truncateds, and infos for agents that were already done before the current step.</li>
 <li>
-<strong>Action Filter</strong>: Excluded actions of deceased agents from affecting the physics engine and game logic.</li>
+<strong>RayEnv / RayVecEnv Consistency</strong>: Applied the same filtering in both <code>RayEnv.step()</code> and <code>RayVecEnv.step()</code>.</li>
+<li>
+<strong>Reset Safety</strong>: Skipped filtering during <code>_reset_on_next_step</code>, preserving fresh initial observations from the next episode.</li>
 </ul>
 <hr class="project-divider" />
 <h4>Result</h4>
 <ul>
 <li>
-<strong>Unit Tests Passed</strong>: 100% pass rate across 10 standalone tests (No-op generation, padding protocols, etc.).</li>
+<strong>Upstream PR Merged</strong>: The staggered-agent-death fix was accepted and merged into Schola via <a href="https://github.com/GPUOpen-LibrariesAndSDKs/Schola/pull/2" target="_blank" rel="noopener noreferrer">GPUOpen-LibrariesAndSDKs/Schola#2</a>, rebased onto current main / Schola v2.1.1.</li>
 <li>
-<strong>Training Stability</strong>: Resolved episode freezes in integrated Unreal environments and confirmed normal episode reset cycles.</li>
+<strong>Training Stability</strong>: Resolved freezes in RLlib <code>NEXT_STEP</code> multi-agent environments where agents terminate at different timesteps and RLlib stops sending actions for already-dead agents.</li>
 <li>
-<strong>Data Integrity</strong>: Verified the elimination of NaN values in rewards and prevented trajectory leakage.</li>
+<strong>Data Integrity</strong>: Filtered stale dead-agent data before returning observations and rewards to RLlib, preventing mixed or invalid agent data from contaminating training batches.</li>
 <li>
-<strong>Open Source Contribution</strong>: Submitted a Pull Request to the Schola repository regarding these fixes.</li>
+<strong>Verification</strong>: Added focused staggered-death tests for <code>RayEnv</code> and <code>RayVecEnv</code> behavior, plus live Unreal/RLlib integration scripts.</li>
 </ul>
+<div class="project-media-grid">
 <figure class="project-media">
-<img src="/images/project1/pr.png" alt="Fig 18. Pull Request" loading="lazy" />
-<figcaption>Fig 18. Pull Request</figcaption>
+<img src="/images/project1/pr1.png" alt="Fig 18. Merged Schola Pull Request" loading="lazy" />
+<figcaption>Fig 18. Merged Schola Pull Request</figcaption>
 </figure>
+<figure class="project-media">
+<img src="/images/project1/pr2.png" alt="Fig 19. Schola PR Changes and Tests" loading="lazy" />
+<figcaption>Fig 19. Schola PR Changes and Tests</figcaption>
+</figure>
+</div>
 <hr class="project-divider" />
 <h4>Problem 2: Loss of Relational Information Between Entities</h4>
 <figure class="project-media">
-<img src="/images/project1/problem2.png" alt="Fig 19. Solving Entity Relation Loss through Attention Implementation" loading="lazy" />
-<figcaption>Fig 19. Solving Entity Relation Loss through Attention Implementation</figcaption>
+<img src="/images/project1/problem2.png" alt="Fig 20. Solving Entity Relation Loss through Attention Implementation" loading="lazy" />
+<figcaption>Fig 20. Solving Entity Relation Loss through Attention Implementation</figcaption>
 </figure>
 <p>Initially, I attempted to induce cooperation by designing a MAPPO-based team reward structure. However, defining the synergy between three distinct roles—Strike, Support, and Vanguard—as a single scalar reward proved ambiguous. This led to frequent reward hacking without producing meaningful cooperative behavior.</p>
 <p>Shifting away from enforcing cooperation through rewards, I pivoted to an architectural approach that allows agents to naturally learn inter-agent relationships. I identified that the root cause of the agents' inability to recognize spatial patterns—such as 'two enemies gathering at a specific point'—lay in the network structure itself. Specifically, the recurring inefficiency of agents clustering at already captured points was diagnosed as an architectural limitation rather than a flaw in the reward function.</p>
@@ -864,8 +874,8 @@ a_ctx, _ = self.ally_attn(q, a_enc, a_enc,
 <hr class="project-divider" />
 <h4>Problem 3: Timing Mismatch Between Step Speed and Agent Movement</h4>
 <figure class="project-media">
-<img src="/images/project1/problem3.png" alt="Fig 20. Throttling Control" loading="lazy" />
-<figcaption>Fig 20. Throttling Control</figcaption>
+<img src="/images/project1/problem3.png" alt="Fig 21. Throttling Control" loading="lazy" />
+<figcaption>Fig 21. Throttling Control</figcaption>
 </figure>
 <p>In the training environment, <code>AGymConnectorManager::Tick()</code> called <code>Connector-&gt;Step()</code> every frame (60Hz+), causing the next step to execute before EQS-based movement was complete. This caused new EQS goals to overwrite existing ones, canceling movement and resulting in poor-quality training data where observations were collected before reaching targets.</p>
 <hr class="project-divider" />
@@ -946,16 +956,16 @@ float StepInterval = 0.3f;  // Seconds, Default 2Hz</code>
 <h4>Training Results</h4>
 <p>Performed MAPPO-based training against Scripted AI over 2.5 million timesteps.</p>
 <figure class="project-media">
-<img src="/images/project1/result_reward.png" alt="Fig 21. Reward" loading="lazy" />
-<figcaption>Fig 21. Reward</figcaption>
+<img src="/images/project1/result_reward.png" alt="Fig 22. Reward" loading="lazy" />
+<figcaption>Fig 22. Reward</figcaption>
 </figure>
 <figure class="project-media">
-<img src="/images/project1/result_vf.png" alt="Fig 22. VF Explained" loading="lazy" />
-<figcaption>Fig 22. VF Explained</figcaption>
+<img src="/images/project1/result_vf.png" alt="Fig 23. VF Explained" loading="lazy" />
+<figcaption>Fig 23. VF Explained</figcaption>
 </figure>
 <figure class="project-media">
-<img src="/images/project1/result_entropy.png" alt="Fig 23. Entropy" loading="lazy" />
-<figcaption>Fig 23. Entropy</figcaption>
+<img src="/images/project1/result_entropy.png" alt="Fig 24. Entropy" loading="lazy" />
+<figcaption>Fig 24. Entropy</figcaption>
 </figure>
 <div class="project-spacer" style="--space:40px">
 </div>
@@ -1002,8 +1012,8 @@ float StepInterval = 0.3f;  // Seconds, Default 2Hz</code>
 <h4>Win Rate</h4>
 <p>The win rate against Scripted AI increased from an initial 0% to around 70%. The intermediate drop in win rate was a temporary phenomenon caused by the increase in the Scripted AI's tier; as the win rate subsequently recovered, it was confirmed that the RL agent had successfully learned the game rules.</p>
 <figure class="project-media">
-<img src="/images/project1/win_rate.png" alt="Fig 24. win rate" loading="lazy" />
-<figcaption>Fig 24. win rate</figcaption>
+<img src="/images/project1/win_rate.png" alt="Fig 25. win rate" loading="lazy" />
+<figcaption>Fig 25. win rate</figcaption>
 </figure>
 <hr class="project-divider" />
 <h4>Miscellaneous Trials & Errors</h4>
@@ -1104,16 +1114,16 @@ float StepInterval = 0.3f;  // Seconds, Default 2Hz</code>
 </table>
 </div>
 <figure class="project-media">
-<img src="/images/project1/attn_comparison_strike.png" alt="Fig 25. STRIKE Self-Attention, Clustered vs Spread vs Difference" loading="lazy" />
-<figcaption>Fig 25. STRIKE Self-Attention, Clustered vs Spread vs Difference</figcaption>
+<img src="/images/project1/attn_comparison_strike.png" alt="Fig 26. STRIKE Self-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<figcaption>Fig 26. STRIKE Self-Attention, Clustered vs Spread vs Difference</figcaption>
 </figure>
 <figure class="project-media">
-<img src="/images/project1/attn_comparison_support.png" alt="Fig 26. SUPPORT Self-Attention, Clustered vs Spread vs Difference" loading="lazy" />
-<figcaption>Fig 26. SUPPORT Self-Attention, Clustered vs Spread vs Difference</figcaption>
+<img src="/images/project1/attn_comparison_support.png" alt="Fig 27. SUPPORT Self-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<figcaption>Fig 27. SUPPORT Self-Attention, Clustered vs Spread vs Difference</figcaption>
 </figure>
 <figure class="project-media">
-<img src="/images/project1/attn_comparison_vanguard.png" alt="Fig 27. VANGUARD Self-Attention, Clustered vs Spread vs Difference" loading="lazy" />
-<figcaption>Fig 27. VANGUARD Self-Attention, Clustered vs Spread vs Difference</figcaption>
+<img src="/images/project1/attn_comparison_vanguard.png" alt="Fig 28. VANGUARD Self-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<figcaption>Fig 28. VANGUARD Self-Attention, Clustered vs Spread vs Difference</figcaption>
 </figure>
 <p>The fact that Support shows the lowest sensitivity is not a bug, but a <strong>natural internalization of role characteristics</strong>. The healer role must monitor all allies equally regardless of team formation, and the training reflected this. In contrast, Vanguard showed the highest sensitivity, indicating that the frontline anchor role has differentiated to react most sensitively to changes in team positioning.</p>
 <hr class="project-divider" />
@@ -1138,32 +1148,32 @@ float StepInterval = 0.3f;  // Seconds, Default 2Hz</code>
 </p>
 <div class="project-media-grid">
 <figure class="project-media">
-<img src="/images/project1/attn_cross_strike_clustered.png" alt="Fig 28. STRIKE Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
-<figcaption>Fig 28. STRIKE Cross-Attention, Clustered vs Spread vs Difference</figcaption>
-</figure>
-<figure class="project-media">
-<img src="/images/project1/attn_cross_strike_spread.png" alt="Fig 29. STRIKE Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<img src="/images/project1/attn_cross_strike_clustered.png" alt="Fig 29. STRIKE Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
 <figcaption>Fig 29. STRIKE Cross-Attention, Clustered vs Spread vs Difference</figcaption>
 </figure>
+<figure class="project-media">
+<img src="/images/project1/attn_cross_strike_spread.png" alt="Fig 30. STRIKE Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<figcaption>Fig 30. STRIKE Cross-Attention, Clustered vs Spread vs Difference</figcaption>
+</figure>
 </div>
 <div class="project-media-grid">
 <figure class="project-media">
-<img src="/images/project1/attn_cross_vanguard_clustered.png" alt="Fig 30. VANGUARD Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
-<figcaption>Fig 30. VANGUARD Cross-Attention, Clustered vs Spread vs Difference</figcaption>
-</figure>
-<figure class="project-media">
-<img src="/images/project1/attn_cross_vanguard_spread.png" alt="Fig 31. VANGUARD Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<img src="/images/project1/attn_cross_vanguard_clustered.png" alt="Fig 31. VANGUARD Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
 <figcaption>Fig 31. VANGUARD Cross-Attention, Clustered vs Spread vs Difference</figcaption>
 </figure>
+<figure class="project-media">
+<img src="/images/project1/attn_cross_vanguard_spread.png" alt="Fig 32. VANGUARD Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<figcaption>Fig 32. VANGUARD Cross-Attention, Clustered vs Spread vs Difference</figcaption>
+</figure>
 </div>
 <div class="project-media-grid">
 <figure class="project-media">
-<img src="/images/project1/attn_cross_support_clustered.png" alt="Fig 32. SUPPORT Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
-<figcaption>Fig 32. SUPPORT Cross-Attention, Clustered vs Spread vs Difference</figcaption>
+<img src="/images/project1/attn_cross_support_clustered.png" alt="Fig 33. SUPPORT Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<figcaption>Fig 33. SUPPORT Cross-Attention, Clustered vs Spread vs Difference</figcaption>
 </figure>
 <figure class="project-media">
-<img src="/images/project1/attn_cross_support_spread.png" alt="Fig 33. SUPPORT Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
-<figcaption>Fig 33. SUPPORT Cross-Attention, Clustered vs Spread vs Difference</figcaption>
+<img src="/images/project1/attn_cross_support_spread.png" alt="Fig 34. SUPPORT Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<figcaption>Fig 34. SUPPORT Cross-Attention, Clustered vs Spread vs Difference</figcaption>
 </figure>
 </div>
 <div class="project-spacer" style="--space:40px">
