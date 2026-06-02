@@ -15,12 +15,12 @@ function About({ lang }) {
         paragraphs: {
             ko: [
                 '저는 게임 플레이 경험을 향상시킬 수 있는 AI 시스템을 연구하고 개발하는 엔지니어입니다.',
-                '게임에서 AI가 어떻게 작동하는지, 그리고 그 구조를 게임에 어떻게 활용하는지에 대한 관심을 바탕으로 강화학습, LLM과 같은 차세대 AI를 게임 도메인에 최적화한 새로운 AI 시스템을 연구하고 있습니다.',
-                '최신 논문 탐색, 관련 지식을 꾸준히 공부하고 있으며 최근에는 CoG와 같은 게임 도메인 학회의 적극적인 기여를 준비하고 있습니다.',
+                '게임에서 AI가 어떻게 작동하는지, 그리고 그 구조를 게임에 어떻게 활용하는지에 대한 관심을 바탕으로 강화학습, LLM과 같은 차세대 AI를 게임 도메인에 최적화한 AI 시스템을 개발하고 있습니다.',
+                '최신 논문 탐색, 관련 지식을 꾸준히 공부하고 있으며 최근에는 생성형 AI를 활용한 게임 콘텐츠 생성 파이프라인 개발에 관심이 있습니다.',
             ],
             en: [
                 'I build and research game AI systems, simulation logic, and NPC decision architecture. I care about why a system behaves the way it does, and whether its structure can be reused, verified, and extended.',
-                'Recently, I worked on Dynamic EQS, connecting Unreal Engine 5 with reinforcement learning to optimize EQS weights dynamically. I am especially interested in systems where established game-engine tools and learned policies meet cleanly.',
+                'I am constantly exploring the latest research papers and studying related knowledge, and recently I have been interested in developing game content generation pipelines using generative AI.',
             ],
         },
     }
