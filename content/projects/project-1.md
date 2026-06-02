@@ -491,63 +491,82 @@ Executing `ray down` terminates all instances immediately, while S3 checkpoints 
 
 ### Problem 1: Agent Death Handling Defects in Multi-Agent Reinforcement Learning (Schola + RLlib)
 
-{{< img src="/images/project1/problem1.png"
+{{< img src="/images/project1/Schola-ScholaArchitecture.png"
         alt=""
         class="max-w-full"
-        caption="Fig 17. Cause and Resolution of the Freezing Phenomenon" >}}
+        caption="Fig 17a. Schola Communication Architecture" >}}
+
+Schola connects Unreal Engine agents and the Python RLlib environment through gRPC, synchronizing actions, observations, rewards, and termination signals at every environment step.
 
 **Episode Freeze**: A communication mismatch occurred where RLlib stopped sending actions for an agent that died early, while Unreal Engine (Schola) remained in a wait-state, expecting actions for all agents.
 
-**Death-resurrection loop**: In `SAME_STEP` mode, deceased agents were immediately reset without a valid state, falling into an infinite loop of repeated deaths.
+**Stale dead-agent data**: In `NEXT_STEP` multi-agent environments, agents that had already terminated could still leak stale observations, rewards, or state transitions back to RLlib unless their terminal state was explicitly preserved.
+
+{{< img src="/images/project1/Schola-DeadAgent(Before).png"
+        alt=""
+        class="max-w-full"
+        caption="Fig 17b. Staggered agent death before the fix" >}}
 
 ---
 
 <font size="4">**Cause**</font>
 
-**Conflict between two termination systems**
+**Mismatch between staggered termination and step synchronization**
 
-There was a contradiction in episode termination signals between Schola (`AutoResetType::SAME_STEP`) and the Python side (RLlib).
+The defect occurred in RLlib `NEXT_STEP` multi-agent environments when agents terminated at different timesteps.
 
-- **Schola**: Triggered an immediate auto-reset upon agent death per the `SAME_STEP` policy.
-- **Python**: RLlib suppressed individual termination signals (`done`) to prevent mixed trajectories (data from different episodes mixing in a single batch).
+- **RLlib**: Once an agent was marked done, RLlib stopped sending actions for that already-dead agent.
+- **Schola / Unreal**: The environment step still had to synchronize the remaining live agents while preserving the terminal/truncated state of agents that were already dead.
 
-Consequently, the Schola engine would revive the agent only for it to die again instantly, consuming the entire "step budget." Surviving agents were then blocked by Schola's multi-agent step barrier, failing to receive subsequent actions indefinitely.
+Without explicit dead-agent handling, stale data from already-dead agents could be returned to RLlib and terminal state could be overwritten by later Unreal step logic. This broke the step contract between RLlib and Schola, producing freezes when agents died at different times.
 
 ---
 
 <font size="4">**Goal**</font>
 
-Establish a stable training environment that operates without interruption even during staggered agent deaths.
-* Ensure the entire episode terminates correctly (`__all__=True`) regardless of individual death timings.
-* Implement a filtering system to prevent deceased agents' observations or rewards from contaminating training data (e.g., preventing NaN values).
+Establish a stable `NEXT_STEP` training environment that operates without interruption even during staggered agent deaths.
+* Preserve terminal/truncated state for agents that already ended before the current step.
+* Filter stale dead-agent observations, rewards, termination flags, truncation flags, and infos before returning data to RLlib.
 
 ---
 
 <font size="4">**Solution**</font>
 
-**Dual-layer modifications in Python (Communication) and C++ (Engine)**
+**Terminal-state preservation and stale-agent filtering across Unreal and RLlib**
 
-Python (Schola Wrapper):
-* **No-op Padding**: Inserted no-op actions for deceased agents to ensure Unreal always receives actions for the full agent count.
-* **Data Filtering**: Filtered observations, rewards, and info for already-deceased agents from the Unreal response before passing data to RLlib.
+Unreal side:
+* **Terminal State Preservation**: Preserved terminal/truncated state for agents that were already dead before `Step()`, preventing environment step logic from overwriting their final state.
+* **Dead-Agent Action Filtering**: Removed already-dead agents from the action map before executing the environment step, so stale actions could not affect physics or game logic.
+* **Revival Prevention**: Prevented already-dead agents from being accidentally revived by downstream step/update logic.
 
-C++ (Unreal Plugin):
-* **Dead Agent Snapshot**: Recorded the state of deceased agents before `Step()` execution and restored terminal flags afterward to prevent state overwriting and resurrection loops.
-* **Action Filter**: Excluded actions of deceased agents from affecting the physics engine and game logic.
+Python / RLlib side:
+* **Shared Dead-Agent Filter**: Added `BaseRayEnv._filter_dead_agents()` to remove stale observations, rewards, terminateds, truncateds, and infos for agents that were already done before the current step.
+* **RayEnv / RayVecEnv Consistency**: Applied the same filtering in both `RayEnv.step()` and `RayVecEnv.step()`.
+* **Reset Safety**: Skipped filtering during `_reset_on_next_step`, preserving fresh initial observations from the next episode.
+
+{{< img src="/images/project1/Schola-DeadAgent(After).png"
+        alt=""
+        class="max-w-full"
+        caption="Fig 17c. Stable step synchronization after filtering dead agents" >}}
 
 ---
 
 <font size="4">**Result**</font>
 
-* **Unit Tests Passed**: 100% pass rate across 10 standalone tests (No-op generation, padding protocols, etc.).
-* **Training Stability**: Resolved episode freezes in integrated Unreal environments and confirmed normal episode reset cycles.
-* **Data Integrity**: Verified the elimination of NaN values in rewards and prevented trajectory leakage.
-* **Open Source Contribution**: Submitted a Pull Request to the Schola repository regarding these fixes.
+* **Upstream PR Merged**: The staggered-agent-death fix was accepted and merged into Schola via [GPUOpen-LibrariesAndSDKs/Schola#2](https://github.com/GPUOpen-LibrariesAndSDKs/Schola/pull/2), rebased onto current main / Schola v2.1.1.
+* **Training Stability**: Resolved freezes in RLlib `NEXT_STEP` multi-agent environments where agents terminate at different timesteps and RLlib stops sending actions for already-dead agents.
+* **Data Integrity**: Filtered stale dead-agent data before returning observations and rewards to RLlib, preventing mixed or invalid agent data from contaminating training batches.
+* **Verification**: Added focused staggered-death tests for `RayEnv` and `RayVecEnv` behavior, plus live Unreal/RLlib integration scripts.
 
-{{< img src="/images/project1/pr.png"
+{{< img src="/images/project1/pr1.png"
         alt=""
         class="max-w-3xl"
-        caption="Fig 18. Pull Request" >}}
+        caption="Fig 18. Merged Schola Pull Request" >}}
+
+{{< img src="/images/project1/pr2.png"
+        alt=""
+        class="max-w-3xl"
+        caption="Fig 19. Schola PR Changes and Tests" >}}
 
 <hr style="border: 0; height: 1px; background: #b3b3b3;">
 

@@ -530,14 +530,21 @@ UE5 헤드리스 인스턴스 구동 및 롤아웃 수집을 전담합니다.
 
 ### Problem 1: 멀티 에이전트 강화학습 환경(Schola + RLlib)에서의 에이전트 개별 사망 처리 결함
 
-{{< img src="/images/project1/problem1.png"
+{{< img src="/images/project1/Schola-ScholaArchitecture.png"
         alt=""
         class="max-w-full"
-        caption="Fig 17. 프리징 현상의 원인과 해결" >}}
+        caption="Fig 17a. Schola 플러그인 통신 구조" >}}
+
+Schola는 gRPC를 통해 Unreal Engine 에이전트와 Python RLlib 환경을 연결하고, 매 스텝마다 액션, 관측값, 보상, 종료 신호를 동기화합니다.
 
 **에피소드 멈춤(Episode Freeze)**: 특정 에이전트가 먼저 사망할 경우, RLlib은 해당 에이전트의 액션을 전송하지 않지만 Unreal Engine Schola는 모든 에이전트의 액션을 기다리며 대기 상태에 빠지는 통신 불일치가 발생했습니다.
 
-**부활 루프(Death-resurrection loop)**: SAME_STEP 모드에서 사망한 에이전트가 유효한 상태 없이 즉시 리셋되어 다시 사망하는 무한 루프 현상 발생했습니다.
+**Stale dead-agent 데이터**: `NEXT_STEP` 멀티 에이전트 환경에서 이미 종료된 에이전트의 terminal state가 명시적으로 보존되지 않으면, 오래된 관측값/보상/상태 전이가 RLlib으로 다시 전달될 수 있었습니다.
+
+{{< img src="/images/project1/Schola-DeadAgent(Before).png"
+        alt=""
+        class="max-w-full"
+        caption="Fig 17b. 수정 전 시차 사망 처리 문제" >}}
 
 
 
@@ -545,54 +552,62 @@ UE5 헤드리스 인스턴스 구동 및 롤아웃 수집을 전담합니다.
 
 <font size="4">**Cause**</font>
 
-**두 종료 시스템의 충돌**
+**시차 종료와 스텝 동기화 방식의 불일치**
 
-Schola 측(`AutoResetType::SAME_STEP`)과 Python 측(RLlib) 사이에 에피소드 종료 신호가 서로 모순되는 상태였습니다.
+이 결함은 에이전트들이 서로 다른 timestep에 종료되는 RLlib `NEXT_STEP` 멀티 에이전트 환경에서 발생했습니다.
 
-- **Schola 측**: 에이전트가 사망하면 `SAME_STEP` 정책에 의해 즉시 자동 리셋을 트리거했습니다.
-- **Python 측**: RLlib은 혼합 궤적(서로 다른 에피소드의 데이터가 한 배치에 섞이는 것)이 생기지 않도록, 모든 에이전트의 종료 신호(`done`)를 억제하고 있었습니다.
+- **RLlib 측**: 한 번 done 처리된 에이전트에 대해서는 더 이상 action을 보내지 않았습니다.
+- **Schola / Unreal 측**: 이미 사망한 에이전트의 terminal/truncated 상태를 유지하면서, 살아 있는 에이전트들의 step 동기화는 계속 처리해야 했습니다.
 
-결과적으로 사망한 에이전트는 Schola가 부활시키자마자 다시 사망하는 무한 루프에 빠지고, 그 루프가 Schola의 스텝 예산(step budget) 전체를 소비해버렸습니다. 생존한 에이전트들은 스텝 버짓이 고갈된 Schola의 멀티에이전트 동기화 장벽(step barrier)에 막혀 영원히 다음 액션을 받지 못하는 상태가 되었습니다.
+dead-agent 처리가 명시적으로 분리되지 않으면, 이미 사망한 에이전트의 stale 데이터가 RLlib으로 반환되거나 Unreal의 이후 step 로직이 terminal state를 덮어쓸 수 있었습니다. 이로 인해 RLlib과 Schola 사이의 step contract가 깨지고, 에이전트별 종료 시점이 다른 상황에서 freeze가 발생했습니다.
 
 ---
 
 <font size="4">**Goal**</font>
 
-시차를 두고 발생하는 에이전트 사망(Staggered Death) 상황에서도 시스템 중단 없는 안정적인 학습 환경 구축
-* 에이전트별 사망 시점이 달라도 전체 에피소드가 정상적으로 종료(__all__=True)되도록 보장.
-* 사망한 에이전트의 관측값이나 보상이 학습 데이터에 오염(NaN 발생 등)을 일으키지 않도록 필터링 시스템 구현.
+시차를 두고 발생하는 에이전트 사망(Staggered Death) 상황에서도 중단 없이 동작하는 안정적인 `NEXT_STEP` 학습 환경 구축
+* 현재 step 이전에 이미 종료된 에이전트의 terminal/truncated state를 보존.
+* RLlib으로 데이터를 반환하기 전에 stale dead-agent의 observation, reward, terminated, truncated, info를 필터링.
 
 ---
 
 <font size="4">**Solution**</font>
 
-**Python(통신 계층)과 C++(엔진 계층)의 이중 레이어 수정**
+**Unreal과 RLlib 양쪽에서 terminal state 보존 및 stale-agent 데이터 필터링**
 
-Python (Schola Wrapper):
-* No-op Padding: 사망한 에이전트의 빈자리에 무효 액션(noop)을 삽입하여 Unreal이 항상 전체 에이전트의 액션을 수신하도록 보정.
-* Data Filtering: Unreal로부터 받은 응답 중, 이미 사망한 에이전트의 관측값/보상/정보를 필터링하여 RLlib에 전달.
+Unreal 측:
+* **Terminal State Preservation**: `Step()` 이전에 이미 사망한 에이전트의 terminal/truncated 상태를 보존하여, 환경 스텝 로직이 최종 상태를 덮어쓰지 않도록 했습니다.
+* **Dead-Agent Action Filtering**: 환경 스텝 실행 전에 이미 사망한 에이전트를 action map에서 제거해 stale action이 물리나 게임 로직에 영향을 주지 않도록 했습니다.
+* **Revival Prevention**: 이후 스텝/업데이트 로직이 이미 사망한 에이전트를 실수로 부활시키지 않도록 방지했습니다.
 
+Python / RLlib 측:
+* **Shared Dead-Agent Filter**: `BaseRayEnv._filter_dead_agents()`를 추가해, 현재 스텝 이전에 이미 done 상태였던 에이전트의 observation, reward, terminated, truncated, info를 제거했습니다.
+* **RayEnv / RayVecEnv Consistency**: 동일한 필터링을 `RayEnv.step()`와 `RayVecEnv.step()` 양쪽에 적용했습니다.
+* **Reset Safety**: `_reset_on_next_step` 중에는 필터링을 건너뛰어, 다음 에피소드의 fresh initial observation이 보존되도록 했습니다.
 
-C++ (Unreal Plugin):
-* Dead Agent Snapshot: Step() 실행 전 사망한 에이전트 상태를 기록하고, 실행 후 터미널 플래그(Terminal Flags)를 재복구하여 상태 덮어쓰기 및 부활 루프 방지.
-* Action Filter: 사망한 에이전트의 액션이 물리 엔진 및 로직에 영향을 주지 않도록 제외 처리.
+{{< img src="/images/project1/Schola-DeadAgent(After).png"
+        alt=""
+        class="max-w-full"
+        caption="Fig 17c. dead agent 필터링 후 안정화된 스텝 동기화" >}}
 
 ---
 
 <font size="4">**Result**</font>
 
-* 단위 테스트 통과: 총 10종의 Standalone 테스트(No-op 생성, 패딩 프로토콜 등) 100% 통과.
+* **Upstream PR 머지 완료**: 시차 사망(staggered death) 처리 수정이 [GPUOpen-LibrariesAndSDKs/Schola#2](https://github.com/GPUOpen-LibrariesAndSDKs/Schola/pull/2)를 통해 Schola에 반영되었고, 현재 main / Schola v2.1.1 기준으로 rebase되었습니다.
+* **학습 안정성 확보**: 에이전트별 종료 시점이 달라 RLlib이 이미 사망한 에이전트의 액션을 더 이상 보내지 않는 `NEXT_STEP` 멀티 에이전트 환경에서 프리징을 해결했습니다.
+* **데이터 무결성**: RLlib으로 observation과 reward를 반환하기 전에 stale dead-agent 데이터를 제거하여, mixed/invalid agent 데이터가 학습 배치에 섞이지 않도록 했습니다.
+* **검증**: `RayEnv`와 `RayVecEnv`의 시차 사망 처리 동작에 대한 집중 테스트와 실제 Unreal/RLlib 연동 검증 스크립트를 추가했습니다.
 
-* 학습 안정성 확보: 실제 Unreal 통합 환경에서 에피소드 정지 현상 해결 및 정상적인 에피소드 리셋 주기 확인.
-
-* 데이터 무결성: 보상 체계에서의 NaN 발생 및 Trajectory 누수 차단 확인.
-
-* 관련 문제 Schola 오픈소스에 PR 제출.
-
-{{< img src="/images/project1/pr.png"
+{{< img src="/images/project1/pr1.png"
         alt=""
         class="max-w-3xl"
-        caption="Fig 18. Pull Request" >}}
+        caption="Fig 18. 머지된 Schola Pull Request" >}}
+
+{{< img src="/images/project1/pr2.png"
+        alt=""
+        class="max-w-3xl"
+        caption="Fig 19. Schola PR 변경 사항 및 테스트" >}}
 
 
 <hr style="border: 0; height: 1px; background: #b3b3b3;">
