@@ -1,45 +1,221 @@
 <hr class="project-divider" />
-<h3>Key Results</h3>
-<div class="project-table-wrap">
-<table>
-<thead>
-<tr>
-<th>Area</th>
-<th>Measured Result</th>
-<th>What I Learned</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Attention validation</td>
-<td>Padding attention max = 0.000; global Self-Cross top-slot consistency = 0.639; Vanguard consistency = 0.917.</td>
-<td>Attention weights are useful as structural evidence only when paired with masks, ablations, and behavioural metrics.</td>
-</tr>
-<tr>
-<td>Role-specific relationship reading</td>
-<td>Ally Self-Attention DeltaMax: Vanguard 0.1086, Strike 0.0945, Support 0.0582. Enemy Self-Attention DeltaMax: Strike 0.1165.</td>
-<td>The attention encoder did not create roles by itself; it let already role-specific policies read spatial relationships differently.</td>
-</tr>
-<tr>
-<td>Duplicate-assignment behaviour</td>
-<td>24 Unreal episodes logged 15,715 team-steps. Realized objective coverage was 0.454, mean unique objectives were 2.27 of 5, and mean max-cluster size was 3.36 agents.</td>
-<td>Problem 2 was real and measurable. Attention mitigated the issue in some signals, but did not eliminate team clustering.</td>
-</tr>
-<tr>
-<td>Episode dynamics</td>
-<td>Nearest-objective coverage improved from 0.356 early, to 0.485 mid, to 0.521 late in the episode.</td>
-<td>Short evaluations need direct behavioural metrics such as coverage and cluster size; win rate alone is too noisy for diagnosing coordination.</td>
-</tr>
-</tbody>
-</table>
-</div>
-<p>The most important conclusion from the additional experiment is scope: Self-Attention improved the observation encoder's ability to represent formations such as clustering, spreading, and converging threats. It should be described as relationship-aware encoding for role-specific policies, not as attention alone producing perfect cooperation or spontaneous role emergence.</p>
-<hr class="project-divider" />
 <h3>Overview</h3>
 <p>This project involved designing and implementing a Dynamic EQS plugin that automatically optimizes the EQS (Environment Query System) weights of UE5 agents through reinforcement learning, validated in a 5v5 team-based capture point environment using MAPPO. The result is a hybrid AI system in which the EQS handles agent spatial navigation and movement, while the reinforcement learning model is responsible for determining optimal positioning.</p>
 <p>To address unstable cooperation signals, the policy architecture was changed so that agents could read entity relationships before producing EQS weights. The final claim is intentionally narrow: role-specific policies and rewards shaped the roles, while Self-Attention and Cross-Attention improved how each role interpreted allies, enemies, and objectives.</p>
 <p>The entire system was built around a RL-EQS integration middleware layer on top of Schola (gRPC), abstracted as a plugin for reusability across other UE5 projects. The full pipeline — from system design through to AWS-based parallel training infrastructure — was implemented end-to-end by a single developer.</figure>
 </div>
+<hr class="project-divider" />
+<h3>Key Results</h3>
+<style>
+.results-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    margin: 24px 0;
+}
+.result-card {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+.result-card:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+.result-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.result-card-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--color-fg);
+    margin: 0;
+}
+.result-card-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 9999px;
+    white-space: nowrap;
+}
+.badge-env { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
+.badge-curriculum { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.2); }
+.badge-algo { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2); }
+.badge-system { background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2); }
+.badge-analysis { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+.badge-infra { background: rgba(107, 114, 128, 0.1); color: #6b7280; border: 1px solid rgba(107, 114, 128, 0.2); }
+
+.result-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.result-section {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.result-section-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-fg-muted);
+}
+.result-content-text {
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--color-fg-secondary);
+    margin: 0;
+}
+.result-learned-box {
+    border-left: 3px solid #3b82f6;
+    padding: 6px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 4px;
+}
+.result-learned-box.env { border-left-color: #10b981; }
+.result-learned-box.curriculum { border-left-color: #8b5cf6; }
+.result-learned-box.algo { border-left-color: #3b82f6; }
+.result-learned-box.system { border-left-color: #f59e0b; }
+.result-learned-box.analysis { border-left-color: #ef4444; }
+.result-learned-box.infra { border-left-color: #6b7280; }
+
+.learned-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-fg-muted);
+}
+.learned-desc {
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--color-fg-secondary);
+    margin: 0;
+}
+</style>
+
+<div class="results-grid">
+  <!-- Card 1 -->
+  <div class="result-card">
+    <div class="result-card-header">
+      <h4 class="result-card-title">Schola-based RL Environment</h4>
+      <span class="result-card-badge badge-env">Environment</span>
+    </div>
+    <div class="result-card-body">
+      <div class="result-section">
+        <span class="result-section-label">Measured Result</span>
+        <p class="result-content-text">Implemented a reusable RL-EQS middleware layer between Ray RLlib and Schola (a gRPC-based RL plugin for Unreal Engine 5), and had a bug-fixing PR merged into Schola's main branch / v2.1.1.</p>
+      </div>
+      <div class="result-learned-box env">
+        <span class="learned-title">What I Learned</span>
+        <p class="learned-desc">Learned that connecting Unreal environments to an RL training loop requires explicit management of not only actions, observations, and rewards, but also agent-specific termination states as part of the step contract.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 2 -->
+  <div class="result-card">
+    <div class="result-card-header">
+      <h4 class="result-card-title">Curriculum Learning</h4>
+      <span class="result-card-badge badge-curriculum">Training Method</span>
+    </div>
+    <div class="result-card-body">
+      <div class="result-section">
+        <span class="result-section-label">Measured Result</span>
+        <p class="result-content-text">Structured Scripted AI into a 3-tier difficulty system (Basic, Standard, Aggressive) with a promotion mechanism based on 25% and 40% win-rate thresholds. Successfully raised the win rate against Scripted AI from 0% to approximately 70% after 2.5M timesteps of training.</p>
+      </div>
+      <div class="result-learned-box curriculum">
+        <span class="learned-title">What I Learned</span>
+        <p class="learned-desc">Confirmed that introducing difficult opponents or self-play too early destabilizes training signals; a curriculum that gradually increases difficulty is essential for learning game rules and stabilizing policies.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 3 -->
+  <div class="result-card">
+    <div class="result-card-header">
+      <h4 class="result-card-title">MAPPO Multi-Agent Training</h4>
+      <span class="result-card-badge badge-algo">Algorithm</span>
+    </div>
+    <div class="result-card-body">
+      <div class="result-section">
+        <span class="result-section-label">Measured Result</span>
+        <p class="result-content-text">Configured a MAPPO training environment utilizing independent actors for each role (Strike, Vanguard, Support) alongside a shared centralized critic, and implemented a checkpoint win-rate comparison script.</p>
+      </div>
+      <div class="result-learned-box algo">
+        <span class="learned-title">What I Learned</span>
+        <p class="learned-desc">Learned that in multi-agent environments, cooperation cannot be easily explained by a single reward scalar; tracking training quality requires co-designing role-specific policies, a centralized critic, and checkpoint evaluation loops.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 4 -->
+  <div class="result-card">
+    <div class="result-card-header">
+      <h4 class="result-card-title">GAS-based Combat Environment</h4>
+      <span class="result-card-badge badge-system">System Integration</span>
+    </div>
+    <div class="result-card-body">
+      <div class="result-section">
+        <span class="result-section-label">Measured Result</span>
+        <p class="result-content-text">Configured Strike's ranged combat, Vanguard's melee engagement, and Support's healing behaviors based on the UE5 Gameplay Ability System (GAS), implementing a combat-RL reward pipeline that calculates approach, capture, and combat rewards at each step.</p>
+      </div>
+      <div class="result-learned-box system">
+        <span class="learned-title">What I Learned</span>
+        <p class="learned-desc">Learned that RL rewards should be connected to the damage, healing, position, and role constraints of the actual combat system rather than being designed through abstract formulas alone to align agent behaviors with gameplay intent.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 5 -->
+  <div class="result-card">
+    <div class="result-card-header">
+      <h4 class="result-card-title">Attention-based Relation Recognition</h4>
+      <span class="result-card-badge badge-analysis">Empirical Analysis</span>
+    </div>
+    <div class="result-card-body">
+      <div class="result-section">
+        <span class="result-section-label">Measured Result</span>
+        <p class="result-content-text">Improved agents to recognize complex spatial context between entities (such as formations, density, and flanking patterns), rather than relying on isolated individual entity information. Empirical validation confirmed that each role (tanks, dealers, etc.) sensitively detects spatial relationships critical to their specific mission.</p>
+      </div>
+      <div class="result-learned-box analysis">
+        <span class="learned-title">What I Learned</span>
+        <p class="learned-desc">Learned that attention mechanisms are not magic tools that automatically complete cooperative behaviors; they should be designed as 'encoders' that help agent policies correctly interpret surrounding spatial contexts (allies, enemies, objectives), while keeping their limits in mind.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 6 -->
+  <div class="result-card">
+    <div class="result-card-header">
+      <h4 class="result-card-title">AWS Cloud Distributed Training</h4>
+      <span class="result-card-badge badge-infra">Infrastructure</span>
+    </div>
+    <div class="result-card-body">
+      <div class="result-section">
+        <span class="result-section-label">Measured Result</span>
+        <p class="result-content-text">Established a cloud parallel training pipeline by packaging the UE5 Linux build to S3 and running Docker-based training scripts on EC2 instances.</p>
+      </div>
+      <div class="result-learned-box infra">
+        <span class="learned-title">What I Learned</span>
+        <p class="learned-desc">Learned that since Unreal-based RL lacks sufficient iteration speed on a single local instance, an infrastructure design covering build deployment, checkpoint synchronization, and remote evaluation is crucial.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<p>The most important conclusion from the additional experiment is scope: Self-Attention improved the observation encoder's ability to represent formations such as clustering, spreading, and converging threats. It should be described as relationship-aware encoding for role-specific policies, not as attention alone producing perfect cooperation or spontaneous role emergence.</p>
 <hr class="project-divider" />
 <h3>System Architecture</h3>
 <figure class="project-media">
