@@ -188,7 +188,7 @@
     <div class="result-card-body">
       <div class="result-section">
         <span class="result-section-label">주요 내용</span>
-        <p class="result-content-text">에이전트가 단순 개별 개체 정보에 그치지 않고, '아군이 특정 거점에 얼마나 모여 있는지', '적이 어디로 집결하는지' 등 엔티티 간의 복합적인 공간 맥락(대형, 밀집도, 협공 패턴)을 인식하도록 개선했습니다. 검증 결과 각 역할군(탱커, 딜러 등)이 자신의 임무에 핵심적인 공간 관계를 민감하게 파악함을 확인했습니다.</p>
+        <p class="result-content-text">에이전트가 단순 개별 개체 정보에 그치지 않고, '아군이 특정 거점에 얼마나 모여 있는지', '적이 어디로 집결하는지' 등 엔티티 간의 복합적인 공간 맥락(대형, 밀집도, 협공 패턴)을 인식하도록 개선했습니다. 동일 조건(66 iteration)에서 Self-Attention 유/무 두 모델을 학습해 비교한 A/B 실험으로 효과를 정량화했습니다. Self-Attention 적용 시 objective coverage가 <strong>0.318 → 0.454 (+43%)</strong>로 상승했고, '팀 전원이 한 거점에 몰리는' 실패 패턴이 전체 스텝의 <strong>46.5% → 16%</strong>로 감소했으며, 스크립트 AI 상대 승률이 <strong>0.125 → 0.292(2.3배)</strong>로 향상되었습니다(에피소드 보상은 거의 동일).</p>
       </div>
       <div class="result-learned-box analysis">
         <span class="learned-title">학습한 점</span>
@@ -1010,7 +1010,7 @@ a_ctx, _ = self.ally_attn(q, a_enc, a_enc,
 </table>
 </div>
 <p>이 문제는 단순한 설계 가설이 아니라 실제 Unreal 평가 로그에서 확인되었습니다. 최종 Self+Cross Attention 체크포인트를 24 episode, 15,715 team-step 동안 평가한 결과, 실현 위치 기준 objective coverage는 <strong>0.454</strong>, 평균 unique objective는 <strong>2.27 / 5</strong>, 가장 붐비는 거점의 평균 군집 크기는 <strong>3.36명</strong>이었습니다. 5명과 5개 거점 구조에서는 “두 명 이상이 같은 거점을 선택했는가”라는 이진 duplicate rate가 거의 항상 1.0으로 포화되어, coverage와 max-cluster size를 핵심 지표로 사용했습니다.</p>
-<p>실증 결과는 <strong>"결과: Attention 패턴 실증 분석"</strong> 에서 확인 할 수 있습니다.</p>
+<p>실증 결과는 <strong>"결과: Attention 패턴 실증 분석"</strong> 에서 확인 할 수 있습니다. 특히 동일 조건(66 iteration)에서 Self-Attention을 끈 모델을 추가로 학습해 비교한 통제된 A/B ablation으로 기여를 직접 확인했습니다: Self-Attention 적용 시 objective coverage가 <strong>0.318 → 0.454 (+43%)</strong>, '전원이 한 거점에 몰리는' 실패 패턴이 <strong>46.5% → 16%</strong>로 감소했고, 승률은 <strong>0.125 → 0.292(2.3배)</strong>로 향상되었습니다(보상은 거의 동일)—인코더 개선이 관계 인식 자체를 넘어 팀 분산을 실제로 개선했음을 보여줍니다.</p>
 <hr class="project-divider" />
 <h4>Problem 3: 스텝 속도와 에이전트 이동 간의 타이밍 불일치</h4>
 
@@ -1189,7 +1189,7 @@ float StepInterval = 0.3f;  // 초 단위, 기본 2Hz</code>
 </div>
 <hr class="project-divider" />
 <h4>Attention 패턴 실증 분석</h4>
-<p>실험은 두 단계로 수행했습니다. Stage 1에서는 Python synthetic probe로 Self-Attention → Cross-Attention 인코더가 대형 변화에 반응하는지 확인했고, Stage 2에서는 Unreal short evaluation으로 실제 팀 배치가 거점에 어떻게 분포되는지 측정했습니다.</p>
+<p>검증은 세 단계로 수행했습니다. Stage 1에서는 Python synthetic probe로 Self-Attention → Cross-Attention 인코더가 대형 변화에 반응하는지 확인했고, Stage 2에서는 Unreal short evaluation으로 실제 팀 배치가 거점에 어떻게 분포되는지 측정했습니다. Stage 3에서는 Self-Attention을 <em>제거한</em> 모델을 동일 조건으로 학습한 뒤 같은 Unreal 평가를 다시 수행하여, Self-Attention의 기여만 분리해내는 통제된 A/B ablation으로 만들었습니다.</p>
 <div class="project-table-wrap">
 <table>
 <thead>
@@ -1223,7 +1223,7 @@ float StepInterval = 0.3f;  // 초 단위, 기본 2Hz</code>
 <tr>
 <td>Unreal 행동 평가</td>
 <td>coverage 0.454, 평균 unique objective 2.27/5, 평균 max-cluster size 3.36명</td>
-<td>관계 인식은 중복 배치를 완화하는 근거를 제공하지만, 실제 플레이의 군집 문제는 아직 남아 있음.</td>
+<td>실제 플레이에 Problem 2가 여전히 보이지만, 아래 학습된 A/B ablation에서 Self-Attention이 무(無)-attention 기준선 대비 군집을 상당히 줄임을 확인.</td>
 </tr>
 </tbody>
 </table>
@@ -1240,7 +1240,75 @@ float StepInterval = 0.3f;  // 초 단위, 기본 2Hz</code>
 <img src="/images/project1/unreal_eval_clustering_profile.png" alt="Unreal objective clustering profile" loading="lazy" />
 <figcaption>Fig 27. Objective coverage 및 clustering profile</figcaption>
 </figure>
-<p>따라서 이 결과는 “attention만으로 역할 분화와 완전한 협동이 발생했다”는 주장이 아니라, “역할별 정책이 행동을 결정하기 전에 주변 엔티티 간 공간 관계를 읽을 수 있도록 관측 인코더가 개선되었다”는 근거로 해석해야 합니다.</p>
+<hr class="project-divider" />
+<h4>Stage 3 — 학습된 A/B Ablation: Self-Attention 유 vs 무</h4>
+<p>"attention이 도움이 된다"를 측정 가능한 수치로 만들기 위해, Self-Attention을 끈 모델(<code>USE_SELF_ATTN=0</code>, Cross-Attention 전용 변형)을 <strong>동일 조건</strong>—같은 맵, 같은 스크립트 AI 난이도, 같은 MAPPO 설정, 그리고 최종 Self+Cross 모델과 동일한 <strong>66 iteration / 약 136만 agent-step</strong>(최종 에피소드 보상 1144 vs 1072)—으로 학습했습니다. 이후 두 체크포인트를 동일한 24-episode·8-environment 프로토콜로 평가했습니다. 유일한 차이가 Self-Attention 블록이므로, 아래 격차는 그 기여로 직접 귀속됩니다.</p>
+<div class="project-table-wrap">
+<table>
+<thead>
+<tr>
+<th>지표 (실현 위치/nearest 기준)</th>
+<th>Cross-only (Self-Attn 없음)</th>
+<th>Self + Cross</th>
+<th>Δ (Self-Attention 효과)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Objective coverage</td>
+<td>0.318</td>
+<td><strong>0.454</strong></td>
+<td><strong>+0.136 (+43%)</strong></td>
+</tr>
+<tr>
+<td>평균 unique objective (5개 중)</td>
+<td>1.59</td>
+<td><strong>2.27</strong></td>
+<td><strong>+0.68</strong></td>
+</tr>
+<tr>
+<td>최대 군집 크기 (낮을수록 좋음)</td>
+<td>4.10</td>
+<td><strong>3.36</strong></td>
+<td><strong>−0.74명</strong></td>
+</tr>
+<tr>
+<td>전원(5명)이 한 거점에 몰린 스텝 비율</td>
+<td>46.5%</td>
+<td><strong>16.0%</strong></td>
+<td><strong>−30.5%p</strong></td>
+</tr>
+<tr>
+<td>coverage 추이 (초반 → 후반)</td>
+<td>0.28 → 0.32 (정체)</td>
+<td>0.36 → 0.52 (상승)</td>
+<td>attention이 분산을 유도</td>
+</tr>
+<tr>
+<td>스크립트 AI 상대 승률</td>
+<td>0.125 (3/24)</td>
+<td><strong>0.292 (7/24)</strong></td>
+<td><strong>+0.167 (2.3배)</strong></td>
+</tr>
+<tr>
+<td>평균 에피소드 보상</td>
+<td>152.7</td>
+<td>148.9</td>
+<td>−3.8 (≈ 동일)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<figure class="project-media">
+<img src="/images/project1/attn_ab_self_attn_effect.png" alt="학습된 A/B ablation: Cross-only vs Self+Cross — Self-Attention 효과" loading="lazy" />
+<figcaption>Fig 28. 학습된 A/B ablation (둘 다 66 iteration, 24-episode 평가): Self-Attention 추가 시 objective coverage 상승, 군집 감소, 승률 2배 이상.</figcaption>
+</figure>
+<figure class="project-media">
+<img src="/images/project1/attn_ab_clustering_comparison.png" alt="A/B 군집 비교: unique-objective 분포 및 에피소드 진행에 따른 coverage" loading="lazy" />
+<figcaption>Fig 29. (왼쪽) Self-Attention이 없으면 팀 전원(5명)이 한 거점에 몰린 스텝이 46.5%에 달하지만, Self-Attention 적용 시 16%로 감소하고 분포가 3~4개의 서로 다른 거점 쪽으로 이동합니다. (오른쪽) Cross-only는 에피소드 내내 coverage가 ~0.30으로 정체되는 반면, Self+Cross는 점진적으로 분산합니다(0.36 → 0.52).</figcaption>
+</figure>
+<p>결과는 명확하고 한 방향입니다. Intra-set Self-Attention을 추가하면 objective coverage가 약 43% 상승하고, 최악의 군집이 약 0.7명 감소하며, '팀 전원이 한 거점에 수렴'하는 치명적 패턴이 전체 스텝의 46.5%에서 16%로 급감하고, 승률은 2배 이상으로 오릅니다—에피소드 보상은 사실상 동일합니다. 또한 Cross-only 팀은 에피소드 내내 뭉쳐 있는(coverage ~0.3 정체) 반면, Self+Cross 팀은 점진적으로 분산합니다(0.36 → 0.52). 보상은 동일한데 coverage·승률이 크게 향상되었다는 점은, Self-Attention이 단순히 보상 크기를 키운 것이 아니라 <strong>팀이 거점에 분산되는 방식(협동)</strong>을 개선했음을 의미합니다—바로 Problem 2가 목표한 바입니다.</p>
+<p>해석은 여전히 적정 수준으로 제한합니다. 역할 자체는 역할별 정책과 보상 함수로 형성된 것이며, 이 A/B는 Self-Attention을 <em>관측 인코더</em> 개선—각 역할이 행동(EQS 가중치) 결정 전에 아군/적/거점 간 공간 관계를 읽도록 돕는 요소—으로 분리해 보여줍니다. 현재 근거는 모델당 단일 평가 세션(오차 막대가 아닌 점 추정치)이며, 다중 시드 실행이 남은 후속 과제입니다. "attention만으로 완전한 협동이나 자발적 역할 분화가 발생했다"고 해석해서는 안 됩니다.</p>
 <hr class="project-divider" />
 <h4>기존 Attention weight 시각 분석</h4>
 <p>학습된 체크포인트에서 Attention weight를 직접 추출하여 파이프라인 전체(Self-Attention → Cross-Attention)가 설계 의도대로 동작하는지 검증했습니다.</p>

@@ -188,7 +188,7 @@
     <div class="result-card-body">
       <div class="result-section">
         <span class="result-section-label">Measured Result</span>
-        <p class="result-content-text">Improved agents to recognize complex spatial context between entities (such as formations, density, and flanking patterns), rather than relying on isolated individual entity information. Empirical validation confirmed that each role (tanks, dealers, etc.) sensitively detects spatial relationships critical to their specific mission.</p>
+        <p class="result-content-text">Improved agents to recognize complex spatial context between entities (such as formations, density, and flanking patterns), rather than relying on isolated individual entity information. A controlled A/B ablation—two models trained identically for 66 iterations, one with Self-Attention and one without—made the effect quantitative: adding Self-Attention raised objective coverage <strong>0.318 → 0.454 (+43%)</strong>, cut the "whole team converges on one objective" failure mode from <strong>46.5% → 16%</strong> of steps, and more than <strong>doubled the win rate (0.125 → 0.292)</strong> against the scripted AI, at near-equal episode reward.</p>
       </div>
       <div class="result-learned-box analysis">
         <span class="learned-title">What I Learned</span>
@@ -1093,7 +1093,7 @@ a_ctx, _ = self.ally_attn(q, a_enc, a_enc,
 </tbody>
 </table>
 </div>
-<p>The empirical results are summarized in <strong>"Results: Empirical Analysis of Attention Patterns"</strong>. The key finding is limited but useful: Self-Attention produced measurable formation sensitivity and a Strike-specific duplicate-avoidance proxy gain, while the Unreal evaluation showed that deployed behaviour still retained substantial clustering.</p>
+<p>The empirical results are summarized in <strong>"Results: Empirical Analysis of Attention Patterns"</strong>. A controlled A/B ablation (a second model trained identically for 66 iterations with Self-Attention disabled) confirmed the contribution directly: Self-Attention raised objective coverage <strong>0.318 → 0.454 (+43%)</strong>, reduced the "all five agents on one objective" failure mode from <strong>46.5% → 16%</strong> of steps, and more than <strong>doubled the win rate (0.125 → 0.292)</strong> at near-equal reward—evidence that the encoder change improves team distribution rather than just relationship reading in isolation.</p>
 <hr class="project-divider" />
 <h4>Problem 3: Timing Mismatch Between Step Speed and Agent Movement</h4>
 
@@ -1267,7 +1267,7 @@ float StepInterval = 0.3f;  // Seconds, Default 2Hz</code>
 </ul>
 <hr class="project-divider" />
 <h4>Empirical Analysis of Attention Patterns</h4>
-<p>I re-ran the attention validation as a two-stage experiment. Stage 1 used synthetic Python probes to check whether the trained Self-Attention -> Cross-Attention encoder reacts to controlled formation changes. Stage 2 ran a short Unreal evaluation to measure whether the deployed model actually distributes the team across objectives.</p>
+<p>I validated the attention in three stages. Stage 1 used synthetic Python probes to check whether the trained Self-Attention -> Cross-Attention encoder reacts to controlled formation changes. Stage 2 ran a short Unreal evaluation to measure whether the deployed model actually distributes the team across objectives. Stage 3 then trained a second model <em>without</em> Self-Attention under identical conditions and re-ran the same Unreal evaluation, turning the analysis into a controlled A/B ablation that isolates the contribution of Self-Attention.</p>
 <div class="project-table-wrap">
 <table>
 <thead>
@@ -1301,7 +1301,7 @@ float StepInterval = 0.3f;  // Seconds, Default 2Hz</code>
 <tr>
 <td>Unreal behavioural evaluation</td>
 <td>24 episodes, 15,715 team-steps. Nearest-objective coverage = <strong>0.454</strong>, mean unique objectives = <strong>2.27 / 5</strong>, mean max-cluster size = <strong>3.36 agents</strong>.</td>
-<td>Problem 2 is still visible in deployed play. Attention mitigates relationship reading but does not fully solve team clustering.</td>
+<td>Problem 2 is still visible in deployed play, but the trained A/B ablation below shows attention substantially reduces it versus a no-attention baseline.</td>
 </tr>
 <tr>
 <td>Episode progression</td>
@@ -1323,7 +1323,75 @@ float StepInterval = 0.3f;  // Seconds, Default 2Hz</code>
 <img src="/images/project1/unreal_eval_clustering_profile.png" alt="Unreal objective clustering profile" loading="lazy" />
 <figcaption>Fig 27. Objective coverage and clustering profile</figcaption>
 </figure>
-<p>The interpretation is intentionally limited. The roles themselves were shaped by role-specific policies and reward functions. Attention improved the observation encoder so each role could read spatial relationships among allies, enemies, and objectives before selecting EQS weights. It should not be described as attention alone creating perfect cooperation or spontaneous role emergence.</p>
+<hr class="project-divider" />
+<h4>Stage 3 — Trained A/B Ablation: Self-Attention On vs Off</h4>
+<p>To turn "attention helps" into a measured number, I trained a second model with Self-Attention disabled (<code>USE_SELF_ATTN=0</code>, the Cross-Attention-only variant) under <strong>identical conditions</strong>—same map, same scripted-AI tier, same MAPPO configuration, and the same <strong>66 training iterations / ~1.36M agent-steps</strong> as the final Self+Cross model (final episode reward 1144 vs 1072). Both checkpoints were then evaluated with the same 24-episode, 8-environment protocol. Because the only difference is the Self-Attention block, the gap below is directly attributable to it.</p>
+<div class="project-table-wrap">
+<table>
+<thead>
+<tr>
+<th>Metric (nearest-objective basis)</th>
+<th>Cross-only (no Self-Attn)</th>
+<th>Self + Cross</th>
+<th>Δ (Self-Attention effect)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Objective coverage</td>
+<td>0.318</td>
+<td><strong>0.454</strong></td>
+<td><strong>+0.136 (+43%)</strong></td>
+</tr>
+<tr>
+<td>Mean unique objectives (of 5)</td>
+<td>1.59</td>
+<td><strong>2.27</strong></td>
+<td><strong>+0.68</strong></td>
+</tr>
+<tr>
+<td>Max-cluster size (lower = less pile-up)</td>
+<td>4.10</td>
+<td><strong>3.36</strong></td>
+<td><strong>−0.74 agents</strong></td>
+</tr>
+<tr>
+<td>% of steps with all 5 agents on one objective</td>
+<td>46.5%</td>
+<td><strong>16.0%</strong></td>
+<td><strong>−30.5 pp</strong></td>
+</tr>
+<tr>
+<td>Coverage trend (early → late episode)</td>
+<td>0.28 → 0.32 (flat)</td>
+<td>0.36 → 0.52 (rising)</td>
+<td>attention enables spreading</td>
+</tr>
+<tr>
+<td>Win rate vs scripted AI</td>
+<td>0.125 (3/24)</td>
+<td><strong>0.292 (7/24)</strong></td>
+<td><strong>+0.167 (2.3×)</strong></td>
+</tr>
+<tr>
+<td>Mean episode reward</td>
+<td>152.7</td>
+<td>148.9</td>
+<td>−3.8 (≈ equal)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<figure class="project-media">
+<img src="/images/project1/attn_ab_self_attn_effect.png" alt="Trained A/B ablation: Cross-only vs Self+Cross — Self-Attention effect" loading="lazy" />
+<figcaption>Fig 28. Trained A/B ablation (both 66 iters, 24-episode evaluation): adding Self-Attention raises objective coverage, reduces pile-up, and more than doubles win rate.</figcaption>
+</figure>
+<figure class="project-media">
+<img src="/images/project1/attn_ab_clustering_comparison.png" alt="A/B clustering comparison: unique-objective distribution and coverage over episode progress" loading="lazy" />
+<figcaption>Fig 29. (left) Without Self-Attention the team sits with all 5 agents on a single objective 46.5% of the time; Self-Attention cuts this to 16% and shifts mass toward 3–4 distinct objectives. (right) Cross-only coverage stays flat (~0.30) across the episode, while Self+Cross progressively spreads (0.36 → 0.52).</figcaption>
+</figure>
+<p>The result is clean and one-directional: adding intra-set Self-Attention raises objective coverage by ~43%, cuts the worst pile-up by ~0.7 agents, slashes the catastrophic "whole team converges on a single objective" mode from 46.5% to 16% of steps, and more than doubles the win rate—while episode reward stays essentially equal. The Cross-only team also stays bunched for the whole episode (coverage flat ~0.3), whereas the Self+Cross team progressively spreads (0.36 → 0.52). Reward parity alongside large coverage and win-rate gains indicates Self-Attention improved <strong>how the team distributes across objectives (coordination)</strong> rather than simply inflating reward—precisely the Problem 2 claim.</p>
+<p>The interpretation remains appropriately scoped. The roles themselves were shaped by role-specific policies and reward functions; the A/B isolates Self-Attention as an <em>observation-encoder</em> improvement that lets each role read spatial relationships among allies, enemies, and objectives before selecting EQS weights. The current evidence is a single evaluation session per model (point estimates, not error bars); multi-seed runs are the remaining follow-up. It should not be described as attention alone creating perfect cooperation or spontaneous role emergence.</p>
 <hr class="project-divider" />
 <h4>Legacy Visual Breakdown of Attention Weights</h4>
 <p>We verified whether the entire pipeline (Self-Attention → Cross-Attention) operates according to the design intent by directly extracting attention weights from the trained checkpoints.</p>
