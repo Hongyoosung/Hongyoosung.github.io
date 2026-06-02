@@ -579,13 +579,21 @@ Python / RLlib side:
 
 Initially, I attempted to induce cooperation by designing a MAPPO-based team reward structure. However, defining the synergy between three distinct roles—Strike, Support, and Vanguard—as a single scalar reward proved ambiguous. This led to frequent reward hacking without producing meaningful cooperative behavior.
 
-Shifting away from enforcing cooperation through rewards, I pivoted to an architectural approach that allows agents to naturally learn inter-agent relationships. I identified that the root cause of the agents' inability to recognize spatial patterns—such as 'two enemies gathering at a specific point'—lay in the network structure itself. Specifically, the recurring inefficiency of agents clustering at already captured points was diagnosed as an architectural limitation rather than a flaw in the reward function.
+Rather than directly forcing cooperation through an additional reward term, I shifted toward improving how the policy reads its observations. First, I used Cross-Attention so that the Self Token (the current agent state) could aggregate action-relevant information from ally, enemy, and point tokens. These attention weights are not rewards; they are the policy's information-selection result immediately before producing the 7-dimensional EQS weight action. In other words, Cross-Attention could express "which entity matters to me right now," but it could not sufficiently express spatial patterns formed between entities, such as "two allies are already around the same point" or "two enemies are converging on the same point."
+
+Because of this limitation, even with a penalty for loitering on already captured friendly zones and a reward for approaching non-friendly objectives, the policy could not reliably distinguish that multiple allies were already clustered around the same point. As a result, each agent could still judge the same point as individually important and produce duplicated assignments.
 
 ---
 
 <font size="4">**Cause**</font>
 
-In the 218-dim observation vector, each entity slot is embedded independently via a linear encoder (`nn.Linear`). While the Self Token subsequently queries the entity set via Cross-Attention, the single-query nature means **relative relationships between entities** (density, flanking patterns, overlap) are not reflected in the Attention weights. The Cross-Attention output is merely a weighted sum of "how important each entity is to Self," lacking information on "how entities relate to one another."
+In the 218-dim observation vector, each entity slot is first embedded independently through a linear encoder (`nn.Linear`). When a single Self Token then queries the entity set through Cross-Attention, the attention weights represent "how useful each entity is from the Self perspective." However, because the Key/Value entity tokens have not yet referenced one another, **relative relationships between entities** (density, flanking patterns, overlap around the same point) are difficult to reflect directly in Cross-Attention weights. Cross-Attention can selectively aggregate the entity representations it receives, but it does not create relational representations between those entities by itself.
+
+---
+
+<font size="4">**Goal**</font>
+
+Before Cross-Attention performs "Self-centric information selection," transform each entity token into a relation-aware representation by allowing it to reference other tokens in the same group. This lets the policy use spatial context such as duplicated assignment, clustering, and flanking during action selection without making the reward function more complex.
 
 ---
 
@@ -593,7 +601,7 @@ In the 218-dim observation vector, each entity slot is embedded independently vi
 
 **Intra-Set Self-Attention (Zambaldi et al., 2018)**
 
-I inserted a **Self-Attention layer** for each entity group (Ally / Enemy / Point) prior to Cross-Attention, allowing entities to reference each other. Entity tokens processed through Self-Attention now carry contextual information (e.g., "There are two allies near the same point as me"). The Self Token then aggregates this **contextualized** entity information during Cross-Attention.
+I inserted a **Self-Attention layer** for each entity group (Ally / Enemy / Point) prior to Cross-Attention, allowing entities to reference one another. Entity tokens processed through Self-Attention can carry contextual information such as "this ally is already near the same point as another ally" or "these enemies are converging toward the same point." The Self Token then aggregates these **contextualized** entity representations during Cross-Attention, so the final EQS weights can reflect not only individual entity importance but also team placement and spatial patterns.
 
 
 

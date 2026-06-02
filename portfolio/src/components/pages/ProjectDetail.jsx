@@ -74,6 +74,11 @@ const getTocHeadings = (root, project) => {
     return allHeadings.filter((heading) => !shouldHideProject1Heading(heading, allHeadings, project))
 }
 
+const getAnchorOffset = () => {
+    const header = document.querySelector('header[role="banner"]')
+    return (header?.offsetHeight || 56) + 20
+}
+
 const removeMathDelimiters = (element) => {
     const previous = element.previousSibling
     const next = element.nextSibling
@@ -326,10 +331,11 @@ function ProjectDetail({ project, lang, navigate }) {
 
         const updateActiveHeading = () => {
             const currentHeadings = getTocHeadings(root, project)
+            const activationOffset = getAnchorOffset() + 28
             const current = nextItems.reduce((active, item) => {
                 const heading = currentHeadings[item.index]
                 if (!heading) return active
-                return heading.getBoundingClientRect().top <= 150 ? item.id : active
+                return heading.getBoundingClientRect().top <= activationOffset ? item.id : active
             }, nextItems[0].id)
 
             setActiveId(current)
@@ -389,7 +395,7 @@ function ProjectDetail({ project, lang, navigate }) {
         const heading = item ? getTocHeadings(contentRef.current, project)[item.index] : null
         if (!heading) return
 
-        const targetTop = heading.getBoundingClientRect().top + window.scrollY - 128
+        const targetTop = heading.getBoundingClientRect().top + window.scrollY - getAnchorOffset()
         window.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' })
         window.history.replaceState({}, '', `${window.location.pathname}#${id}`)
         setActiveId(id)

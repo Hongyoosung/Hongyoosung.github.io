@@ -5,6 +5,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!content || !tocList) return;
 
+    const getAnchorOffset = () => {
+        const stickyProjectNav = document.querySelector('.project-nav');
+        const siteHeader = document.querySelector('.header');
+        return (stickyProjectNav?.offsetHeight || siteHeader?.offsetHeight || 56) + 20;
+    };
+
     const normalizeHeading = (text) => text
         .toLowerCase()
         .replace(/\s+/g, '')
@@ -94,7 +100,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         a.addEventListener('click', (e) => {
             e.preventDefault();
-            heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            const targetTop = heading.getBoundingClientRect().top + window.scrollY - getAnchorOffset();
+            window.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
             history.pushState(null, null, `#${heading.id}`);
         });
     });
