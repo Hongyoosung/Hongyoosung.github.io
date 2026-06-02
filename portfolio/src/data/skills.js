@@ -48,7 +48,67 @@ export const skills = [
 export const credentials = [
     {
         title: {
-            ko: '수상 내역',
+            ko: '연구활동',
+            en: 'Research Activities',
+        },
+        items: [
+            {
+                name: {
+                    ko: '논문 게재 및 발표',
+                    en: 'Published and Presented Papers',
+                },
+                date: 'May 2022 - Present',
+                details: {
+                    ko: [
+                        '"Learned Coordination Conventions in Cooperative MARL: Measuring the Translation Gap Between Theory-Informed Roles and Learned Routing", NExT-Game 2026: NEw frontiers in GAME-Theoretic learning - ICML 2026 Workshop, 포스터 승인',
+                        '"One Policy, Infinite NPCs: Scalable Persona-Conditioned NPC Control via Shared Reinforcement Learning Policies", arxiv 등재',
+                        '"GOBT: A Synergistic Approach to Game AI Using Goal-Oriented and Utility-Based Planning in Behavior Trees", Journal of Multimedia Information System (JMIS), Vol. 4, Oct 2023',
+                        '"IoT 가상환경 플랫폼에서의 무결성 보장 시스템: Hyperledger Indy와 MQTT를 통하여", 한국스마트미디어학회, Vol. 4, Apr 2024',
+                        '"게임 에이전트 의사결정에서 대규모 언어모델(LLM)의 잠재력 평가", 2024 한국멀티미디어학회 춘계학술발표대회',
+                        '"신뢰할 수 있는 탈중앙 메타버스를 위한 IoT 통신기술 개발", 2023 한국디지털콘텐츠학회 추계종합학술대회',
+                        '"탈중앙 디지털 생태계를 위한 디지털 신원확인 기술에 관한 연구", 2023 한국디지털콘텐츠학회 추계종합학술대회',
+                        '"메타버스와 IoT 디바이스 연동 기술 개발", 2023 한국통신학회 하계종합학술발표회',
+                    ],
+                    en: [
+                        '"Learned Coordination Conventions in Cooperative MARL: Measuring the Translation Gap Between Theory-Informed Roles and Learned Routing", NExT-Game 2026: NEw frontiers in GAME-Theoretic learning - ICML 2026 Workshop, Poster Accepted',
+                        '"One Policy, Infinite NPCs: Scalable Persona-Conditioned NPC Control via Shared Reinforcement Learning Policies", arxiv Publication',
+                        '"GOBT: A Synergistic Approach to Game AI Using Goal-Oriented and Utility-Based Planning in Behavior Trees", Journal of Multimedia Information System (JMIS), Vol. 4, Oct 2023',
+                        '"Integrity Assurance System in an IoT Virtual Environment Platform: Through Hyperledger Indy and MQTT", Korea Smart Media Society, Vol. 4, Apr 2024',
+                        '"Evaluating the Potential of Large Language Models (LLMs) in Game Agent Decision-Making", 2024 Korea Multimedia Society Spring Conference',
+                        '"Development of IoT Communication Technology for a Trustworthy Decentralized Metaverse", 2023 Korea Digital Contents Society (DCS) Autumn Conference',
+                        '"A Study on Digital Identity Verification Technology for a Decentralized Digital Ecosystem", 2023 Korea Digital Contents Society (DCS) Autumn Conference',
+                        '"Development of Technology for Connecting the Metaverse and IoT Devices", 2023 Korea Institute of Communications and Information Sciences (KICS) Summer Conference',
+                    ],
+                },
+            },
+        ],
+    },
+    {
+        title: {
+            ko: '특허',
+            en: 'Patents',
+        },
+        items: [
+            {
+                name: {
+                    ko: '10-2025-012****',
+                    en: '10-2025-012****',
+                },
+                date: '',
+                details: {
+                    ko: [
+                        '생성형 AI 기반 질문유형 분류를 이용한 교사 교정지도 기술 훈련 방법 및 시스템 특허 출원',
+                    ],
+                    en: [
+                        'Patent application for a method and system for training teacher correction guidance skills using generative AI-based question type classification',
+                    ],
+                },
+            },
+        ],
+    },
+    {
+        title: {
+            ko: '수상',
             en: 'Awards',
         },
         items: [
@@ -196,39 +256,38 @@ export const credentials = [
     },
     {
         title: {
-            ko: '연구 및 학술 활동',
-            en: 'Research & Academic',
+            ko: '기술 기여',
+            en: 'Technical Contributions',
         },
         items: [
             {
                 name: {
-                    ko: '논문 게재 및 발표',
-                    en: 'Published and Presented Papers',
+                    ko: 'Open Source Contribution (AMD Schola)',
+                    en: 'Open Source Contribution (AMD Schola)',
                 },
-                date: 'May 2022 - Present',
+                link: 'https://github.com/GPUOpen-LibrariesAndSDKs/Schola/pull/2',
+                date: '',
                 details: {
                     ko: [
-                        '"Learned Coordination Conventions in Cooperative MARL: Measuring the Translation Gap Between Theory-Informed Roles and Learned Routing", NExT-Game 2026: NEw frontiers in GAME-Theoretic learning - ICML 2026 Workshop, 포스터 승인',
-                        '"One Policy, Infinite NPCs: Scalable Persona-Conditioned NPC Control via Shared Reinforcement Learning Policies", arxiv 등재',
-                        '"GOBT: A Synergistic Approach to Game AI Using Goal-Oriented and Utility-Based Planning in Behavior Trees", Journal of Multimedia Information System (JMIS), Vol. 4, Oct 2023',
-                        '"IoT 가상환경 플랫폼에서의 무결성 보장 시스템: Hyperledger Indy와 MQTT를 통하여", 한국스마트미디어학회, Vol. 4, Apr 2024',
-                        '"게임 에이전트 의사결정에서 대규모 언어모델(LLM)의 잠재력 평가", 2024 한국멀티미디어학회 춘계학술발표대회',
-                        '"신뢰할 수 있는 탈중앙 메타버스를 위한 IoT 통신기술 개발", 2023 한국디지털콘텐츠학회 추계종합학술대회',
-                        '"탈중앙 디지털 생태계를 위한 디지털 신원확인 기술에 관한 연구", 2023 한국디지털콘텐츠학회 추계종합학술대회',
-                        '"메타버스와 IoT 디바이스 연동 기술 개발", 2023 한국통신학회 하계종합학술발표회',
+                        'Unreal Engine 강화학습 플러그인',
+                        '종료 에이전트에 대한 RLlib-Schola 동기화 문제 식별 및 수정',
+                        '공식 리포지토리 Pull Request 머지 완료',
                     ],
                     en: [
-                        '"Learned Coordination Conventions in Cooperative MARL: Measuring the Translation Gap Between Theory-Informed Roles and Learned Routing", NExT-Game 2026: NEw frontiers in GAME-Theoretic learning - ICML 2026 Workshop, Poster Accepted',
-                        '"One Policy, Infinite NPCs: Scalable Persona-Conditioned NPC Control via Shared Reinforcement Learning Policies", arxiv Publication',
-                        '"GOBT: A Synergistic Approach to Game AI Using Goal-Oriented and Utility-Based Planning in Behavior Trees", Journal of Multimedia Information System (JMIS), Vol. 4, Oct 2023',
-                        '"Integrity Assurance System in an IoT Virtual Environment Platform: Through Hyperledger Indy and MQTT", Korea Smart Media Society, Vol. 4, Apr 2024',
-                        '"Evaluating the Potential of Large Language Models (LLMs) in Game Agent Decision-Making", 2024 Korea Multimedia Society Spring Conference',
-                        '"Development of IoT Communication Technology for a Trustworthy Decentralized Metaverse", 2023 Korea Digital Contents Society (DCS) Autumn Conference',
-                        '"A Study on Digital Identity Verification Technology for a Decentralized Digital Ecosystem", 2023 Korea Digital Contents Society (DCS) Autumn Conference',
-                        '"Development of Technology for Connecting the Metaverse and IoT Devices", 2023 Korea Institute of Communications and Information Sciences (KICS) Summer Conference',
+                        'Unreal Engine reinforcement learning plugin',
+                        'Identified and resolved RLlib-Schola synchronization issues for terminated agents',
+                        'Pull Request merged in the official repository',
                     ],
                 },
             },
+        ],
+    },
+    {
+        title: {
+            ko: '기타(학부연구생, 외부활동, 동아리)',
+            en: 'Others (Research, Extracurricular, Club)',
+        },
+        items: [
             {
                 name: {
                     ko: '학부연구생',
@@ -284,56 +343,7 @@ export const credentials = [
             },
         ],
     },
-    {
-        title: {
-            ko: '특허',
-            en: 'Patent',
-        },
-        items: [
-            {
-                name: {
-                    ko: '10-2025-0123053',
-                    en: '10-2025-0123053',
-                },
-                date: '',
-                details: {
-                    ko: [
-                        '생성형 AI 기반 질문유형 분류를 이용한 교사 교정지도 기술 훈련 방법 및 시스템 특허 출원',
-                    ],
-                    en: [
-                        'Patent application for a method and system for training teacher correction guidance skills using generative AI-based question type classification',
-                    ],
-                },
-            },
-        ],
-    },
-    {
-        title: {
-            ko: '기술적 성과',
-            en: 'Technical Achievements',
-        },
-        items: [
-            {
-                name: {
-                    ko: 'Open Source Contribution (AMD Schola)',
-                    en: 'Open Source Contribution (AMD Schola)',
-                },
-                date: '',
-                details: {
-                    ko: [
-                        'Unreal Engine 강화학습 플러그인',
-                        '종료 에이전트에 대한 RLlib-Schola 동기화 문제 식별 및 수정',
-                        '공식 리포지토리 Pull Request 머지 완료',
-                    ],
-                    en: [
-                        'Unreal Engine reinforcement learning plugin',
-                        'Identified and resolved RLlib-Schola synchronization issues for terminated agents',
-                        'Pull Request merged in the official repository',
-                    ],
-                },
-            },
-        ],
-    },
 ]
 
 export default skills
+

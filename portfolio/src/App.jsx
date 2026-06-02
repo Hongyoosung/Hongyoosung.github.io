@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTheme } from './hooks/useTheme'
 
 import Header from './components/layout/Header'
@@ -27,12 +27,24 @@ function App() {
     const [lang, setLang] = useState(() => normalizePath().startsWith('/ko') ? 'ko' : 'en')
     const [showTopButton, setShowTopButton] = useState(false)
 
+    const currentPathRef = useRef(path)
+
     useEffect(() => {
-        const onPopState = () => {
+        currentPathRef.current = path
+    }, [path])
+
+    useEffect(() => {
+        if ('scrollRestoration' in window.history) {
+            window.history.scrollRestoration = 'manual'
+        }
+        const onPopState = (e) => {
             const nextPath = normalizePath()
+            const prevPath = currentPathRef.current
             setPath(nextPath)
             setLang(nextPath.startsWith('/ko') ? 'ko' : 'en')
-            window.scrollTo({ top: 0, behavior: 'instant' })
+            if (nextPath !== prevPath) {
+                window.scrollTo({ top: 0, behavior: 'instant' })
+            }
         }
         window.addEventListener('popstate', onPopState)
         return () => window.removeEventListener('popstate', onPopState)

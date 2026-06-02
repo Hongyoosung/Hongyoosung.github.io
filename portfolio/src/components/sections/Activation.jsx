@@ -23,12 +23,12 @@ function Activation({ lang }) {
                     {lang === 'ko' ? '활동' : 'Activation'}
                 </h2>
 
-                <div className="credentials-list" aria-label={lang === 'ko' ? '수상, 자격증, 활동 내역' : 'Awards, certifications, and activities'}>
+                <div className="credentials-list" aria-label={lang === 'ko' ? '연구활동, 특허, 수상, 자격증, 기술 기여 및 기타 활동 내역' : 'Research, patents, awards, certifications, technical contributions, and other activities'}>
                     {credentials.map(({ title, items }, i) => (
                         <section key={title.en} className="credential-section" style={fx(120 + i * 80)}>
                             <p className="skills-category">{title[lang]}</p>
                             <div className="credential-items">
-                                {items.map(({ name, date, details, proofImage }) => (
+                                {items.map(({ name, date, details, proofImage, link }) => (
                                     <article key={`${title.en}-${name.en}`} className="credential-item">
                                         <div className="credential-heading">
                                             {proofImage ? (
@@ -39,6 +39,12 @@ function Activation({ lang }) {
                                                 >
                                                     {name[lang]}
                                                 </button>
+                                            ) : link ? (
+                                                <h3>
+                                                    <a href={link} target="_blank" rel="noopener noreferrer" className="credential-link">
+                                                        {name[lang]}
+                                                    </a>
+                                                </h3>
                                             ) : (
                                                 <h3>{name[lang]}</h3>
                                             )}

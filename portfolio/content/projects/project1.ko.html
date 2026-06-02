@@ -1013,10 +1013,7 @@ a_ctx, _ = self.ally_attn(q, a_enc, a_enc,
 <p>실증 결과는 <strong>"결과: Attention 패턴 실증 분석"</strong> 에서 확인 할 수 있습니다.</p>
 <hr class="project-divider" />
 <h4>Problem 3: 스텝 속도와 에이전트 이동 간의 타이밍 불일치</h4>
-<figure class="project-media">
-<img src="/images/project1/problem3.png" alt="Fig 21. 스로틀링 제어" loading="lazy" />
-<figcaption>Fig 21. 스로틀링 제어</figcaption>
-</figure>
+
 <p>에이전트가 이전 스텝에서 결정된 목적지에 도달하기 전에 새로운 스텝이 실행되어 이동이 취소되는 문제가 발생하여 학습의 품질이 크게 훼손되었습니다.</p>
 <hr class="project-divider" />
 <h4>Cause</h4>
@@ -1102,16 +1099,16 @@ float StepInterval = 0.3f;  // 초 단위, 기본 2Hz</code>
 <h4>학습 결과</h4>
 <p>총 2.5M(250만) 타임스텝에 걸쳐 MAPPO 기반 ScriptedAI 대전 학습을 수행했습니다.</p>
 <figure class="project-media">
-<img src="/images/project1/result_reward.png" alt="Fig 22. reward" loading="lazy" />
-<figcaption>Fig 22. reward</figcaption>
+<img src="/images/project1/result_reward.png" alt="Fig 21. reward" loading="lazy" />
+<figcaption>Fig 21. reward</figcaption>
 </figure>
 <figure class="project-media">
-<img src="/images/project1/result_vf.png" alt="Fig 23. vf explained" loading="lazy" />
-<figcaption>Fig 23. vf explained</figcaption>
+<img src="/images/project1/result_vf.png" alt="Fig 22. vf explained" loading="lazy" />
+<figcaption>Fig 22. vf explained</figcaption>
 </figure>
 <figure class="project-media">
-<img src="/images/project1/result_entropy.png" alt="Fig 24. entropy" loading="lazy" />
-<figcaption>Fig 24. entropy</figcaption>
+<img src="/images/project1/result_entropy.png" alt="Fig 23. entropy" loading="lazy" />
+<figcaption>Fig 23. entropy</figcaption>
 </figure>
 </div>
 <h4>핵심 수치 요약</h4>
@@ -1155,8 +1152,8 @@ float StepInterval = 0.3f;  // 초 단위, 기본 2Hz</code>
 <h4>승률</h4>
 <p>스크립티드 AI와의 승률은 초기 0%에서 70% 수준으로 상승했습니다. 중간의 승률 저하는 스크립티드 AI의 티어가 상승하면서 발생한 일시적인 현상으로, 이후 다시 승률을 회복하면서 RL 에이전트가 정상적으로 게임 규칙을 학습했음을 확인했습니다.</p>
 <figure class="project-media">
-<img src="/images/project1/win_rate.png" alt="Fig 25. win rate" loading="lazy" />
-<figcaption>Fig 25. win rate</figcaption>
+<img src="/images/project1/win_rate.png" alt="Fig 24. win rate" loading="lazy" />
+<figcaption>Fig 24. win rate</figcaption>
 </figure>
 </div>
 <hr class="project-divider" />
@@ -1233,15 +1230,15 @@ float StepInterval = 0.3f;  // 초 단위, 기본 2Hz</code>
 </div>
 <figure class="project-media">
 <img src="/images/project1/attn_probe_metric_summary.png" alt="Attention probe metric summary" loading="lazy" />
-<figcaption>Fig 26. Attention probe metric summary</figcaption>
+<figcaption>Fig 25. Attention probe metric summary</figcaption>
 </figure>
 <figure class="project-media">
 <img src="/images/project1/unreal_eval_behavior_metrics.png" alt="Unreal evaluation behaviour metrics" loading="lazy" />
-<figcaption>Fig 27. Unreal 행동 평가 지표</figcaption>
+<figcaption>Fig 26. Unreal 행동 평가 지표</figcaption>
 </figure>
 <figure class="project-media">
 <img src="/images/project1/unreal_eval_clustering_profile.png" alt="Unreal objective clustering profile" loading="lazy" />
-<figcaption>Fig 28. Objective coverage 및 clustering profile</figcaption>
+<figcaption>Fig 27. Objective coverage 및 clustering profile</figcaption>
 </figure>
 <p>따라서 이 결과는 “attention만으로 역할 분화와 완전한 협동이 발생했다”는 주장이 아니라, “역할별 정책이 행동을 결정하기 전에 주변 엔티티 간 공간 관계를 읽을 수 있도록 관측 인코더가 개선되었다”는 근거로 해석해야 합니다.</p>
 <hr class="project-divider" />
@@ -1313,16 +1310,16 @@ float StepInterval = 0.3f;  // 초 단위, 기본 2Hz</code>
 </table>
 </div>
 <figure class="project-media">
-<img src="/images/project1/attn_comparison_strike.png" alt="Fig 26. STRIKE Self-Attention, Clustered vs Spread vs Difference" loading="lazy" />
-<figcaption>Fig 26. STRIKE Self-Attention, Clustered vs Spread vs Difference</figcaption>
+<img src="/images/project1/attn_comparison_strike.png" alt="Fig 28. STRIKE Self-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<figcaption>Fig 28. STRIKE Self-Attention, Clustered vs Spread vs Difference</figcaption>
 </figure>
 <figure class="project-media">
-<img src="/images/project1/attn_comparison_support.png" alt="Fig 27. SUPPORT Self-Attention, Clustered vs Spread vs Difference" loading="lazy" />
-<figcaption>Fig 27. SUPPORT Self-Attention, Clustered vs Spread vs Difference</figcaption>
+<img src="/images/project1/attn_comparison_support.png" alt="Fig 29. SUPPORT Self-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<figcaption>Fig 29. SUPPORT Self-Attention, Clustered vs Spread vs Difference</figcaption>
 </figure>
 <figure class="project-media">
-<img src="/images/project1/attn_comparison_vanguard.png" alt="Fig 28. VANGUARD Self-Attention, Clustered vs Spread vs Difference" loading="lazy" />
-<figcaption>Fig 28. VANGUARD Self-Attention, Clustered vs Spread vs Difference</figcaption>
+<img src="/images/project1/attn_comparison_vanguard.png" alt="Fig 30. VANGUARD Self-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<figcaption>Fig 30. VANGUARD Self-Attention, Clustered vs Spread vs Difference</figcaption>
 </figure>
 <p>Support가 가장 낮은 민감도를 보이는 것은 버그가 아닌 <strong>역할 특성의 자연스러운 내재화</strong>입니다. 회복 역할은 팀 대형에 관계없이 전체 아군을 동등하게 모니터링해야 하며, 학습이 이를 반영했습니다. 반면 Vanguard는 가장 높은 민감도를 보여, 전선 앵커 역할이 팀 배치 변화에 가장 민감하게 반응하도록 분화됐음을 나타냅니다.</p>
 <hr class="project-divider" />
@@ -1347,32 +1344,32 @@ float StepInterval = 0.3f;  // 초 단위, 기본 2Hz</code>
 </p>
 <div class="project-media-grid">
 <figure class="project-media">
-<img src="/images/project1/attn_cross_strike_clustered.png" alt="Fig 29. STRIKE Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
-<figcaption>Fig 29. STRIKE Cross-Attention, Clustered vs Spread vs Difference</figcaption>
+<img src="/images/project1/attn_cross_strike_clustered.png" alt="Fig 31. STRIKE Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<figcaption>Fig 31. STRIKE Cross-Attention, Clustered vs Spread vs Difference</figcaption>
 </figure>
 <figure class="project-media">
-<img src="/images/project1/attn_cross_strike_spread.png" alt="Fig 30. SUPPORT Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
-<figcaption>Fig 30. SUPPORT Cross-Attention, Clustered vs Spread vs Difference</figcaption>
-</figure>
-</div>
-<div class="project-media-grid">
-<figure class="project-media">
-<img src="/images/project1/attn_cross_vanguard_clustered.png" alt="Fig 31. VANGUARD Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
-<figcaption>Fig 31. VANGUARD Cross-Attention, Clustered vs Spread vs Difference</figcaption>
-</figure>
-<figure class="project-media">
-<img src="/images/project1/attn_cross_vanguard_spread.png" alt="Fig 32. SUPPORT Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<img src="/images/project1/attn_cross_strike_spread.png" alt="Fig 32. SUPPORT Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
 <figcaption>Fig 32. SUPPORT Cross-Attention, Clustered vs Spread vs Difference</figcaption>
 </figure>
 </div>
 <div class="project-media-grid">
 <figure class="project-media">
-<img src="/images/project1/attn_cross_support_clustered.png" alt="Fig 33. SUPPORT Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
-<figcaption>Fig 33. SUPPORT Cross-Attention, Clustered vs Spread vs Difference</figcaption>
+<img src="/images/project1/attn_cross_vanguard_clustered.png" alt="Fig 33. VANGUARD Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<figcaption>Fig 33. VANGUARD Cross-Attention, Clustered vs Spread vs Difference</figcaption>
 </figure>
 <figure class="project-media">
-<img src="/images/project1/attn_cross_support_spread.png" alt="Fig 34. SUPPORT Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<img src="/images/project1/attn_cross_vanguard_spread.png" alt="Fig 34. SUPPORT Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
 <figcaption>Fig 34. SUPPORT Cross-Attention, Clustered vs Spread vs Difference</figcaption>
+</figure>
+</div>
+<div class="project-media-grid">
+<figure class="project-media">
+<img src="/images/project1/attn_cross_support_clustered.png" alt="Fig 35. SUPPORT Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<figcaption>Fig 35. SUPPORT Cross-Attention, Clustered vs Spread vs Difference</figcaption>
+</figure>
+<figure class="project-media">
+<img src="/images/project1/attn_cross_support_spread.png" alt="Fig 36. SUPPORT Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<figcaption>Fig 36. SUPPORT Cross-Attention, Clustered vs Spread vs Difference</figcaption>
 </figure>
 </div>
 </div>

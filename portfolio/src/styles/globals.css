@@ -588,6 +588,19 @@ button, input, textarea, select {
         text-decoration-color: currentColor;
     }
 
+    .credential-link {
+        color: inherit;
+        text-decoration: underline;
+        text-decoration-color: transparent;
+        text-underline-offset: 4px;
+        transition: opacity 0.16s ease, text-decoration-color 0.16s ease;
+    }
+
+    .credential-link:hover {
+        opacity: 0.72;
+        text-decoration-color: currentColor;
+    }
+
     @media (max-width: 640px) {
         .credential-section {
             grid-template-columns: 1fr;

@@ -401,12 +401,10 @@ function ProjectDetail({ project, lang, navigate }) {
     }
 
     const getHeadingScrollTop = (heading) => {
-        let top = 0
-        let curr = heading
-        while (curr) {
-            top += curr.offsetTop
-            curr = curr.offsetParent
-        }
+        if (!heading) return 0
+        const rect = heading.getBoundingClientRect()
+        const scrollTop = window.scrollY || document.documentElement.scrollTop
+        const top = rect.top + scrollTop
         return Math.max(0, top - getAnchorOffset())
     }
 
@@ -422,9 +420,15 @@ function ProjectDetail({ project, lang, navigate }) {
         const correctionDelays = [450, 900, 1400]
         scrollCorrectionTimersRef.current = correctionDelays.map((delay, index) => window.setTimeout(() => {
             const currentHeading = document.getElementById(headingId) || heading
+            if (!currentHeading || !document.body.contains(currentHeading)) return
+
             const currentTargetTop = getHeadingScrollTop(currentHeading)
+            // Safety check: if target top is very close to 0 but it's not the first TOC item, it's a layout/DOM issue.
+            // Do not correct (scroll to top) in this case.
+            if (currentTargetTop < 10 && headingId !== tocItems[0]?.id) return
+
             const distanceFromTarget = currentHeading.getBoundingClientRect().top - getAnchorOffset()
-            if (Math.abs(distanceFromTarget) <= 2) return
+            if (Math.abs(distanceFromTarget) <= 4) return
 
             const hasTargetShifted = Math.abs(currentTargetTop - lastTargetTop) > 2
             const isLastTimer = index === correctionDelays.length - 1
