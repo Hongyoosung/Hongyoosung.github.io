@@ -400,24 +400,42 @@ function ProjectDetail({ project, lang, navigate }) {
         scrollCorrectionTimersRef.current = []
     }
 
-    const getHeadingScrollTop = (heading) => (
-        Math.max(0, heading.getBoundingClientRect().top + window.scrollY - getAnchorOffset())
-    )
+    const getHeadingScrollTop = (heading) => {
+        let top = 0
+        let curr = heading
+        while (curr) {
+            top += curr.offsetTop
+            curr = curr.offsetParent
+        }
+        return Math.max(0, top - getAnchorOffset())
+    }
 
     const scrollToHeadingElement = (heading) => {
         clearScrollCorrectionTimers()
 
-        window.scrollTo({ top: getHeadingScrollTop(heading), behavior: 'smooth' })
+        const initialTargetTop = getHeadingScrollTop(heading)
+        window.scrollTo({ top: initialTargetTop, behavior: 'smooth' })
+
+        let lastTargetTop = initialTargetTop
+        const headingId = heading.id
 
         const correctionDelays = [450, 900, 1400]
         scrollCorrectionTimersRef.current = correctionDelays.map((delay, index) => window.setTimeout(() => {
-            const distanceFromTarget = heading.getBoundingClientRect().top - getAnchorOffset()
+            const currentHeading = document.getElementById(headingId) || heading
+            const currentTargetTop = getHeadingScrollTop(currentHeading)
+            const distanceFromTarget = currentHeading.getBoundingClientRect().top - getAnchorOffset()
             if (Math.abs(distanceFromTarget) <= 2) return
 
-            window.scrollTo({
-                top: getHeadingScrollTop(heading),
-                behavior: index === correctionDelays.length - 1 ? 'auto' : 'smooth',
-            })
+            const hasTargetShifted = Math.abs(currentTargetTop - lastTargetTop) > 2
+            const isLastTimer = index === correctionDelays.length - 1
+
+            if (hasTargetShifted || isLastTimer) {
+                lastTargetTop = currentTargetTop
+                window.scrollTo({
+                    top: currentTargetTop,
+                    behavior: isLastTimer ? 'auto' : 'smooth',
+                })
+            }
         }, delay))
     }
 
