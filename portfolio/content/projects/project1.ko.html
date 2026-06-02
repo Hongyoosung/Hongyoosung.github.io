@@ -1,4 +1,50 @@
 <hr class="project-divider" />
+<h3>주요 결과</h3>
+<div class="project-table-wrap">
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>주요 내용</th>
+<th>학습한 점</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Schola 기반 강화학습 환경</td>
+<td>Schola(gRPC)와 Ray RLlib 사이에 재사용 가능한 RL-EQS 미들 레이어를 구현하고, 시차 사망 처리 결함을 수정한 PR이 Schola main / v2.1.1 기준으로 머지되었습니다.</td>
+<td>Unreal 환경을 RL 학습 루프에 연결할 때는 액션, 관측, 보상뿐 아니라 agent별 종료 상태까지 step contract로 명확히 관리해야 한다는 점을 배웠습니다.</td>
+</tr>
+<tr>
+<td>커리큘럼 학습</td>
+<td>Scripted AI를 Basic, Standard, Aggressive 3단계 티어로 구성하고 승률 25%, 40% 임계값 기반 승격 구조를 적용했습니다. 최종적으로 2.5M 타임스텝 학습 후 Scripted AI 상대 승률이 0%에서 약 70% 수준까지 상승했습니다.</td>
+<td>초기부터 어려운 상대나 self-play를 적용하면 학습 신호가 불안정해지므로, 난이도를 점진적으로 올리는 커리큘럼이 게임 규칙 학습과 정책 안정화에 중요하다는 점을 확인했습니다.</td>
+</tr>
+<tr>
+<td>MAPPO 멀티 에이전트 학습</td>
+<td>Strike, Vanguard, Support 역할별 독립 actor와 shared centralized critic을 사용하는 MAPPO 학습 환경을 구성했습니다. Live Evaluation은 50회 에피소드 기준으로 win / loss / draw / timeout을 기록하고 best / latest 체크포인트를 병렬 평가하도록 구현했습니다.</td>
+<td>멀티 에이전트 환경에서는 단일 보상 스칼라만으로 협동을 설명하기 어렵고, 역할별 정책, 중앙 critic, 체크포인트 평가 루프를 함께 설계해야 학습 품질을 추적할 수 있다는 점을 배웠습니다.</td>
+</tr>
+<tr>
+<td>GAS 기반 전투 환경</td>
+<td>UE5 Gameplay Ability System을 기반으로 Strike의 원거리 전투, Vanguard의 근접 교전, Support의 치유 행동을 구성하고, 접근, 거점, 전투 보상을 매 스텝 계산하는 전투-RL 보상 파이프라인을 구현했습니다.</td>
+<td>강화학습 환경의 보상은 추상 수식만으로 설계하기보다 실제 전투 시스템의 데미지, 치유, 위치, 역할 제약과 연결해야 에이전트 행동이 게임플레이 의도와 맞아진다는 점을 배웠습니다.</td>
+</tr>
+<tr>
+<td>Attention 기반 관계 인식</td>
+<td>패딩 슬롯 attention 최대값 0.000, 전체 Self-Cross 일관성 0.639, Vanguard 일관성 0.917을 확인했습니다. 24 episode, 15,715 team-step 평가에서는 coverage 0.454, 평균 unique objective 2.27/5, 평균 max-cluster size 3.36명을 기록했습니다.</td>
+<td>Attention은 협동을 자동으로 만들어내는 장치가 아니라, 역할별 정책이 아군, 적, 거점 사이의 공간 관계를 읽도록 돕는 관측 인코더로 해석해야 한다는 점을 정리했습니다.</td>
+</tr>
+<tr>
+<td>AWS 클라우드 분산 학습</td>
+<td>UE5 Linux 빌드를 S3에 적재하고 Docker 기반 학습 스크립트를 EC2에서 실행하는 클라우드 병렬 학습 파이프라인을 구축했습니다. 신규 최고 승률 달성 시 best 체크포인트를 자동 동기화하고, 보상, 승률, 손실 지표를 실시간 모니터링했습니다.</td>
+<td>Unreal 기반 RL은 로컬 단일 인스턴스만으로 반복 속도가 부족하므로, 빌드 배포, 체크포인트 동기화, 원격 평가를 포함한 인프라 설계가 모델 성능만큼 중요하다는 점을 배웠습니다.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>핵심 성과는 단일 attention 실험이 아니라, Schola 기반 UE5-RL 연결, 커리큘럼 학습, MAPPO 멀티 에이전트 정책, GAS 전투 시스템, AWS 분산 학습 인프라를 하나의 학습 파이프라인으로 통합했다는 점입니다. Attention은 이 중 관계 인식 관측 인코딩을 개선한 한 요소로 정리했습니다.</p>
+<hr class="project-divider" />
 <h3>개요 (Overview)</h3>
 <p>본 프로젝트는 강화학습을 통해 UE5 에이전트의 EQS(Environment Query System) 가중치를 자동 최적화하는 Dynamic EQS 플러그인을 설계·구현하고, 5v5 팀 기반 거점 점령전 환경에서 MAPPO 학습을 통해 검증했습니다. 이를 통해 에이전트의 공간 탐색 및 이동은 EQS 시스템이 담당하고, 최적 위치 산정은 강화학습 모델이 담당하는 하이브리드 AI 시스템을 구현했습니다.</p>
 <p>학습 과정에서 팀 기반 협동 행동 유도를 위해 협동 보상 스칼라 설계 대신 아키텍처 차원의 어텐션 메커니즘을 도입했습니다. 이를 통해 각 에이전트가 동료 에이전트를 인지하고 중요 상태 정보를 선택적으로 식별할 수 있도록 하여 협동 전략이 자연스럽게 발현되도록 설계했습니다.</p>
@@ -798,6 +844,7 @@ a_ctx, _ = self.ally_attn(q, a_enc, a_enc,
 </tbody>
 </table>
 </div>
+<p>이 문제는 단순한 설계 가설이 아니라 실제 Unreal 평가 로그에서 확인되었습니다. 최종 Self+Cross Attention 체크포인트를 24 episode, 15,715 team-step 동안 평가한 결과, 실현 위치 기준 objective coverage는 <strong>0.454</strong>, 평균 unique objective는 <strong>2.27 / 5</strong>, 가장 붐비는 거점의 평균 군집 크기는 <strong>3.36명</strong>이었습니다. 5명과 5개 거점 구조에서는 “두 명 이상이 같은 거점을 선택했는가”라는 이진 duplicate rate가 거의 항상 1.0으로 포화되어, coverage와 max-cluster size를 핵심 지표로 사용했습니다.</p>
 <p>실증 결과는 <strong>"결과: Attention 패턴 실증 분석"</strong> 에서 확인 할 수 있습니다.</p>
 <hr class="project-divider" />
 <h4>Problem 3: 스텝 속도와 에이전트 이동 간의 타이밍 불일치</h4>
@@ -980,6 +1027,60 @@ float StepInterval = 0.3f;  // 초 단위, 기본 2Hz</code>
 </div>
 <hr class="project-divider" />
 <h4>Attention 패턴 실증 분석</h4>
+<p>실험은 두 단계로 수행했습니다. Stage 1에서는 Python synthetic probe로 Self-Attention → Cross-Attention 인코더가 대형 변화에 반응하는지 확인했고, Stage 2에서는 Unreal short evaluation으로 실제 팀 배치가 거점에 어떻게 분포되는지 측정했습니다.</p>
+<div class="project-table-wrap">
+<table>
+<thead>
+<tr>
+<th>검증 항목</th>
+<th>측정 결과</th>
+<th>해석</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>패딩 억제</td>
+<td>패딩 슬롯 attention 최대값 <strong>0.000</strong></td>
+<td>유효하지 않은 엔티티 슬롯이 attention에 누수되지 않음.</td>
+</tr>
+<tr>
+<td>역할별 대형 민감도</td>
+<td>아군 Self-Attention DeltaMax: Vanguard 0.1086, Strike 0.0945, Support 0.0582. 적군 DeltaMax: Strike 0.1165</td>
+<td>Vanguard는 아군 대형, Strike는 적군 집결에 가장 민감하게 반응.</td>
+</tr>
+<tr>
+<td>Self → Cross 전달</td>
+<td>전체 Self-Cross consistency 0.639, Vanguard 0.917, Strike ally Cross TV shift 0.1347</td>
+<td>Self-Attention에서 만들어진 문맥 변화가 행동 직전 Cross-Attention 분포까지 일부 전달됨.</td>
+</tr>
+<tr>
+<td>중복 위험 proxy</td>
+<td>Strike의 crowded-objective avoidance proxy에서 Self-Attention gain <strong>+0.0178</strong></td>
+<td>중복 회피 신호는 Strike에서 가장 명확하며, 모든 역할에 동일하게 나타나는 보편 효과는 아님.</td>
+</tr>
+<tr>
+<td>Unreal 행동 평가</td>
+<td>coverage 0.454, 평균 unique objective 2.27/5, 평균 max-cluster size 3.36명</td>
+<td>관계 인식은 중복 배치를 완화하는 근거를 제공하지만, 실제 플레이의 군집 문제는 아직 남아 있음.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<figure class="project-media">
+<img src="/images/project1/attn_probe_metric_summary.png" alt="Attention probe metric summary" loading="lazy" />
+<figcaption>Fig 26. Attention probe metric summary</figcaption>
+</figure>
+<figure class="project-media">
+<img src="/images/project1/unreal_eval_behavior_metrics.png" alt="Unreal evaluation behaviour metrics" loading="lazy" />
+<figcaption>Fig 27. Unreal 행동 평가 지표</figcaption>
+</figure>
+<figure class="project-media">
+<img src="/images/project1/unreal_eval_clustering_profile.png" alt="Unreal objective clustering profile" loading="lazy" />
+<figcaption>Fig 28. Objective coverage 및 clustering profile</figcaption>
+</figure>
+<p>따라서 이 결과는 “attention만으로 역할 분화와 완전한 협동이 발생했다”는 주장이 아니라, “역할별 정책이 행동을 결정하기 전에 주변 엔티티 간 공간 관계를 읽을 수 있도록 관측 인코더가 개선되었다”는 근거로 해석해야 합니다.</p>
+<hr class="project-divider" />
+<h4>기존 Attention weight 시각 분석</h4>
 <p>학습된 체크포인트에서 Attention weight를 직접 추출하여 파이프라인 전체(Self-Attention → Cross-Attention)가 설계 의도대로 동작하는지 검증했습니다.</p>
 <hr class="project-divider" />
 <h4>실험 설계</h4>
@@ -1142,4 +1243,4 @@ float StepInterval = 0.3f;  // 초 단위, 기본 2Hz</code>
 </tbody>
 </table>
 </div>
-<p>개별 역할 레이블 외 별도의 귀납 편향 없이, Intra-Set Self-Attention 구조만으로 <strong>역할 특화된 공간 추론의 자발적 분화</strong>가 달성됐음을 두 단계의 Attention 패턴을 통해 실증했습니다.</p>
+<p>두 단계의 Attention 패턴을 통해 Intra-Set Self-Attention이 역할별 정책의 관측 인코더에 공간 관계를 읽는 능력을 제공한다는 점을 확인했습니다. 다만 이는 encoder-level evidence이며, attention만으로 역할이 생성되었거나 중복 거점 배치가 완전히 해결되었다는 의미는 아닙니다.</p>

@@ -286,6 +286,7 @@ function ProjectDetail({ project, lang, navigate }) {
     const contentRef = useRef(null)
     const detailSectionRef = useRef(null)
     const tocRef = useRef(null)
+    const scrollCorrectionTimersRef = useRef([])
     const [tocItems, setTocItems] = useState([])
     const [activeId, setActiveId] = useState('')
     const [lightboxImage, setLightboxImage] = useState(null)
@@ -389,14 +390,44 @@ function ProjectDetail({ project, lang, navigate }) {
         return () => window.cancelAnimationFrame(frameId)
     }, [tocItems.length, project, lang])
 
+    useEffect(() => () => {
+        scrollCorrectionTimersRef.current.forEach((timerId) => window.clearTimeout(timerId))
+        scrollCorrectionTimersRef.current = []
+    }, [])
+
+    const clearScrollCorrectionTimers = () => {
+        scrollCorrectionTimersRef.current.forEach((timerId) => window.clearTimeout(timerId))
+        scrollCorrectionTimersRef.current = []
+    }
+
+    const getHeadingScrollTop = (heading) => (
+        Math.max(0, heading.getBoundingClientRect().top + window.scrollY - getAnchorOffset())
+    )
+
+    const scrollToHeadingElement = (heading) => {
+        clearScrollCorrectionTimers()
+
+        window.scrollTo({ top: getHeadingScrollTop(heading), behavior: 'smooth' })
+
+        const correctionDelays = [450, 900, 1400]
+        scrollCorrectionTimersRef.current = correctionDelays.map((delay, index) => window.setTimeout(() => {
+            const distanceFromTarget = heading.getBoundingClientRect().top - getAnchorOffset()
+            if (Math.abs(distanceFromTarget) <= 2) return
+
+            window.scrollTo({
+                top: getHeadingScrollTop(heading),
+                behavior: index === correctionDelays.length - 1 ? 'auto' : 'smooth',
+            })
+        }, delay))
+    }
+
     const scrollToHeading = (event, id) => {
         event.preventDefault()
         const item = tocItems.find((tocItem) => tocItem.id === id)
         const heading = item ? getTocHeadings(contentRef.current, project)[item.index] : null
         if (!heading) return
 
-        const targetTop = heading.getBoundingClientRect().top + window.scrollY - getAnchorOffset()
-        window.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' })
+        scrollToHeadingElement(heading)
         window.history.replaceState({}, '', `${window.location.pathname}#${id}`)
         setActiveId(id)
     }

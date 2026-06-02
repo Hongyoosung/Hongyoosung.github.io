@@ -1,6 +1,8 @@
 # Site Maintenance Guide
 
-This guide covers how to add new content and modify styles for this Hugo + PaperMod GitHub Pages site.
+This guide mostly documents the legacy Hugo + PaperMod site structure.
+
+Current deployment builds the React/Vite app in `portfolio/`. Project 1 content is maintained as HTML in `portfolio/content/projects/project1.en.html` and `portfolio/content/projects/project1.ko.html`; the old duplicate Markdown files for project 1 have been removed.
 
 ---
 
@@ -37,8 +39,11 @@ yoosung-h/
 │   └── projects/             # Project showcase
 │       ├── _index.md         # Projects list page (EN)
 │       ├── _index.ko.md      # Projects list page (KR)
-│       ├── project-1.md      # Individual project (EN)
-│       └── project-1.ko.md   # Individual project (KR)
+│       └── project-2.md      # Legacy Markdown project content
+├── portfolio/
+│   └── content/projects/
+│       ├── project1.en.html  # Current Project 1 content (EN)
+│       └── project1.ko.html  # Current Project 1 content (KR)
 ├── layouts/                  # Custom templates (override theme)
 │   ├── index.html            # Homepage
 │   ├── partials/
