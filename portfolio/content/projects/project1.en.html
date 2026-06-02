@@ -10,28 +10,28 @@
 .results-grid {
     display: flex;
     flex-direction: column;
-    gap: 32px;
+    gap: 0;
     margin: 24px 0;
+    border-top: 1px solid var(--color-border);
 }
 .result-card {
     background: transparent;
     border: none;
     border-radius: 0;
-    padding: 0;
-    padding-bottom: 28px;
+    padding: 24px 0;
     border-bottom: 1px solid var(--color-border);
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 12px;
 }
 .result-card:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
+    border-bottom: 1px solid var(--color-border);
 }
 .result-card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 16px;
 }
 .result-card-title {
     font-size: 17px;
@@ -42,16 +42,22 @@
 .result-card-badge {
     font-size: 11px;
     font-weight: 700;
-    padding: 3px 8px;
+    color: var(--color-fg-muted);
+    background: transparent;
+    border: 1px solid var(--color-border);
+    padding: 3px 9px;
     border-radius: 9999px;
     white-space: nowrap;
 }
-.badge-env { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
-.badge-curriculum { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.2); }
-.badge-algo { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2); }
-.badge-system { background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2); }
-.badge-analysis { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
-.badge-infra { background: rgba(107, 114, 128, 0.1); color: #6b7280; border: 1px solid rgba(107, 114, 128, 0.2); }
+.badge-env,
+.badge-curriculum,
+.badge-algo,
+.badge-system,
+.badge-analysis,
+.badge-infra {
+    color: var(--color-fg-muted);
+    border-color: var(--color-border);
+}
 
 .result-card-body {
     display: flex;
@@ -77,19 +83,21 @@
     margin: 0;
 }
 .result-learned-box {
-    border-left: 3px solid #3b82f6;
-    padding: 6px 14px;
+    border-left: 2px solid var(--color-border);
+    padding: 4px 0 4px 14px;
     display: flex;
     flex-direction: column;
     gap: 4px;
     margin-top: 4px;
 }
-.result-learned-box.env { border-left-color: #10b981; }
-.result-learned-box.curriculum { border-left-color: #8b5cf6; }
-.result-learned-box.algo { border-left-color: #3b82f6; }
-.result-learned-box.system { border-left-color: #f59e0b; }
-.result-learned-box.analysis { border-left-color: #ef4444; }
-.result-learned-box.infra { border-left-color: #6b7280; }
+.result-learned-box.env,
+.result-learned-box.curriculum,
+.result-learned-box.algo,
+.result-learned-box.system,
+.result-learned-box.analysis,
+.result-learned-box.infra {
+    border-left-color: var(--color-border);
+}
 
 .learned-title {
     font-size: 11px;
@@ -121,6 +129,24 @@
       <div class="result-learned-box env">
         <span class="learned-title">What I Learned</span>
         <p class="learned-desc">Learned that connecting Unreal environments to an RL training loop requires explicit management of not only actions, observations, and rewards, but also agent-specific termination states as part of the step contract.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 2 -->
+  <div class="result-card">
+    <div class="result-card-header">
+      <h4 class="result-card-title">Attention-based Relation Recognition</h4>
+      <span class="result-card-badge badge-analysis">Empirical Analysis</span>
+    </div>
+    <div class="result-card-body">
+      <div class="result-section">
+        <span class="result-section-label">Measured Result</span>
+        <p class="result-content-text">Improved the observation encoder so agents could read spatial relationships among allies, enemies, and objectives instead of treating each entity as isolated information. In a controlled A/B ablation with the same 66-iteration setup, adding Self-Attention raised objective coverage from <strong>0.318 to 0.454 (+43%)</strong>, reduced the whole-team-on-one-objective failure mode from <strong>46.5% to 16.0%</strong>, and improved the win rate against scripted AI from <strong>0.125 to 0.292 (2.3x)</strong>.</p>
+      </div>
+      <div class="result-learned-box analysis">
+        <span class="learned-title">What I Learned</span>
+        <p class="learned-desc">Attention is not a mechanism that automatically completes cooperation; it is an encoder design that helps the policy interpret team formation and spatial context before choosing an action.</p>
       </div>
     </div>
   </div>
@@ -179,24 +205,6 @@
     </div>
   </div>
 
-  <!-- Card 5 -->
-  <div class="result-card">
-    <div class="result-card-header">
-      <h4 class="result-card-title">Attention-based Relation Recognition</h4>
-      <span class="result-card-badge badge-analysis">Empirical Analysis</span>
-    </div>
-    <div class="result-card-body">
-      <div class="result-section">
-        <span class="result-section-label">Measured Result</span>
-        <p class="result-content-text">Improved agents to recognize complex spatial context between entities (such as formations, density, and flanking patterns), rather than relying on isolated individual entity information. A controlled A/B ablation—two models trained identically for 66 iterations, one with Self-Attention and one without—made the effect quantitative: adding Self-Attention raised objective coverage <strong>0.318 → 0.454 (+43%)</strong>, cut the "whole team converges on one objective" failure mode from <strong>46.5% → 16%</strong> of steps, and more than <strong>doubled the win rate (0.125 → 0.292)</strong> against the scripted AI, at near-equal episode reward.</p>
-      </div>
-      <div class="result-learned-box analysis">
-        <span class="learned-title">What I Learned</span>
-        <p class="learned-desc">Learned that attention mechanisms are not magic tools that automatically complete cooperative behaviors; they should be designed as 'encoders' that help agent policies correctly interpret surrounding spatial contexts (allies, enemies, objectives), while keeping their limits in mind.</p>
-      </div>
-    </div>
-  </div>
-
   <!-- Card 6 -->
   <div class="result-card">
     <div class="result-card-header">
@@ -215,7 +223,6 @@
     </div>
   </div>
 </div>
-<p>The most important conclusion from the additional experiment is scope: Self-Attention improved the observation encoder's ability to represent formations such as clustering, spreading, and converging threats. It should be described as relationship-aware encoding for role-specific policies, not as attention alone producing perfect cooperation or spontaneous role emergence.</p>
 <hr class="project-divider" />
 <h3>System Architecture</h3>
 <figure class="project-media">
@@ -1093,7 +1100,7 @@ a_ctx, _ = self.ally_attn(q, a_enc, a_enc,
 </tbody>
 </table>
 </div>
-<p>The empirical results are summarized in <strong>"Results: Empirical Analysis of Attention Patterns"</strong>. A controlled A/B ablation (a second model trained identically for 66 iterations with Self-Attention disabled) confirmed the contribution directly: Self-Attention raised objective coverage <strong>0.318 → 0.454 (+43%)</strong>, reduced the "all five agents on one objective" failure mode from <strong>46.5% → 16%</strong> of steps, and more than <strong>doubled the win rate (0.125 → 0.292)</strong> at near-equal reward—evidence that the encoder change improves team distribution rather than just relationship reading in isolation.</p>
+<p>The empirical results are summarized above in <strong>"Empirical Analysis of Attention Patterns"</strong>. A controlled A/B ablation (a second model trained identically for 66 iterations with Self-Attention disabled) confirmed the contribution directly: Self-Attention raised objective coverage <strong>0.318 → 0.454 (+43%)</strong>, reduced the "all five agents on one objective" failure mode from <strong>46.5% → 16%</strong> of steps, and more than <strong>doubled the win rate (0.125 → 0.292)</strong> at near-equal reward—evidence that the encoder change improves team distribution rather than just relationship reading in isolation.</p>
 <hr class="project-divider" />
 <h4>Problem 3: Timing Mismatch Between Step Speed and Agent Movement</h4>
 
@@ -1171,6 +1178,213 @@ float StepInterval = 0.3f;  // Seconds, Default 2Hz</code>
 <hr class="project-divider" />
 <h4>Result</h4>
 <p>With <code>StepInterval = 0.3s</code>, training data quality improved as observations were collected after agents fully reached their EQS targets. Burst steps caused by <code>DeltaTime</code> spikes during editor background transitions were eliminated via <code>FMath::Min</code> clamping. This architecture allows for real-time balancing of training speed and movement completion rates through a single variable.</p>
+<hr class="project-divider" />
+<h3>Empirical Analysis of Attention Patterns</h3>
+<h4>Key Finding</h4>
+<p>Self-Attention did not simply inflate reward. Its main contribution was helping the observation encoder read spatial relationships among allies, enemies, and objectives before the policy produced EQS weights. In the controlled A/B evaluation, adding Self-Attention raised objective coverage from <strong>0.318 to 0.454 (+43%)</strong>, reduced the whole-team-on-one-objective failure mode from <strong>46.5% to 16.0%</strong>, and improved the win rate against scripted AI from <strong>0.125 to 0.292 (2.3x)</strong>. Because the average episode reward stayed nearly equal, the improvement is best understood as a change in <strong>how the team distributes across objectives</strong>, not as a reward-scale artifact.</p>
+
+<h4>Validation Design</h4>
+<p>The analysis used three complementary checks. First, synthetic Python probes tested whether the Self-Attention and Cross-Attention encoder reacts to controlled formation changes. Second, a short Unreal evaluation measured how the deployed team actually distributed itself across objectives. Third, a Cross-only model with Self-Attention disabled was trained under the same conditions and evaluated with the same protocol, isolating the contribution of the Self-Attention block.</p>
+<div class="project-table-wrap">
+<table>
+<thead>
+<tr>
+<th>Validation Item</th>
+<th>Measured Result</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Padding mask</td>
+<td>Maximum attention on padded slots = <strong>0.000</strong></td>
+<td>Invalid entity slots did not leak into attention computation.</td>
+</tr>
+<tr>
+<td>Formation-change sensitivity</td>
+<td>Ally Self-Attention DeltaMax: Vanguard 0.1086, Strike 0.0945, Support 0.0582. Enemy DeltaMax: Strike 0.1165.</td>
+<td>Vanguard reacted more strongly to ally formation changes, while Strike reacted more strongly to enemy convergence.</td>
+</tr>
+<tr>
+<td>Self-to-Cross propagation</td>
+<td>Global Self-Cross consistency = 0.639; Vanguard = 0.917. Strike ally Cross TV shift = 0.1347.</td>
+<td>Context changes formed by Self-Attention were carried into the final pre-action Cross-Attention distribution.</td>
+</tr>
+<tr>
+<td>Duplicate-avoidance proxy</td>
+<td>Strike Self-Attention gain = <strong>+0.0178</strong> on the crowded-objective avoidance proxy.</td>
+<td>The duplicate-avoidance signal was clearest in Strike and was not a universal effect shared equally by every role.</td>
+</tr>
+<tr>
+<td>Unreal behavior evaluation</td>
+<td>Objective coverage = 0.454, mean unique objectives = 2.27/5, mean max-cluster size = 3.36 agents.</td>
+<td>Some clustering remained in deployed play, but the A/B ablation showed that Self-Attention meaningfully reduced it.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<figure class="project-media">
+<img src="/images/project1/attn_probe_metric_summary.png" alt="Attention probe metric summary" loading="lazy" />
+<figcaption>Fig 25. Attention probe metric summary</figcaption>
+</figure>
+<figure class="project-media">
+<img src="/images/project1/unreal_eval_behavior_metrics.png" alt="Unreal evaluation behaviour metrics" loading="lazy" />
+<figcaption>Fig 26. Unreal behavior evaluation metrics</figcaption>
+</figure>
+<figure class="project-media">
+<img src="/images/project1/unreal_eval_clustering_profile.png" alt="Unreal objective clustering profile" loading="lazy" />
+<figcaption>Fig 27. Objective coverage and clustering profile</figcaption>
+</figure>
+
+<h4>A/B Ablation: Self-Attention On vs Off</h4>
+<p>I trained a Cross-only model with Self-Attention disabled (<code>USE_SELF_ATTN=0</code>) under the same map, scripted-AI tier, MAPPO configuration, and <strong>66 training iterations / approximately 1.36M agent-steps</strong> as the final Self+Cross model. Both checkpoints were evaluated with the same 24-episode, 8-environment protocol. Because the only architectural difference was the Self-Attention block, the gap below can be interpreted as the relational-encoding effect of the observation encoder.</p>
+<div class="project-table-wrap">
+<table>
+<thead>
+<tr>
+<th>Metric (nearest-objective basis)</th>
+<th>Cross-only</th>
+<th>Self + Cross</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Objective coverage</td>
+<td>0.318</td>
+<td><strong>0.454</strong></td>
+<td><strong>+0.136 (+43%)</strong></td>
+</tr>
+<tr>
+<td>Mean unique objectives (of 5)</td>
+<td>1.59</td>
+<td><strong>2.27</strong></td>
+<td><strong>+0.68</strong></td>
+</tr>
+<tr>
+<td>Max-cluster size (lower is better)</td>
+<td>4.10</td>
+<td><strong>3.36</strong></td>
+<td><strong>-0.74 agents</strong></td>
+</tr>
+<tr>
+<td>Steps with all 5 agents on one objective</td>
+<td>46.5%</td>
+<td><strong>16.0%</strong></td>
+<td><strong>-30.5 pp</strong></td>
+</tr>
+<tr>
+<td>Coverage trend (early to late episode)</td>
+<td>0.28 to 0.32 (flat)</td>
+<td>0.36 to 0.52 (rising)</td>
+<td>Improved spreading over the episode</td>
+</tr>
+<tr>
+<td>Win rate vs scripted AI</td>
+<td>0.125 (3/24)</td>
+<td><strong>0.292 (7/24)</strong></td>
+<td><strong>+0.167 (2.3x)</strong></td>
+</tr>
+<tr>
+<td>Mean episode reward</td>
+<td>152.7</td>
+<td>148.9</td>
+<td>-3.8 (nearly equal)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<figure class="project-media">
+<img src="/images/project1/attn_ab_self_attn_effect.png" alt="Trained A/B ablation: Cross-only vs Self+Cross — Self-Attention effect" loading="lazy" />
+<figcaption>Fig 28. Trained A/B ablation: adding Self-Attention raises objective coverage, reduces pile-up, and more than doubles win rate.</figcaption>
+</figure>
+<figure class="project-media">
+<img src="/images/project1/attn_ab_clustering_comparison.png" alt="A/B clustering comparison: unique-objective distribution and coverage over episode progress" loading="lazy" />
+<figcaption>Fig 29. Unique-objective distribution and coverage progression before and after Self-Attention.</figcaption>
+</figure>
+
+<h4>Attention Weight Visual Analysis</h4>
+<p>I directly extracted attention weights from the trained checkpoint to verify whether the Self-Attention to Cross-Attention pipeline was connected as intended. Two scenarios were fed into the same policy: <strong>Clustered</strong>, where four allies are concentrated within one objective radius, and <strong>Spread</strong>, where four allies are distributed across different corners of the map. Across all roles and scenarios, padded slots 4-7 were suppressed to 0.00.</p>
+
+<h4>Self-Attention: Capturing Spatial Relationships Between Entities</h4>
+<p>Self-Attention allows entity tokens to reference one another before Cross-Attention. The important point is that the encoder does not only read each ally, enemy, or objective independently; it also reflects <strong>relationships between entities</strong>, such as density and formation changes, in the token representations.</p>
+<div class="project-table-wrap">
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Formation Sensitivity</th>
+<th>Key Observation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Strike</strong></td>
+<td>Medium (DeltaMax approximately 0.19)</td>
+<td>In Clustered, it referenced the four ally slots relatively evenly; in Spread, it concentrated on Assault slot 1.</td>
+</tr>
+<tr>
+<td><strong>Support</strong></td>
+<td>Low (DeltaMax approximately 0.06)</td>
+<td>It kept a near-even distribution across slots regardless of formation, matching the healer role's need to monitor the full team.</td>
+</tr>
+<tr>
+<td><strong>Vanguard</strong></td>
+<td>High (DeltaMax approximately 0.29)</td>
+<td>Its focus moved from slot 3 in Clustered to slot 1 in Spread, making the frontline anchor role the most sensitive to team-position changes.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<figure class="project-media">
+<img src="/images/project1/attn_comparison_strike.png" alt="Fig 30. STRIKE Self-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<figcaption>Fig 30. STRIKE Self-Attention, Clustered vs Spread vs Difference</figcaption>
+</figure>
+<figure class="project-media">
+<img src="/images/project1/attn_comparison_support.png" alt="Fig 31. SUPPORT Self-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<figcaption>Fig 31. SUPPORT Self-Attention, Clustered vs Spread vs Difference</figcaption>
+</figure>
+<figure class="project-media">
+<img src="/images/project1/attn_comparison_vanguard.png" alt="Fig 32. VANGUARD Self-Attention, Clustered vs Spread vs Difference" loading="lazy" />
+<figcaption>Fig 32. VANGUARD Self-Attention, Clustered vs Spread vs Difference</figcaption>
+</figure>
+
+<h4>Cross-Attention: Final Information Aggregation Before Action</h4>
+<p>Cross-Attention uses the Self Token as the Query and looks up ally, enemy, and objective tokens. Because its output flows into the EQS weight action, it reveals which information the agent used immediately before acting. Enemy slots were treated as nearly equal threats across roles, objective slots showed role-specific priorities, and ally slots were used to test whether the Self-Attention focus remained consistent in the final aggregation stage.</p>
+<div class="project-media-grid">
+<figure class="project-media">
+<img src="/images/project1/attn_cross_strike_clustered.png" alt="Fig 33. STRIKE Cross-Attention, Clustered" loading="lazy" />
+<figcaption>Fig 33. STRIKE Cross-Attention, Clustered</figcaption>
+</figure>
+<figure class="project-media">
+<img src="/images/project1/attn_cross_strike_spread.png" alt="Fig 34. STRIKE Cross-Attention, Spread" loading="lazy" />
+<figcaption>Fig 34. STRIKE Cross-Attention, Spread</figcaption>
+</figure>
+</div>
+<div class="project-media-grid">
+<figure class="project-media">
+<img src="/images/project1/attn_cross_vanguard_clustered.png" alt="Fig 35. VANGUARD Cross-Attention, Clustered" loading="lazy" />
+<figcaption>Fig 35. VANGUARD Cross-Attention, Clustered</figcaption>
+</figure>
+<figure class="project-media">
+<img src="/images/project1/attn_cross_vanguard_spread.png" alt="Fig 36. VANGUARD Cross-Attention, Spread" loading="lazy" />
+<figcaption>Fig 36. VANGUARD Cross-Attention, Spread</figcaption>
+</figure>
+</div>
+<div class="project-media-grid">
+<figure class="project-media">
+<img src="/images/project1/attn_cross_support_clustered.png" alt="Fig 37. SUPPORT Cross-Attention, Clustered" loading="lazy" />
+<figcaption>Fig 37. SUPPORT Cross-Attention, Clustered</figcaption>
+</figure>
+<figure class="project-media">
+<img src="/images/project1/attn_cross_support_spread.png" alt="Fig 38. SUPPORT Cross-Attention, Spread" loading="lazy" />
+<figcaption>Fig 38. SUPPORT Cross-Attention, Spread</figcaption>
+</figure>
+</div>
+<p>The clearest case is Vanguard. In Clustered, both Self-Attention and Cross-Attention strongly referenced slot 3. In Spread, both stages shifted focus to slot 1. This shows that Cross-Attention consistently used the contextualized representations produced by Self-Attention immediately before action selection.</p>
+
+<h4>Interpretation Scope</h4>
+<p>This is encoder-level evidence that Self-Attention gives the policy measurable access to spatial relationships. The roles themselves were still shaped by role-specific policies and reward functions, so this should not be read as attention alone creating perfect cooperation or spontaneous role emergence. The current evidence is also based on one evaluation session per model, so multi-seed validation remains future work.</p>
 <hr class="project-divider" />
 <h3>Results</h3>
 <h4>Training Results</h4>
@@ -1265,296 +1479,3 @@ float StepInterval = 0.3f;  // Seconds, Default 2Hz</code>
 <li>Currently, training is conducted on a single EC2 instance running four UE5 environments simultaneously.</li>
 <li>I aim to establish a <strong>distributed training environment</strong> utilizing multiple EC2 instances and <strong>Ray clusters</strong> to scale the learning process.</li>
 </ul>
-<hr class="project-divider" />
-<h4>Empirical Analysis of Attention Patterns</h4>
-<p>I validated the attention in three stages. Stage 1 used synthetic Python probes to check whether the trained Self-Attention -> Cross-Attention encoder reacts to controlled formation changes. Stage 2 ran a short Unreal evaluation to measure whether the deployed model actually distributes the team across objectives. Stage 3 then trained a second model <em>without</em> Self-Attention under identical conditions and re-ran the same Unreal evaluation, turning the analysis into a controlled A/B ablation that isolates the contribution of Self-Attention.</p>
-<div class="project-table-wrap">
-<table>
-<thead>
-<tr>
-<th>Validation Item</th>
-<th>Measured Result</th>
-<th>Portfolio Interpretation</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Padding suppression</td>
-<td>Maximum attention on padded slots = <strong>0.000</strong></td>
-<td>The entity mask is applied correctly; invalid slots do not leak into attention.</td>
-</tr>
-<tr>
-<td>Role-specific formation sensitivity</td>
-<td>Ally Self-Attention DeltaMax: Vanguard 0.1086, Strike 0.0945, Support 0.0582. Enemy DeltaMax: Strike 0.1165.</td>
-<td>Different role policies read spatial relationships differently: Vanguard reacts most to ally formation, while Strike reacts most to enemy convergence.</td>
-</tr>
-<tr>
-<td>Self -> Cross propagation</td>
-<td>Global Self-Cross consistency = 0.639; Vanguard = 0.917. Strike ally Cross TV shift = 0.1347.</td>
-<td>Self-Attention changes are partially carried into the final pre-action information-selection stage.</td>
-</tr>
-<tr>
-<td>Duplicate-risk proxy</td>
-<td>Strike Self-Attention gain = <strong>+0.0178</strong> on the crowded-objective avoidance proxy.</td>
-<td>The cleanest duplicate-avoidance signal appears in Strike; Vanguard and Support remain role-specific rather than universally avoiding allies.</td>
-</tr>
-<tr>
-<td>Unreal behavioural evaluation</td>
-<td>24 episodes, 15,715 team-steps. Nearest-objective coverage = <strong>0.454</strong>, mean unique objectives = <strong>2.27 / 5</strong>, mean max-cluster size = <strong>3.36 agents</strong>.</td>
-<td>Problem 2 is still visible in deployed play, but the trained A/B ablation below shows attention substantially reduces it versus a no-attention baseline.</td>
-</tr>
-<tr>
-<td>Episode progression</td>
-<td>Coverage improves from 0.356 early, to 0.485 mid, to 0.521 late.</td>
-<td>The policy spreads over time within an episode, but the final model still leaves measurable coordination headroom.</td>
-</tr>
-</tbody>
-</table>
-</div>
-<figure class="project-media">
-<img src="/images/project1/attn_probe_metric_summary.png" alt="Attention probe metric summary" loading="lazy" />
-<figcaption>Fig 25. attention-probe metric summary</figcaption>
-</figure>
-<figure class="project-media">
-<img src="/images/project1/unreal_eval_behavior_metrics.png" alt="Unreal evaluation behaviour metrics" loading="lazy" />
-<figcaption>Fig 26. Unreal behavioural evaluation metrics</figcaption>
-</figure>
-<figure class="project-media">
-<img src="/images/project1/unreal_eval_clustering_profile.png" alt="Unreal objective clustering profile" loading="lazy" />
-<figcaption>Fig 27. Objective coverage and clustering profile</figcaption>
-</figure>
-<hr class="project-divider" />
-<h4>Stage 3 — Trained A/B Ablation: Self-Attention On vs Off</h4>
-<p>To turn "attention helps" into a measured number, I trained a second model with Self-Attention disabled (<code>USE_SELF_ATTN=0</code>, the Cross-Attention-only variant) under <strong>identical conditions</strong>—same map, same scripted-AI tier, same MAPPO configuration, and the same <strong>66 training iterations / ~1.36M agent-steps</strong> as the final Self+Cross model (final episode reward 1144 vs 1072). Both checkpoints were then evaluated with the same 24-episode, 8-environment protocol. Because the only difference is the Self-Attention block, the gap below is directly attributable to it.</p>
-<div class="project-table-wrap">
-<table>
-<thead>
-<tr>
-<th>Metric (nearest-objective basis)</th>
-<th>Cross-only (no Self-Attn)</th>
-<th>Self + Cross</th>
-<th>Δ (Self-Attention effect)</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Objective coverage</td>
-<td>0.318</td>
-<td><strong>0.454</strong></td>
-<td><strong>+0.136 (+43%)</strong></td>
-</tr>
-<tr>
-<td>Mean unique objectives (of 5)</td>
-<td>1.59</td>
-<td><strong>2.27</strong></td>
-<td><strong>+0.68</strong></td>
-</tr>
-<tr>
-<td>Max-cluster size (lower = less pile-up)</td>
-<td>4.10</td>
-<td><strong>3.36</strong></td>
-<td><strong>−0.74 agents</strong></td>
-</tr>
-<tr>
-<td>% of steps with all 5 agents on one objective</td>
-<td>46.5%</td>
-<td><strong>16.0%</strong></td>
-<td><strong>−30.5 pp</strong></td>
-</tr>
-<tr>
-<td>Coverage trend (early → late episode)</td>
-<td>0.28 → 0.32 (flat)</td>
-<td>0.36 → 0.52 (rising)</td>
-<td>attention enables spreading</td>
-</tr>
-<tr>
-<td>Win rate vs scripted AI</td>
-<td>0.125 (3/24)</td>
-<td><strong>0.292 (7/24)</strong></td>
-<td><strong>+0.167 (2.3×)</strong></td>
-</tr>
-<tr>
-<td>Mean episode reward</td>
-<td>152.7</td>
-<td>148.9</td>
-<td>−3.8 (≈ equal)</td>
-</tr>
-</tbody>
-</table>
-</div>
-<figure class="project-media">
-<img src="/images/project1/attn_ab_self_attn_effect.png" alt="Trained A/B ablation: Cross-only vs Self+Cross — Self-Attention effect" loading="lazy" />
-<figcaption>Fig 28. Trained A/B ablation (both 66 iters, 24-episode evaluation): adding Self-Attention raises objective coverage, reduces pile-up, and more than doubles win rate.</figcaption>
-</figure>
-<figure class="project-media">
-<img src="/images/project1/attn_ab_clustering_comparison.png" alt="A/B clustering comparison: unique-objective distribution and coverage over episode progress" loading="lazy" />
-<figcaption>Fig 29. (left) Without Self-Attention the team sits with all 5 agents on a single objective 46.5% of the time; Self-Attention cuts this to 16% and shifts mass toward 3–4 distinct objectives. (right) Cross-only coverage stays flat (~0.30) across the episode, while Self+Cross progressively spreads (0.36 → 0.52).</figcaption>
-</figure>
-<p>The result is clean and one-directional: adding intra-set Self-Attention raises objective coverage by ~43%, cuts the worst pile-up by ~0.7 agents, slashes the catastrophic "whole team converges on a single objective" mode from 46.5% to 16% of steps, and more than doubles the win rate—while episode reward stays essentially equal. The Cross-only team also stays bunched for the whole episode (coverage flat ~0.3), whereas the Self+Cross team progressively spreads (0.36 → 0.52). Reward parity alongside large coverage and win-rate gains indicates Self-Attention improved <strong>how the team distributes across objectives (coordination)</strong> rather than simply inflating reward—precisely the Problem 2 claim.</p>
-<p>The interpretation remains appropriately scoped. The roles themselves were shaped by role-specific policies and reward functions; the A/B isolates Self-Attention as an <em>observation-encoder</em> improvement that lets each role read spatial relationships among allies, enemies, and objectives before selecting EQS weights. The current evidence is a single evaluation session per model (point estimates, not error bars); multi-seed runs are the remaining follow-up. It should not be described as attention alone creating perfect cooperation or spontaneous role emergence.</p>
-<hr class="project-divider" />
-<h4>Legacy Visual Breakdown of Attention Weights</h4>
-<p>We verified whether the entire pipeline (Self-Attention → Cross-Attention) operates according to the design intent by directly extracting attention weights from the trained checkpoints.</p>
-<hr class="project-divider" />
-<h4>Experimental Design</h4>
-<p>We observed changes in attention distribution by inputting two contrasting scenarios under the same training policy.</p>
-<div class="project-table-wrap">
-<table>
-<thead>
-<tr>
-<th>Scenario</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<strong>Clustered</strong>
-</td>
-<td>4 allies concentrated within the same base radius (position difference ≈ 0.01)</td>
-</tr>
-<tr>
-<td>
-<strong>Spread</strong>
-</td>
-<td>4 allies distributed across 4 corners of the map (position difference ≈ 0.6)</td>
-</tr>
-</tbody>
-</table>
-</div>
-<p>The attention weights for slots 4–7 were 0.00 across all roles and scenarios, confirming that the padding mask was correctly applied and focus was restricted to valid entities (slots 0–3).</p>
-<hr class="project-divider" />
-<h4>Step 1 — Intra-Set Self-Attention: Capturing Spatial Relationships Between Entities</h4>
-<p>Self-Attention serves as a preprocessing stage for Cross-Attention, where entity tokens reference each other to generate contextualized representations. The key metric is the <strong>fluctuation range of weight distribution (Δmax)</strong> in response to formation changes (Clustered → Spread).</p>
-<div class="project-table-wrap">
-<table>
-<thead>
-<tr>
-<th>Role</th>
-<th>Formation Sensitivity</th>
-<th>Key Observations</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<strong>Strike</strong>
-</td>
-<td>Medium (Δmax ≈ 0.19)</td>
-<td>Clustered: Even distribution across 4 slots → Spread: Concentrated on Slot 1 (Assault) (0.47)</td>
-</tr>
-<tr>
-<td>
-<strong>Support</strong>
-</td>
-<td>Low (Δmax ≈ 0.06)</td>
-<td>Regardless of formation, maintains even distribution across all slots — Consistent with role characteristics</td>
-</tr>
-<tr>
-<td>
-<strong>Vanguard</strong>
-</td>
-<td>High (Δmax ≈ 0.29)</td>
-<td>Clustered: Concentrated on Slot 3 (0.53) → Spread: Concentrated on Slot 1 (0.54)</td>
-</tr>
-</tbody>
-</table>
-</div>
-<figure class="project-media">
-<img src="/images/project1/attn_comparison_strike.png" alt="Fig 28. STRIKE Self-Attention, Clustered vs Spread vs Difference" loading="lazy" />
-<figcaption>Fig 28. STRIKE Self-Attention, Clustered vs Spread vs Difference</figcaption>
-</figure>
-<figure class="project-media">
-<img src="/images/project1/attn_comparison_support.png" alt="Fig 29. SUPPORT Self-Attention, Clustered vs Spread vs Difference" loading="lazy" />
-<figcaption>Fig 29. SUPPORT Self-Attention, Clustered vs Spread vs Difference</figcaption>
-</figure>
-<figure class="project-media">
-<img src="/images/project1/attn_comparison_vanguard.png" alt="Fig 30. VANGUARD Self-Attention, Clustered vs Spread vs Difference" loading="lazy" />
-<figcaption>Fig 30. VANGUARD Self-Attention, Clustered vs Spread vs Difference</figcaption>
-</figure>
-<p>The fact that Support shows the lowest sensitivity is not a bug, but a <strong>natural internalization of role characteristics</strong>. The healer role must monitor all allies equally regardless of team formation, and the training reflected this. In contrast, Vanguard showed the highest sensitivity, indicating that the frontline anchor role has differentiated to react most sensitively to changes in team positioning.</p>
-<hr class="project-divider" />
-<h4>Step 2 — Cross-Attention: Final Information Aggregation Before Action</h4>
-<p>In Cross-Attention, the Self Token (one's own observation embedding) acts as the Query to look up each of the three entity sets: Allies, Enemies, and Bases. Since this weighted sum leads directly to EQS weights (actions), it most directly reveals "what the agent looks at when making actual behavioral decisions."</p>
-<div class="project-spacer" style="--space:40px">
-</div>
-<p>
-<strong>Enemy Cross-Attention</strong>
-</p>
-<p>Across all roles, weights are distributed almost equally between active enemy slots 0 and 1 (≈ 0.48–0.52). This is a consistent pattern of perceiving both enemies as equal threats, while slots 2–7 (padding) are accurately suppressed to 0.</p>
-<div class="project-spacer" style="--space:40px">
-</div>
-<p>
-<strong>Base Cross-Attention</strong>
-</p>
-<p>Priority bases differ clearly by role. Strike and Support concentrate on bases 0 and 1 (≈ 0.40–0.42), whereas Vanguard shows more distributed weights across bases 1 and 2. This is interpreted as a result of differentiation, where the Vanguard, as a frontline maintenance role, references neutral and rear bases in a balanced manner.</p>
-<div class="project-spacer" style="--space:40px">
-</div>
-<p>
-<strong>Ally Cross-Attention — Consistency Verification with Self-Attention</strong>
-</p>
-<div class="project-media-grid">
-<figure class="project-media">
-<img src="/images/project1/attn_cross_strike_clustered.png" alt="Fig 31. STRIKE Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
-<figcaption>Fig 31. STRIKE Cross-Attention, Clustered vs Spread vs Difference</figcaption>
-</figure>
-<figure class="project-media">
-<img src="/images/project1/attn_cross_strike_spread.png" alt="Fig 32. STRIKE Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
-<figcaption>Fig 32. STRIKE Cross-Attention, Clustered vs Spread vs Difference</figcaption>
-</figure>
-</div>
-<div class="project-media-grid">
-<figure class="project-media">
-<img src="/images/project1/attn_cross_vanguard_clustered.png" alt="Fig 33. VANGUARD Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
-<figcaption>Fig 33. VANGUARD Cross-Attention, Clustered vs Spread vs Difference</figcaption>
-</figure>
-<figure class="project-media">
-<img src="/images/project1/attn_cross_vanguard_spread.png" alt="Fig 34. VANGUARD Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
-<figcaption>Fig 34. VANGUARD Cross-Attention, Clustered vs Spread vs Difference</figcaption>
-</figure>
-</div>
-<div class="project-media-grid">
-<figure class="project-media">
-<img src="/images/project1/attn_cross_support_clustered.png" alt="Fig 35. SUPPORT Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
-<figcaption>Fig 35. SUPPORT Cross-Attention, Clustered vs Spread vs Difference</figcaption>
-</figure>
-<figure class="project-media">
-<img src="/images/project1/attn_cross_support_spread.png" alt="Fig 36. SUPPORT Cross-Attention, Clustered vs Spread vs Difference" loading="lazy" />
-<figcaption>Fig 36. SUPPORT Cross-Attention, Clustered vs Spread vs Difference</figcaption>
-</figure>
-</div>
-<div class="project-spacer" style="--space:40px">
-</div>
-<p>Vanguard's Cross-Attention ally weights correspond exactly with the Self-Attention results. In the Clustered scenario, Self-Attention dominantly selected Slot 3, and Cross-Attention also referenced Slot 3 most highly (0.50). In the Spread scenario, the focus shifted to Slot 1 in both cases (Self: 0.54, Cross: 0.42). This demonstrates that Cross-Attention consistently utilizes the contextualized representations generated by Self-Attention, <strong>confirming that the two-stage pipeline is connected and functioning as intended.</strong>
-</p>
-<hr class="project-divider" />
-<h4>Summary</h4>
-<div class="project-table-wrap">
-<table>
-<thead>
-<tr>
-<th>Verification Item</th>
-<th>Result</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Padding Mask Suppression</td>
-<td>Slots 4–7 completely suppressed — Normal</td>
-</tr>
-<tr>
-<td>Role-specific Self-Attention Differentiation</td>
-<td>Support (Equal) / Strike (Medium) / Vanguard (High Sensitivity) — Consistent with role characteristics</td>
-</tr>
-<tr>
-<td>Cross-Attention Entity Priority</td>
-<td>Enemy: Equal threat perception / Base: Varies by role / Ally: Consistent with Self-Attention</td>
-</tr>
-<tr>
-<td>Pipeline Consistency</td>
-<td>Matching focus targets between Self → Cross Attention — Pipeline integrity confirmed</td>
-</tr>
-</tbody>
-</table>
-</div>
-<p>Through the two-stage attention patterns, I confirmed that Intra-Set Self-Attention gives the encoder measurable access to role-specific spatial relationships. The result should be read as encoder-level evidence, not as proof that attention alone created the roles or fully solved duplicate objective assignment.</p>
