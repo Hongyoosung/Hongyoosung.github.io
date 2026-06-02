@@ -12,7 +12,7 @@
 <tbody>
 <tr>
 <td>Schola 기반 강화학습 환경</td>
-<td>Schola(gRPC)와 Ray RLlib 사이에 재사용 가능한 RL-EQS 미들 레이어를 구현하고, 시차 사망 처리 결함을 수정한 PR이 Schola main / v2.1.1 기준으로 머지되었습니다.</td>
+<td>언리얼엔진 5를 지원하는 강화학습 플러그인인 Schola(gRPC)와 Ray RLlib 사이에 재사용 가능한 RL-EQS 미들 레이어를 구현하고, 플러그인의 결함을 수정한 PR이 Schola main / v2.1.1 기준으로 머지되었습니다.</td>
 <td>Unreal 환경을 RL 학습 루프에 연결할 때는 액션, 관측, 보상뿐 아니라 agent별 종료 상태까지 step contract로 명확히 관리해야 한다는 점을 배웠습니다.</td>
 </tr>
 <tr>
@@ -22,7 +22,7 @@
 </tr>
 <tr>
 <td>MAPPO 멀티 에이전트 학습</td>
-<td>Strike, Vanguard, Support 역할별 독립 actor와 shared centralized critic을 사용하는 MAPPO 학습 환경을 구성했습니다. Live Evaluation은 50회 에피소드 기준으로 win / loss / draw / timeout을 기록하고 best / latest 체크포인트를 병렬 평가하도록 구현했습니다.</td>
+<td>Strike, Vanguard, Support 역할별 독립 actor와 shared centralized critic을 사용하는 MAPPO 학습 환경을 구성하고 체크포인트간 승률 비교 스크립트를 구현하였습니다.</td>
 <td>멀티 에이전트 환경에서는 단일 보상 스칼라만으로 협동을 설명하기 어렵고, 역할별 정책, 중앙 critic, 체크포인트 평가 루프를 함께 설계해야 학습 품질을 추적할 수 있다는 점을 배웠습니다.</td>
 </tr>
 <tr>
@@ -37,8 +37,8 @@
 </tr>
 <tr>
 <td>AWS 클라우드 분산 학습</td>
-<td>UE5 Linux 빌드를 S3에 적재하고 Docker 기반 학습 스크립트를 EC2에서 실행하는 클라우드 병렬 학습 파이프라인을 구축했습니다. 신규 최고 승률 달성 시 best 체크포인트를 자동 동기화하고, 보상, 승률, 손실 지표를 실시간 모니터링했습니다.</td>
-<td>Unreal 기반 RL은 로컬 단일 인스턴스만으로 반복 속도가 부족하므로, 빌드 배포, 체크포인트 동기화, 원격 평가를 포함한 인프라 설계가 모델 성능만큼 중요하다는 점을 배웠습니다.</td>
+<td>UE5 Linux 빌드를 S3에 적재하고 Docker 기반 학습 스크립트를 EC2에서 실행하는 클라우드 병렬 학습 파이프라인을 구축했습니다.</td>
+<td>Unreal 기반 RL은 로컬 단일 인스턴스만으로 반복 속도가 부족하므로, 빌드 배포, 체크포인트 동기화, 원격 평가를 포함한 인프라 설계가 중요하다는 점을 배웠습니다.</td>
 </tr>
 </tbody>
 </table>
