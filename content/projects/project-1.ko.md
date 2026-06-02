@@ -283,7 +283,7 @@ DynamicEQS의 주요 클래스는 4가지로, **환경**, **에이전트**, **�
         class="max-w-3xl"
         caption="Fig 3. 플러그인 계층 구조. 붉은 박스가 실제 구현한 부분입니다" >}}
 
-{{< img src="/images/project1/flow3.png"
+{{< img src="/images/project1/InferenceLoop.png"
         alt=""
         class="max-w-3xl"
         caption="Fig 4. 학습/추론 런타임 데이터 플로우" >}}

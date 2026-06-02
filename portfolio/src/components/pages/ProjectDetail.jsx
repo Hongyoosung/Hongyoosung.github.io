@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import katex from 'katex'
 import 'katex/dist/katex.min.css'
@@ -100,6 +100,183 @@ const renderProjectMath = (root) => {
     })
 }
 
+const escapeHtml = (value) => value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+
+const wrapCodeToken = (type, value) => `<span class="project-code-token project-code-token-${type}">${escapeHtml(value)}</span>`
+
+const codeKeywordSets = {
+    python: new Set([
+        'and', 'as', 'assert', 'async', 'await', 'break', 'class', 'continue', 'def',
+        'del', 'elif', 'else', 'except', 'finally', 'for', 'from', 'global', 'if',
+        'import', 'in', 'is', 'lambda', 'nonlocal', 'not', 'or', 'pass', 'raise',
+        'return', 'try', 'while', 'with', 'yield',
+    ]),
+    cLike: new Set([
+        'abstract', 'auto', 'bool', 'break', 'case', 'catch', 'class', 'const',
+        'constexpr', 'continue', 'default', 'do', 'double', 'else', 'enum', 'explicit',
+        'false', 'final', 'float', 'for', 'foreach', 'if', 'in', 'inline', 'int',
+        'internal', 'namespace', 'new', 'noexcept', 'null', 'nullptr', 'override',
+        'private', 'protected', 'public', 'readonly', 'ref', 'return', 'static',
+        'string', 'struct', 'switch', 'template', 'this', 'throw', 'true', 'try',
+        'typedef', 'typename', 'uint', 'ulong', 'using', 'var', 'virtual', 'void',
+        'while', 'yield',
+    ]),
+}
+
+const codeLiteralSet = new Set(['true', 'false', 'null', 'nullptr', 'None', 'True', 'False'])
+
+const detectCodeLanguage = (codeElement) => {
+    const languageClass = Array.from(codeElement.classList)
+        .find((className) => className.startsWith('language-'))
+
+    if (!languageClass) return 'plain'
+
+    const language = languageClass.replace('language-', '').toLowerCase()
+    if (language === 'py') return 'python'
+    if (language === 'cs' || language === 'csharp') return 'csharp'
+    if (language === 'cpp' || language === 'cxx' || language === 'cc' || language === 'c++') return 'cpp'
+
+    return language
+}
+
+const isIdentifierStart = (char) => /[A-Za-z_]/.test(char)
+const isIdentifierPart = (char) => /[A-Za-z0-9_]/.test(char)
+
+const getIdentifierTokenType = (word, source, endIndex, language) => {
+    const keywordSet = language === 'python' ? codeKeywordSets.python : codeKeywordSets.cLike
+    const nextChar = source.slice(endIndex).match(/^\s*(.)/)?.[1]
+
+    if (codeLiteralSet.has(word)) return 'literal'
+    if (keywordSet.has(word)) return 'keyword'
+    if (/^[A-Z][A-Za-z0-9_]*$/.test(word) || /(SO|Flags|Node|Data|Controller|Manager|Tensor)$/.test(word)) return 'type'
+    if (nextChar === '(') return 'function'
+
+    return 'identifier'
+}
+
+const highlightCode = (source, language) => {
+    let index = 0
+    let html = ''
+
+    while (index < source.length) {
+        const char = source[index]
+        const next = source[index + 1]
+        const lineStart = source.lastIndexOf('\n', index - 1) + 1
+        const beforeOnLine = source.slice(lineStart, index)
+
+        if (/\s/.test(char)) {
+            html += escapeHtml(char)
+            index += 1
+            continue
+        }
+
+        if (language === 'python' && char === '#') {
+            const end = source.indexOf('\n', index)
+            const token = source.slice(index, end === -1 ? source.length : end)
+            html += wrapCodeToken('comment', token)
+            index += token.length
+            continue
+        }
+
+        if (language !== 'python' && char === '#' && beforeOnLine.trim() === '') {
+            const end = source.indexOf('\n', index)
+            const token = source.slice(index, end === -1 ? source.length : end)
+            html += wrapCodeToken('directive', token)
+            index += token.length
+            continue
+        }
+
+        if (language !== 'python' && char === '/' && next === '/') {
+            const end = source.indexOf('\n', index)
+            const token = source.slice(index, end === -1 ? source.length : end)
+            html += wrapCodeToken('comment', token)
+            index += token.length
+            continue
+        }
+
+        if (language !== 'python' && char === '/' && next === '*') {
+            const end = source.indexOf('*/', index + 2)
+            const token = source.slice(index, end === -1 ? source.length : end + 2)
+            html += wrapCodeToken('comment', token)
+            index += token.length
+            continue
+        }
+
+        if (char === '"' || char === "'") {
+            const quote = char
+            let end = index + 1
+
+            while (end < source.length) {
+                if (source[end] === '\\') {
+                    end += 2
+                    continue
+                }
+
+                if (source[end] === quote) {
+                    end += 1
+                    break
+                }
+
+                end += 1
+            }
+
+            const token = source.slice(index, end)
+            html += wrapCodeToken('string', token)
+            index = end
+            continue
+        }
+
+        const numberMatch = source.slice(index).match(/^(?:0x[\da-fA-F]+|\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)(?:[fFuUlL]+)?/)
+        if (numberMatch) {
+            html += wrapCodeToken('number', numberMatch[0])
+            index += numberMatch[0].length
+            continue
+        }
+
+        if (isIdentifierStart(char)) {
+            let end = index + 1
+            while (end < source.length && isIdentifierPart(source[end])) end += 1
+
+            const word = source.slice(index, end)
+            html += wrapCodeToken(getIdentifierTokenType(word, source, end, language), word)
+            index = end
+            continue
+        }
+
+        if (/[-+*/%=!<>&|?:.~^]+/.test(char)) {
+            const operatorMatch = source.slice(index).match(/^[-+*/%=!<>&|?:.~^]+/)
+            html += wrapCodeToken('operator', operatorMatch[0])
+            index += operatorMatch[0].length
+            continue
+        }
+
+        html += escapeHtml(char)
+        index += 1
+    }
+
+    return html
+}
+
+const highlightProjectContent = (content) => {
+    if (!content || typeof document === 'undefined') return content
+
+    const template = document.createElement('template')
+    template.innerHTML = content
+
+    template.content.querySelectorAll('.project-code-block code').forEach((codeElement) => {
+        const source = codeElement.textContent
+        if (!source) return
+
+        codeElement.innerHTML = highlightCode(source, detectCodeLanguage(codeElement))
+    })
+
+    return template.innerHTML
+}
+
 function ProjectDetail({ project, lang, navigate }) {
     const contentRef = useRef(null)
     const detailSectionRef = useRef(null)
@@ -107,6 +284,10 @@ function ProjectDetail({ project, lang, navigate }) {
     const [tocItems, setTocItems] = useState([])
     const [activeId, setActiveId] = useState('')
     const [lightboxImage, setLightboxImage] = useState(null)
+    const highlightedProjectContent = useMemo(
+        () => highlightProjectContent(project?.content?.[lang]),
+        [project, lang],
+    )
 
     useEffect(() => {
         const root = contentRef.current
@@ -168,7 +349,9 @@ function ProjectDetail({ project, lang, navigate }) {
         const root = contentRef.current
         if (!project || !root) return undefined
 
-        const frameId = window.requestAnimationFrame(() => renderProjectMath(root))
+        const frameId = window.requestAnimationFrame(() => {
+            renderProjectMath(root)
+        })
         return () => window.cancelAnimationFrame(frameId)
     }, [project, lang, tocItems.length])
 
@@ -289,10 +472,10 @@ function ProjectDetail({ project, lang, navigate }) {
                             ))}
                         </ul>
 
-                        {project.content?.[lang] && (
+                        {highlightedProjectContent && (
                             <article
                                 className="project-content"
-                                dangerouslySetInnerHTML={{ __html: project.content[lang] }}
+                                dangerouslySetInnerHTML={{ __html: highlightedProjectContent }}
                             />
                         )}
                     </div>

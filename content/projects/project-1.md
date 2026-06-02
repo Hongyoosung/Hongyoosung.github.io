@@ -268,7 +268,7 @@ DynamicEQS consists of four primary classes responsible for **Environment**, **A
         class="max-w-full"
         caption="Fig 3. Plugin Hierarchy" >}}
 
-{{< img src="/images/project1/flow3.png"
+{{< img src="/images/project1/InferenceLoop.png"
         alt=""
         class="max-w-full"
         caption="Fig 4. Training/Inference Runtime Data Flow" >}}
