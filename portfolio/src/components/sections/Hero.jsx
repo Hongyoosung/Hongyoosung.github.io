@@ -2,13 +2,6 @@ import { useEffect, useState } from 'react'
 import { Github, BookOpen, ArrowDown, Linkedin } from 'lucide-react'
 import { personalInfo } from '../../data/personal'
 
-const profileAssets = import.meta.glob('../../assets/profile.png', {
-    eager: true,
-    import: 'default',
-    query: '?url',
-})
-const profileUrl = Object.values(profileAssets)[0] ?? '/profile.png'
-
 function Hero({ lang }) {
     const scrollTo = (id) =>
         document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
@@ -208,6 +201,7 @@ function Hero({ lang }) {
                         letterSpacing: '0.12em',
                         textTransform: 'uppercase',
                         animation: 'nudge 2.4s ease-in-out 1.5s infinite',
+                        '--scroll-color': 'var(--hero-scroll)',
                     }}
                 >
                     <ArrowDown size={16} strokeWidth={1.5} />
@@ -221,12 +215,9 @@ function Hero({ lang }) {
                     --hero-text-secondary: var(--color-fg-secondary);
                     --hero-text-muted: var(--color-fg-muted);
                     --hero-icon-border: var(--color-border);
+                    --hero-scroll: rgba(17, 24, 39, 0.72);
                     height: 100vh;
                     min-height: 720px;
-                    background-image: url('${profileUrl}');
-                    background-repeat: no-repeat;
-                    background-position: 22% top;
-                    background-size: 34%;
                     background-color: var(--color-bg);
                 }
                 .hero-overlay {
@@ -234,18 +225,25 @@ function Hero({ lang }) {
                     inset: 0;
                     z-index: 1;
                     background:
-                        linear-gradient(to bottom, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.46) 50%, var(--color-bg) 100%);
+                        radial-gradient(circle at 50% 42%, rgba(255,255,255,0.78) 0%, rgba(255,255,255,0.5) 30%, rgba(255,255,255,0.28) 54%, rgba(255,255,255,0.08) 72%),
+                        linear-gradient(to bottom, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.42) 50%, var(--color-bg) 100%);
                 }
                 .dark .hero-section {
                     --hero-text: #fff;
                     --hero-text-secondary: rgba(255,255,255,0.75);
                     --hero-text-muted: rgba(255,255,255,0.56);
                     --hero-icon-border: rgba(255,255,255,0.35);
+                    --hero-scroll: rgba(255,255,255,0.78);
                     background-color: #0f1115;
                 }
                 .dark .hero-overlay {
                     background:
-                        linear-gradient(to bottom, rgba(0,0,0,0.48) 0%, rgba(0,0,0,0.36) 45%, rgba(0,0,0,0.74) 100%);
+                        radial-gradient(circle at 50% 42%, rgba(15,17,21,0.24) 0%, rgba(15,17,21,0.48) 34%, rgba(15,17,21,0.7) 60%, rgba(15,17,21,0.92) 78%),
+                        linear-gradient(to bottom, rgba(0,0,0,0.42) 0%, rgba(0,0,0,0.34) 45%, rgba(0,0,0,0.72) 100%);
+                }
+                .hero-section button[aria-label="Scroll to about"] {
+                    color: var(--hero-scroll) !important;
+                    text-shadow: 0 1px 16px rgba(0,0,0,0.2);
                 }
                 @keyframes nudge {
                     0%, 100% { transform: translateY(0); opacity: 0.62; }
@@ -255,8 +253,6 @@ function Hero({ lang }) {
                     .hero-section {
                         height: 100svh;
                         min-height: 680px;
-                        background-position: center top;
-                        background-size: 72%;
                     }
                 }
             `}</style>
