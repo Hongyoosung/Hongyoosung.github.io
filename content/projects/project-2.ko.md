@@ -62,7 +62,17 @@ math: true
 
 ## 주요 기능 (Key Features)
 
-### 1. 플래너 노드를 통한 데이터 주도형 상태 전이
+### 1. Planner Node
+Planner Node는 Behavior Tree 내에 존재하는 세부 전술 담당의 노드입니다.
+상태 오브젝트를 노드에 할당하면 이후 사전조건, 사후효과 기반으로 상태 그래프가 구축됩니다.
+에이전트는 런타임에 Planner Node가 실행될 경우 목표 상태에 도달하기 위한 상태 그래프를 구축하고 유틸리티 평가에 
+따라 상태를 전환해가면서 액션을 실행합니다.
+
+{{< img src="/images/project2/stategraph.png" 
+        alt="스테이트 그래프" 
+        class="max-w-3xl"
+        caption="Fig 3. State Space Graph" >}}
+
 * **Enum 비트마스크 기반 월드 상태 표현**: 에이전트 상태와 환경 데이터를 Enum 기반 비트마스크로 인코딩했습니다. HasWeapon, LowHealth 등의 조건을 비트 플래그로 관리하여, 조건 일치 여부를 문자열 비교나 딕셔너리 조회 없이 빠른 비트 연산(AND/OR)만으로 판별합니다. WorldState 구조체는 불변 값 타입(Immutable Value Type)으로 설계되어 비교 시 힙 할당(Heap Allocation)이 발생하지 않도록 했습니다.
 
 
@@ -108,18 +118,13 @@ public readonly struct WorldState
 
 * **최적 기대 가치 산출**: 단순히 고정된 우선순위를 따르지 않고, 가중치($w$)가 적용된 유틸리티 함수를 실시간 평가하여 기회비용이 가장 낮고 기대 가치가 높은 행동을 선택합니다.
 
-$$U_{final} = \max(w_1 \cdot U_1, w_2 \cdot U_2, \dots, w_n \cdot U_n)$$
+<div class="project-math"><img src="/formula/project2/utilityformula.svg" class="project-math-svg" alt="Utility Formula" /></div>
 
-{{< img-grid 
-    src1="/images/project2/statenode.png" cap1="Fig 2. 액션 선택 과정. 에이전트는 선택된 행동의 After-effect를 Current State로 갖는다."
-    class1="w-3/4" 
-    
-    src2="/images/project2/stategraph.png" cap2="Fig 3. State Space Graph"
-    
-    
-    class="max-w-full" 
-    nocrop="true"
->}}
+
+{{< img src="/images/project2/statenode.png"
+        alt="스테이트 노드 디테일" 
+        class="max-w-3xl"
+        caption="Fig 2. 액션 선택 과정. 에이전트는 선택된 행동의 After-effect를 Current State로 갖는다." >}}
 
 {{< img src="/images/project2/graph.png" 
         alt="유틸리티 그래프" 
@@ -163,7 +168,7 @@ public abstract class GOBTEvaluatorSO : ScriptableObject
 
 ## 기술적 난제 및 해결 전략 (Problem Solbing)
 
-### 1. 다중 에이전트 연산 병목 해결 (Time-slicing)
+### 1. 다중 에이전트 연산 병목
 * **Problem**: 수십 명의 에이전트가 동시에 그래프를 구축할 때 발생하는 CPU Spike 현상 확인.
 * **Solution**: 단일 프레임의 과도한 연산을 방지하기 위해 **코루틴 기반 시분할 처리(Time-slicing)** 기법을 도입. 프레임당 가용 연산 시간을 초과할 경우 작업을 다음 프레임으로 이월.
 * **Result**: 초기화 시 발생하는 프레임 저하를 **80% 이상 개선**, 대규모 유닛 환경에서도 안정적인 프레임 유지.
@@ -234,10 +239,10 @@ if (action == _lastAction)
 
 <br>
 
-### 3. 유틸리티 계산 비용 최적화 (Weight Caching)
+### 3. 유틸리티 계산 비용
 * **Problem**: 상태 전환 시마다 모든 하위 노드의 유틸리티 가중치를 실시간으로 계산하는 방식은 에이전트 수에 비례하여 CPU 연산 부하를 가중.
 * **Solution**: 유틸리티 값에 영향을 주는 핵심 변수(체력, 거리 등)가 일정 임계값 이상 변하지 않았을 경우, 이전 계산값을 재사용하는 캐싱 매커니즘을 도입했습니다. 또한, 업데이트 주기를 에이전트별로 엇갈리게 배치하는 틱(Tick) 시스템을 병행.
-* **Result**: 유틸리티 계산 빈도를 효율적으로 조절함으로써, 연산 비용을 최적화하고 더 많은 수의 에이전트를 한 화면에 배치할 수 있는 성능적 여유를 확보.
+* **Result**: 유틸리티 계산 빈도를 효율적으로 조절함으로써, **연산 비용 약 40% 이상 감소**.
 
 
 {{< code lang="csharp" label="Weight Caching & Tick System" width="96%" height="400px" align="right" >}}
@@ -267,7 +272,7 @@ private void Update()
 
 <br>
 
-### 4. 오브젝트 풀링을 통한 GC 스파이크 방지
+### 4. GC 스파이크
 * **Problem**: 상태 그래프 목표 탐색 과정에서 수많은 ActionNode 인스턴스가 생성/소멸되어 빈번한 가비지 컬렉션(GC) 동작 유발.
 
 * **Solution**: 시작 시 미리 할당된 **ActionNode Pool** 을 도입. 노드를 렌트하여 사용 후 탐색이 완료되면 일괄 반납하는 구조로 설계하여, 플래닝 시 발생하는 힙 할당을 거의 제로(Zero-allocation)에 가깝게 유지.

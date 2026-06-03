@@ -20,7 +20,7 @@ math: true
 본 프로젝트는 메타버스 환경과 실제 IoT 기기 간의 안전하고 효율적인 데이터 통신을 위한 분산형 플랫폼을 목표로 합니다. DID(Decentralized Identifier)를 활용한 신원 검증과 MQTT 프로토콜을 통한 실시간 데이터 전송을 결합하여, 데이터의 무결성을 보장하면서도 낮은 지연 시간으로 상호작용을 구현했습니다. 또한 탈중앙 신원 관리를 위해 Hyperledger Indy 기반의 DID 원장을 활용하여 참여 주체의 신뢰 가능한 식별과 검증 가능한 자격 증명 관리를 구현했습니다.
 
 
-{{< img src="/images/project4/overview.png" 
+{{< img src="/images/project4/DpkiClient.drawio.png" 
         alt="개요 이미지" 
         class="max-w-3xl" 
         caption="Fig 1. 아키텍처 다이어그램" >}}
@@ -68,15 +68,16 @@ math: true
 
 * **보안 아키텍처**: 데이터 전송 구간 내 위변조를 원천 차단하는 DPKI(Decentralized PKI) 구조를 통해 데이터의 신뢰성을 확보했습니다.
 
-{{< side-by-side src="/images/project4/sensor.png" caption="Fig 3. 실험에 사용된 센서" align="right" >}}
+{{< img src="/images/project4/sensor.png" 
+        alt="패킷 이미지" 
+        class="max-w-xl" 
+        caption="Fig 3. IoT 센서" >}}
 
 | 센서 종류 | 토픽 |
 | :--- | :---: |
 | **초음파 센서** | home/devices/{device DID}/ultrasonic |
 | **LED 전구** | home/devices/{device DID}/led |
 | **온도 센서** | home/devices/{device DID}/tem | 
-
-{{< /side-by-side >}}
 
 ---
 
@@ -95,34 +96,38 @@ math: true
 
 ---
 
-### 4. 실감형 메타버스 통합 인터페이스
+### 4. 메타버스 통합 인터페이스
 **"디지털 트윈 기반의 직관적 IoT 제어 환경 제공"**
 
 * **Unity 엔진 통합**: 메타버스 환경 내에서 실제 IoT 기기의 상태를 실시간 동기화하여 시각화했습니다.
+* **유저-아바타 기반의 플랫폼 상호작용**: 유저는 자신의 캐릭터를 통해 플랫폼을 제어할 수 있습니다.
 
-* **직관적 UI/UX**: 아바타를 통한 기기 제어 및 데이터 흐름 시각화를 구현하여, 사용자에게 실제 기기와 상호작용하는 듯한 몰입형 모니터링 경험을 제공합니다.
 
+{{< img-grid 
+    src1="/images/project4/unity.png" cap1="Fig 5. 유니티 환경"
+    class1="w-3/4"
 
-{{< img src="/images/project4/unity.png" 
-        alt="유니티 이미지" 
-        class="max-w-md" 
-        caption="Fig 5. 유니티 환경" >}}
+    src2="/images/project4/avataUI.drawio.png" cap2="Fig 6. 상호작용 시퀀스"
+    class2="w-3/4"
+
+    nocrop="true"
+>}}
 
 ---
 
 ## 주요 문제 해결 과정 (Problem Solving)
 
-### 1. 고성능 비동기 검증 파이프라인 설계 (성능 최적화)
+### 1. 서명 검증 연산 병목
 
 * **Problem**: 매 프레임 발생하는 블록체인 조회(I/O)와 서명 검증(CPU) 연산으로 인해 메인 스레드 병목 및 **프레임 드랍(Hiccup)** 발생.
 * **Solution**: Task 기반 비동기 패턴(Async/Await)을 적용하여 네트워크 수신-데이터 검증-UI 반영 스레드를 분리.
-* **Result**: 보안 레이어 추가 후에도 순수 MQTT 대비 추가 지연 시간을 4.3ms 이내로 최적화하며 60 FPS 환경 사수.
+* **Result**: 보안 레이어 추가 후에도 순수 MQTT 대비 추가 **지연 시간을 4.3ms 이내로 최적화**하며 60 FPS 환경 사수.
 
 {{< img-grid 
-    src1="/images/project4/case1.png" cap1="Fig 6. 최적화 전(블로킹 발생)"
+    src1="/images/project4/case1.png" cap1="Fig 7. 최적화 전(블로킹 발생)"
     class1="w-3/4"
 
-    src2="/images/project4/case2.png" cap2="Fig 7. 최적화 후(비동기 처리)"
+    src2="/images/project4/case2.png" cap2="Fig 8. 최적화 후(비동기 처리)"
     class2="w-3/4"
 
     nocrop="true"

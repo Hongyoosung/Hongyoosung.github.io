@@ -114,7 +114,7 @@ public readonly struct WorldState
 * **Optimal Action Selection Mechanism**: Instead of following fixed priorities, the system evaluates utility functions attached to each action node in real-time. Using a weighted ($w$) utility formula, the agent autonomously selects the optimal action with the lowest opportunity cost and highest expected value.
 * **Context-Aware Responsiveness**: Moving beyond the constraints of fixed FSMs (Finite State Machines), the utility curves react to subtle environmental changes, resulting in organic movements where the agent appears to truly "understand" and judge the situation.
 
-$$U_{final} = \max(w_1 \cdot U_1, w_2 \cdot U_2, \dots, w_n \cdot U_n)$$
+<div class="project-math"><img src="/formula/project2/utilityformula.svg" class="project-math-svg" alt="Utility Formula" /></div>
 
 {{< img src="/images/project2/graph.png" 
         alt="Utility Graph" 

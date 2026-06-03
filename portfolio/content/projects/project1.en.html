@@ -648,7 +648,7 @@ if cached_target.health &lt; threshold and agent attempted kill:
 <p>To enhance cooperation in team-based environments, we implement a <strong>Reward Mixing</strong> strategy that blends individual and team-average rewards.</p>
 
 </div>
-<p>$<span class="project-inline-math">\text{final\_reward} = (1 - \alpha) \times r_{\text{individual}} + \alpha \times r_{\text{team\_avg}}</span>$</p>
+<div class="project-math"><img src="/formula/project1/final_reward_formula.svg" class="project-math-svg" alt="Team Reward Mixing Formula" /></div>
 
 </div>
 <div class="project-table-wrap">
@@ -805,7 +805,7 @@ if (Ctx)
 </div>
 <p>
 <strong>Dual Value Estimation</strong> Each <code>EntityCentricRLlibModel</code> combines a local critic (<span class="project-inline-math">V_{local}</span>, 226-dim agent observation) and a centralized critic (<span class="project-inline-math">V_{central}</span>, 71-dim global state) using a learnable mixing coefficient <span class="project-inline-math">\alpha</span>.</p>
-<div class="project-math">V = \alpha \cdot V_{\text{local}}(\text{agent\_obs}[0:226]) + (1 - \alpha) \cdot V_{\text{central}}(\text{global\_state}[226:297])</div>
+<div class="project-math"><img src="/formula/project1/agent_obs_formula.svg" class="project-math-svg" alt="Dual Value Estimation Formula" /></div>
 <p>
 <span class="project-inline-math">\alpha</span> is initialized via <code>sigmoid(_value_mix_logit)</code> (initial value of 0.5) and automatically determines the optimal weight between local and global signals for each role through training.</p>
 <div class="project-spacer" style="--space:50px">

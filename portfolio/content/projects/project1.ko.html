@@ -587,7 +587,7 @@ if cached_target.health &lt; threshold and agent attempted kill:
 <h4>팀 보상 믹싱 (Team Reward Mixing — MAPPO Cooperative Signal)</h4>
 <p>팀 기반의 환경에서 협동성을 강화하기 위해 개인 보상과 팀 평균 보상을 혼합하는 방식을 도입했습니다.</p>
 </div>
-<div class="project-math">\text{final\_reward} = (1 - \alpha) \times r_{\text{individual}} + \alpha \times r_{\text{team\_avg}}</div>
+<div class="project-math"><img src="/formula/project1/final_reward_formula.svg" class="project-math-svg" alt="팀 보상 믹싱 수식" /></div>
 </div>
 <div class="project-table-wrap">
 <table>
@@ -732,7 +732,7 @@ if (Ctx)
 <hr class="project-divider" />
 <h4>Dual Value Estimation</h4>
 <p>각 <code>EntityCentricRLlibModel</code>은 로컬 Critic(<code>V_local</code>, 218-dim 에이전트 관측)과 중앙 Critic(<code>V_central</code>, 71-dim 전역 상태)을 학습 가능한 혼합 계수 α로 결합합니다.</p>
-<div class="project-math">V = \alpha \cdot V_{\text{local}}(\text{agent\_obs}[0:218]) + (1 - \alpha) \cdot V_{\text{central}}(\text{global\_state}[218:289])</div>
+<div class="project-math"><img src="/formula/project1/agent_obs_formula.svg" class="project-math-svg" alt="Dual Value Estimation 수식" /></div>
 <p>α는 <code>sigmoid(_value_mix_logit)</code>로 초기화되며(초기값 0.5), 학습을 통해 각 역할에 최적인 로컬/전역 비중을 자동으로 결정합니다.</p>
 </div>
 <hr class="project-divider" />

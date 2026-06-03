@@ -1468,6 +1468,18 @@ button, input, textarea, select {
         white-space: pre;
     }
 
+    .project-math-svg {
+        display: block;
+        margin: 0 auto;
+        max-height: 48px;
+        max-width: 100%;
+        height: auto;
+    }
+
+    .dark .project-math-svg {
+        filter: invert(1);
+    }
+
     .project-code-token-comment {
         color: var(--code-comment);
         font-style: italic;
