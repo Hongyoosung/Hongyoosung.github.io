@@ -1182,6 +1182,16 @@ button, input, textarea, select {
         color: var(--color-fg-secondary);
     }
 
+    .project-content h2 {
+        scroll-margin-top: 150px;
+        margin: 44px 0 18px;
+        font-family: var(--font-display);
+        font-size: clamp(24px, 3vw, 34px);
+        line-height: 1.2;
+        letter-spacing: 0;
+        color: var(--color-fg);
+    }
+
     .project-content h3 {
         scroll-margin-top: 150px;
         margin: 44px 0 18px;
@@ -1378,6 +1388,23 @@ button, input, textarea, select {
         margin: 0;
     }
 
+    .gif-grid-container {
+        display: grid;
+        gap: 18px;
+        margin: 30px 0;
+        align-items: start;
+    }
+
+    .gif-item img {
+        max-width: 100%;
+        height: auto;
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        background: var(--color-bg-alt);
+        box-shadow: var(--shadow-card);
+        cursor: zoom-in;
+    }
+
     .project-side-by-side {
         display: grid;
         grid-template-columns: minmax(260px, 0.9fr) minmax(0, 1fr);
@@ -1452,6 +1479,7 @@ button, input, textarea, select {
         margin: 0;
         overflow-x: auto;
         padding: 16px;
+        background: transparent !important;
     }
 
     .project-code-block code {

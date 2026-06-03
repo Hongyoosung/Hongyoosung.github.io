@@ -266,11 +266,85 @@ const highlightCode = (source, language) => {
     return html
 }
 
+const replaceElementTag = (element, tagName) => {
+    const replacement = document.createElement(tagName)
+
+    Array.from(element.attributes).forEach((attribute) => {
+        replacement.setAttribute(attribute.name, attribute.value)
+    })
+
+    while (element.firstChild) {
+        replacement.appendChild(element.firstChild)
+    }
+
+    element.replaceWith(replacement)
+    return replacement
+}
+
+const normalizeLegacyProjectContent = (fragment) => {
+    const hasLegacySectionHeadings = fragment.querySelector('h2')
+
+    if (hasLegacySectionHeadings) {
+        const headingMap = {
+            H4: 'h5',
+            H3: 'h4',
+            H2: 'h3',
+        }
+
+        fragment.querySelectorAll('h4, h3, h2').forEach((heading) => {
+            replaceElementTag(heading, headingMap[heading.tagName])
+        })
+    }
+
+    fragment.querySelectorAll('hr').forEach((divider) => {
+        divider.classList.add('project-divider')
+    })
+
+    fragment.querySelectorAll('table').forEach((table) => {
+        if (table.closest('.project-table-wrap')) return
+
+        const wrapper = document.createElement('div')
+        wrapper.className = 'project-table-wrap'
+        table.replaceWith(wrapper)
+        wrapper.appendChild(table)
+    })
+
+    fragment.querySelectorAll('.custom-code-container').forEach((container) => {
+        const pre = container.querySelector('pre')
+        if (!pre) return
+
+        const figure = document.createElement('figure')
+        figure.className = 'project-code-block'
+
+        const label = container.querySelector('.code-label')?.textContent?.trim()
+        if (label) {
+            const caption = document.createElement('figcaption')
+            caption.textContent = label
+            figure.appendChild(caption)
+        }
+
+        figure.appendChild(pre)
+        container.replaceWith(figure)
+    })
+
+    fragment.querySelectorAll('.highlight').forEach((highlight) => {
+        const pre = highlight.querySelector(':scope > pre')
+        if (!pre || highlight.closest('.project-code-block')) return
+
+        const figure = document.createElement('figure')
+        figure.className = 'project-code-block'
+        figure.appendChild(pre)
+        highlight.replaceWith(figure)
+    })
+}
+
 const highlightProjectContent = (content) => {
     if (!content || typeof document === 'undefined') return content
 
     const template = document.createElement('template')
     template.innerHTML = content
+
+    normalizeLegacyProjectContent(template.content)
 
     template.content.querySelectorAll('.project-code-block code').forEach((codeElement) => {
         const source = codeElement.textContent
