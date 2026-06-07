@@ -10,7 +10,7 @@ export const publications = [
         },
         date: '2026',
         image: '/papers/images/learned-coordination-first-page.png',
-        url: '/papers/pdfs/50_Learned_Coordination_Conven.pdf',
+        url: 'https://openreview.net/forum?id=JpqbBp9xzK',
         pdfUrl: '/papers/pdfs/50_Learned_Coordination_Conven.pdf',
         keywords: ['Cooperative MARL', 'Game-Theoretic Learning', 'Role-Conditioned Attention', 'Coordination', 'Equilibrium Selection'],
         description: {
