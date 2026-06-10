@@ -31,7 +31,7 @@ const project3 = {
         "Combat System",
         "Design Patterns"
     ],
-    "github": "",
+    "github": "https://github.com/V-2024/ProjectOmega",
     "youtube": "https://www.youtube.com/watch?v=Dl0W6wjeUj0",
     "highlights": {
         "ko": [

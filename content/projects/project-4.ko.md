@@ -8,7 +8,7 @@ keywords: ["Blockchain", "Metaverse", "IoT", "MQTT", "Data Integrity"]
 duration: "2022.10 ~ 2023.12"
 team_size: "1 people"
 role: "메인 프로그래머, 논문 작성"
-github: "https://github.com/yoosunghong/Metaverse_for_IoT/tree/main/Decentralized_MQTT"
+github: "https://github.com/yoosunghong/Metaverse_for_IoT"
 paper: "https://kism.or.kr/file/memoir/13_4_8.pdf"
 math: true
 ---

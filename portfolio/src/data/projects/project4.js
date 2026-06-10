@@ -31,7 +31,7 @@ const project4 = {
         "MQTT",
         "Data Integrity"
     ],
-    "github": "https://github.com/yoosunghong/Metaverse_for_IoT/tree/main/Decentralized_MQTT",
+    "github": "https://github.com/yoosunghong/Metaverse_for_IoT",
     "paper": "https://kism.or.kr/file/memoir/13_4_8.pdf",
     "highlights": {
         "ko": [

@@ -8,6 +8,7 @@ keywords: ["Unreal Engine 5", "VR FPS", "AI Architecture", "Combat System", "Des
 duration: "2023.09 ~ 2024.05"
 team_size: "3 people"
 role: "AI system programmer"
+github: "https://github.com/V-2024/ProjectOmega"
 youtube: "https://www.youtube.com/watch?v=Dl0W6wjeUj0"
 math: true
 ---

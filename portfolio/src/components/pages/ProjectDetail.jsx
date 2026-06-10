@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Github } from 'lucide-react'
 import katex from 'katex'
 import 'katex/dist/katex.min.css'
 import ImageLightbox from '../ui/ImageLightbox'
@@ -77,6 +77,17 @@ const getTocHeadings = (root, project) => {
 const getAnchorOffset = () => {
     const header = document.querySelector('header[role="banner"]')
     return (header?.offsetHeight || 56) + 20
+}
+
+const getGitHubRepoLabel = (url) => {
+    if (!url) return ''
+
+    return url
+        .replace(/^https:\/\/github\.com\//, '')
+        .replace(/\/$/, '')
+        .split('/')
+        .slice(0, 2)
+        .join('/')
 }
 
 const removeMathDelimiters = (element) => {
@@ -581,6 +592,21 @@ function ProjectDetail({ project, lang, navigate }) {
                             <span>{lang === 'ko' ? '역할' : 'Role'}</span>
                             <strong>{project.role[lang]}</strong>
                         </div>
+                        {project.github && (
+                            <a
+                                className="project-meta-card-link"
+                                href={project.github}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label={`GitHub repository: ${getGitHubRepoLabel(project.github)}`}
+                            >
+                                <span className="project-meta-icon-label">
+                                    <Github size={14} aria-hidden="true" />
+                                    GitHub
+                                </span>
+                                <strong>{getGitHubRepoLabel(project.github)}</strong>
+                            </a>
+                        )}
                     </div>
 
                     <div className="project-keyword-row" aria-label="Project keywords">
