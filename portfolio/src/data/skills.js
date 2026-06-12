@@ -284,6 +284,32 @@ export const credentials = [
     },
     {
         title: {
+            ko: '교육',
+            en: 'Education',
+        },
+        items: [
+            {
+                name: {
+                    ko: 'Deep Learning Specialization',
+                    en: 'Deep Learning Specialization',
+                },
+                proofImage: '/images/experience/Coursera 5TAEFIIDLBRK.pdf',
+                date: 'Jun 2026',
+                details: {
+                    ko: [
+                        'DeepLearning.AI (Coursera)',
+                        '5개 코스 수료: Neural Networks and Deep Learning, Improving Deep Neural Networks, Structuring Machine Learning Projects, Convolutional Neural Networks, Sequence Models',
+                    ],
+                    en: [
+                        'DeepLearning.AI (Coursera)',
+                        'Completed 5 courses: Neural Networks and Deep Learning, Improving Deep Neural Networks, Structuring Machine Learning Projects, Convolutional Neural Networks, Sequence Models',
+                    ],
+                },
+            },
+        ],
+    },
+    {
+        title: {
             ko: '기타(학부연구생, 외부활동, 동아리)',
             en: 'Others (Research, Extracurricular, Club)',
         },

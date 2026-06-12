@@ -52,12 +52,21 @@ function ImageLightbox({ image, onClose, label = 'Expanded image' }) {
                 <X size={18} />
             </button>
             <div className="image-lightbox-scroller">
-                <img
-                    className="image-lightbox-img"
-                    src={image.src}
-                    alt={image.alt || label}
-                    onClick={(event) => event.stopPropagation()}
-                />
+                {image.src.toLowerCase().endsWith('.pdf') ? (
+                    <iframe
+                        className="image-lightbox-pdf"
+                        src={image.src}
+                        title={image.alt || label}
+                        onClick={(event) => event.stopPropagation()}
+                    />
+                ) : (
+                    <img
+                        className="image-lightbox-img"
+                        src={image.src}
+                        alt={image.alt || label}
+                        onClick={(event) => event.stopPropagation()}
+                    />
+                )}
             </div>
         </div>
     )
