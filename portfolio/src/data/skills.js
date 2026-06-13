@@ -98,9 +98,13 @@ export const credentials = [
                 details: {
                     ko: [
                         '생성형 AI 기반 질문유형 분류를 이용한 교사 교정지도 기술 훈련 방법 및 시스템 특허 출원',
+                        '출원인: (주)삼우이머션',
+                        '역할: 제1발명자',
                     ],
                     en: [
                         'Patent application for a method and system for training teacher correction guidance skills using generative AI-based question type classification',
+                        'Applicant: Samwoo Immersion',
+                        'Role: First Inventor',
                     ],
                 },
             },
