@@ -1,4 +1,5 @@
 import project5KoContent from '../../../content/projects/project5.ko.html?raw'
+import project5EnContent from '../../../content/projects/project5.en.html?raw'
 
 const project5 = {
     "id": 5,
@@ -46,7 +47,7 @@ const project5 = {
 
 project5.content = {
     ko: project5KoContent,
-    en: project5KoContent
+    en: project5EnContent
 }
 
 export default project5
