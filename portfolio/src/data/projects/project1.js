@@ -1,5 +1,5 @@
-import project1KoContent from '../../../content/projects/project1.ko.html?raw'
-import project1EnContent from '../../../content/projects/project1.en.html?raw'
+import project1KoContent from '../../../content/projects/project1.ko.md?raw'
+import project1EnContent from '../../../content/projects/project1.en.md?raw'
 
 const project1 = {
     "id": 1,

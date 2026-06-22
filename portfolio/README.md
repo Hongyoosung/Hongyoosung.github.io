@@ -1,16 +1,19 @@
-# React + Vite
+# Portfolio site
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This GitHub Pages site is built with Vite and React. The deployment workflow in
+`../.github/workflows/hugo.yaml` runs `npm run build` in this directory and publishes
+`dist/`; the root-level Hugo configuration is not used by the deployed portfolio.
 
-Currently, two official plugins are available:
+## Editing project details
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Project detail copy lives in `content/projects` as localized Markdown files:
 
-## React Compiler
+- `projectN.en.md`
+- `projectN.ko.md`
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+The application parses GitHub Flavored Markdown with `marked`, so headings, emphasis,
+lists, fenced code blocks, and Markdown tables render automatically. Raw HTML may be
+used for layout-only structures such as media grids, `<figure>`, and `<img>`.
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Run `npm run dev` for local editing or `npm run build` to verify the production output.
+Pushing to `main` triggers the existing GitHub Pages workflow.

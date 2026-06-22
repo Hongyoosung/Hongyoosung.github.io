@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { marked } from 'marked'
 import { ArrowLeft, Github } from 'lucide-react'
 import katex from 'katex'
 import 'katex/dist/katex.min.css'
@@ -347,13 +348,25 @@ const normalizeLegacyProjectContent = (fragment) => {
         figure.appendChild(pre)
         highlight.replaceWith(figure)
     })
+
+    // Marked renders ordinary fenced Markdown as a bare <pre><code> pair.
+    // Normalize those blocks too so they receive the same themed container and
+    // syntax-token styling as legacy Hugo/custom code blocks.
+    fragment.querySelectorAll('pre').forEach((pre) => {
+        if (pre.closest('.project-code-block')) return
+
+        const figure = document.createElement('figure')
+        figure.className = 'project-code-block'
+        pre.replaceWith(figure)
+        figure.appendChild(pre)
+    })
 }
 
 const highlightProjectContent = (content) => {
     if (!content || typeof document === 'undefined') return content
 
     const template = document.createElement('template')
-    template.innerHTML = content
+    template.innerHTML = marked.parse(content, { gfm: true })
 
     normalizeLegacyProjectContent(template.content)
 
