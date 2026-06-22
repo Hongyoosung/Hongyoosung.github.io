@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ChevronLeft, ChevronRight, Github, ExternalLink, FileText } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Github, ExternalLink, FileText, Youtube } from 'lucide-react'
 import { personalInfo } from '../../data/personal'
 import { projects } from '../../data/projects'
 import { useInView } from '../../hooks/useInView'
@@ -119,8 +119,8 @@ function ProjectCard({ project, index, lang, onOpen, animStyle }) {
                     )}
                     {project.youtube && (
                         <a className="mini-link" href={project.youtube} target="_blank" rel="noopener noreferrer">
-                            <ExternalLink size={13} />
-                            Video
+                            <Youtube size={13} />
+                            YouTube
                         </a>
                     )}
                 </div>

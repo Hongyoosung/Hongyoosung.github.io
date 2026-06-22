@@ -31,6 +31,8 @@ const project5 = {
         "LangGraph",
         "Digital Twin"
     ],
+    "github": "https://github.com/yoosunghong/V-CORE",
+    "youtube": "https://www.youtube.com/watch?v=Q0mszYUpqFU",
     "highlights": {
         "ko": [
             "자연어 입력에서 UE5 시뮬레이션 실행, 실시간 텔레메트리, KPI 리포트까지 연결",

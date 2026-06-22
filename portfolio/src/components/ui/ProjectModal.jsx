@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { X, Github, ExternalLink, Calendar, User, Users, Wrench, Star, Lock } from 'lucide-react'
+import { X, Github, ExternalLink, Calendar, User, Users, Wrench, Star, Lock, Youtube } from 'lucide-react'
 
 function ProjectModal({ project, onClose }) {
   // ESC 키로 닫기
@@ -338,6 +338,27 @@ function ProjectModal({ project, onClose }) {
                   GitHub
                 </a>
                 )
+              )}
+              {project.youtube && (
+                <a
+                  href={project.youtube}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '7px',
+                    fontFamily: 'var(--font-body)', fontSize: '14px', fontWeight: 500,
+                    color: 'var(--color-fg)', backgroundColor: 'var(--color-bg-warm)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: '9999px', padding: '9px 18px',
+                    textDecoration: 'none', boxShadow: 'var(--shadow-warm)',
+                    transition: 'opacity var(--transition)',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.opacity = '0.75'}
+                  onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                >
+                  <Youtube size={14} />
+                  YouTube
+                </a>
               )}
               {project.demo && (
                 <a
