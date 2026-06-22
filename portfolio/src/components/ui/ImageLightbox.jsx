@@ -61,7 +61,7 @@ function ImageLightbox({ image, onClose, label = 'Expanded image' }) {
                     />
                 ) : (
                     <img
-                        className="image-lightbox-img"
+                        className={`image-lightbox-img${image.originalSize ? ' is-original-size' : ''}`}
                         src={image.src}
                         alt={image.alt || label}
                         onClick={(event) => event.stopPropagation()}

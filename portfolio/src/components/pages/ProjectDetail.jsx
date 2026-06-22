@@ -559,6 +559,7 @@ function ProjectDetail({ project, lang, navigate }) {
         setLightboxImage({
             src: image.currentSrc || image.src,
             alt: image.alt || project.title[lang],
+            originalSize: /\.gif(?:$|\?)/i.test(image.currentSrc || image.src),
         })
     }
 

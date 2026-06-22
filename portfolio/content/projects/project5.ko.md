@@ -2,7 +2,7 @@
 
 ### 개요 (Overview)
 
-**V-CORE**는 산업 현장의 운영 전략을 Unreal Engine 5 기반 디지털 트윈에서 검증하기 위한 **AI Agent 기반 시뮬레이션 제어 플랫폼**입니다. 사용자는 "AGV를 몇 대 투입할 것인가", "병목률 5% 이하의 최적 AGV 대수를 찾아줘"와 같은 자연어 요청을 입력하고, 시스템은 LangGraph 기반 에이전트 라우팅, 로컬 LLM Tool Calling, Validation Layer, UE5 Command Proxy를 거쳐 실제 시뮬레이션 실행과 KPI 리포트까지 자동화합니다.
+**V-CORE**는 산업 현장의 운영 전략을 Unreal Engine 5 기반 디지털 트윈에서 검증하기 위한 **AI Agent 기반 시뮬레이션 제어 플랫폼**입니다. 사용자는 "AGV를 몇 대 투입할 것인가", "병목률 5% 이하의 최적 AGV 대수를 찾아줘"와 같은 자연어 요청을 입력하고, 시스템은 LangGraph 기반 에이전트 라우팅, 로컬 LLM Tool Calling, Validation Layer, UE5 Command Proxy를 거쳐 실제 시뮬레이션 실행과 KPI 리포트까지 자동화합니다. 여기에 다국어 Vector RAG와 typed graph를 결합해 운영 절차, 실시간 설비 상태, 과거 run KPI를 출처가 추적 가능한 답변으로 연결했습니다.
 
 핵심 목표는 무거운 UE5 실행 환경을 사용자 PC에 직접 요구하지 않고, **Pixel Streaming 2와 웹 대시보드**를 통해 공정 상태를 제어·관찰하는 것입니다. 동시에 온프레미스 LLM을 운영 환경에 맞게 최적화하고, 프롬프트 증류 SFT를 통해 Tool-routing 안정성을 개선했습니다.
 
@@ -16,8 +16,9 @@
 | **Agent Orchestration** | LangGraph, Tool Calling, Tool Routing, State Management |
 | **Backend** | FastAPI, SSE, WebSocket, UE5 Command Proxy |
 | **Frontend** | React, Web Dashboard, Simulation Studio |
-| **Data / Infra** | Firebase RTDB, PostgreSQL, Docker, Perforce |
-| **Local LLM** | Qwen3.5-2B, llama.cpp, Ollama, QLoRA, GGUF(q4\_k\_m) |
+| **Knowledge / RAG** | Qdrant, bge-m3 (1024-dim), Multilingual Vector RAG, Hybrid GraphRAG, Vector/Lexical Reranking |
+| **Data / Infra** | Firebase RTDB, PostgreSQL, Qdrant Managed Cloud (GCP), Docker, Perforce |
+| **Local AI** | Qwen3.5-2B, llama.cpp, Ollama, QLoRA, GGUF(q4\_k\_m), OpenAI-compatible Embeddings API |
 
 * * *
 
@@ -62,7 +63,7 @@
 
 <figure class="flex flex-col items-center my-8"><img src="/images/project5/simulation_optionA.png" alt="AGV 3대 2배속 시뮬레이션 실행" class="max-w-3xl rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 6. 사용 예시 A: AGV 3대, 2배속 시뮬레이션 실행</figcaption></figure>
 
-<div class="gif-grid-container" style="grid-template-columns:50% 50%;margin-top:0;padding-top:0"><div class="gif-item" style="line-height:0"><img src="/gifs/project5/simulation-optionA-start-ezgif.com-video-to-gif-converter.gif" alt="AGV 3대 2배속 시뮬레이션 시작" loading="lazy" style="display:block;margin:0 auto" class="modal-trigger cursor-pointer"></div><div class="gif-item" style="line-height:0"><img src="/gifs/project5/simulation-optionA-agv-ezgif.com-video-to-gif-converter.gif" alt="AGV 3대 시뮬레이션 주행 화면" loading="lazy" style="display:block;margin:0 auto" class="modal-trigger cursor-pointer"></div></div>
+<div class="gif-grid-container" style="grid-template-columns:50% 50%;margin-top:0;padding-top:0"><figure class="gif-item"><img src="/gifs/project5/simulation-optionA-start-ezgif.com-video-to-gif-converter.gif" alt="AGV 3대 2배속 시뮬레이션 시작" loading="lazy" style="display:block;margin:0 auto" class="modal-trigger cursor-pointer"><figcaption class="gif-caption">AGV 수와 실행 속도를 지정해 기본 시뮬레이션을 시작하는 과정</figcaption></figure><figure class="gif-item"><img src="/gifs/project5/simulation-optionA-agv-ezgif.com-video-to-gif-converter.gif" alt="AGV 3대 시뮬레이션 주행 화면" loading="lazy" style="display:block;margin:0 auto" class="modal-trigger cursor-pointer"><figcaption class="gif-caption">투입된 AGV 3대가 공정 경로를 따라 주행하는 실시간 화면</figcaption></figure></div>
 
 * * *
 
@@ -76,7 +77,7 @@
 
 <figure class="flex flex-col items-center my-8"><img src="/images/project5/simulation_optionB.png" alt="목표 탐색형 시뮬레이션" class="max-w-3xl rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 7. 사용 예시 B: 병목률 기준 AGV 대수 탐색</figcaption></figure>
 
-<div class="gif-grid-container" style="grid-template-columns:50% 50%;margin-top:0;padding-top:0"><div class="gif-item" style="line-height:0"><img src="/gifs/project5/simulation-optionB-start-ezgif.com-video-to-gif-converter.gif" alt="목표 탐색 시뮬레이션 시작" loading="lazy" style="display:block;margin:0 auto" class="modal-trigger cursor-pointer"></div><div class="gif-item" style="line-height:0"><img src="/gifs/project5/simulation-optionB-loop-ezgif.com-video-to-gif-converter.gif" alt="목표 탐색 반복 실행" loading="lazy" style="display:block;margin:0 auto" class="modal-trigger cursor-pointer"></div><div class="gif-item" style="line-height:0"><img src="/gifs/project5/simulation-optionB-success-ezgif.com-video-to-gif-converter.gif" alt="목표 탐색 성공 결과" loading="lazy" style="display:block;margin:0 auto" class="modal-trigger cursor-pointer"></div></div>
+<div class="gif-grid-container" style="grid-template-columns:50% 50%;margin-top:0;padding-top:0"><figure class="gif-item"><img src="/gifs/project5/simulation-optionB-start-ezgif.com-video-to-gif-converter.gif" alt="목표 탐색 시뮬레이션 시작" loading="lazy" style="display:block;margin:0 auto" class="modal-trigger cursor-pointer"><figcaption class="gif-caption">목표 병목률을 입력해 최적 AGV 대수 탐색을 시작하는 과정</figcaption></figure><figure class="gif-item"><img src="/gifs/project5/simulation-optionB-loop-ezgif.com-video-to-gif-converter.gif" alt="목표 탐색 반복 실행" loading="lazy" style="display:block;margin:0 auto" class="modal-trigger cursor-pointer"><figcaption class="gif-caption">조건을 만족할 때까지 AGV 대수를 조정하며 시뮬레이션을 반복하는 과정</figcaption></figure><figure class="gif-item"><img src="/gifs/project5/simulation-optionB-success-ezgif.com-video-to-gif-converter.gif" alt="목표 탐색 성공 결과" loading="lazy" style="display:block;margin:0 auto" class="modal-trigger cursor-pointer"><figcaption class="gif-caption">목표 병목률을 만족하는 AGV 대수를 찾아낸 최종 결과</figcaption></figure></div>
 
 * * *
 
@@ -90,7 +91,7 @@ V-CORE는 시뮬레이션 실행 후에도 사용자의 후속 요청을 같은 
 
 <figure class="flex flex-col items-center my-8"><img src="/images/project5/process_status_terminate.png" alt="시뮬레이션 상태 보고와 종료 화면" class="max-w-3xl rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 8. 시뮬레이션 상태 보고 및 종료 명령 처리</figcaption></figure>
 
-<div class="gif-grid-container" style="grid-template-columns:50% 50%;margin-top:0;padding-top:0"><div class="gif-item" style="line-height:0"><img src="/gifs/project5/simulation-status-ezgif.com-video-to-gif-converter.gif" alt="시뮬레이션 상태 보고" loading="lazy" style="display:block;margin:0 auto" class="modal-trigger cursor-pointer"></div><div class="gif-item" style="line-height:0"><img src="/gifs/project5/simulation-termination-ezgif.com-video-to-gif-converter.gif" alt="시뮬레이션 종료 처리" loading="lazy" style="display:block;margin:0 auto" class="modal-trigger cursor-pointer"></div><div class="gif-item" style="line-height:0"><img src="/gifs/project5/simulation-optionA-result-ezgif.com-video-to-gif-converter.gif" alt="시뮬레이션 결과 보고" loading="lazy" style="display:block;margin:0 auto" class="modal-trigger cursor-pointer"></div></div>
+<div class="gif-grid-container" style="grid-template-columns:50% 50%;margin-top:0;padding-top:0"><figure class="gif-item"><img src="/gifs/project5/simulation-status-ezgif.com-video-to-gif-converter.gif" alt="시뮬레이션 상태 보고" loading="lazy" style="display:block;margin:0 auto" class="modal-trigger cursor-pointer"><figcaption class="gif-caption">실행 중인 시뮬레이션의 진행 상태와 주요 지표를 조회하는 과정</figcaption></figure><figure class="gif-item"><img src="/gifs/project5/simulation-termination-ezgif.com-video-to-gif-converter.gif" alt="시뮬레이션 종료 처리" loading="lazy" style="display:block;margin:0 auto" class="modal-trigger cursor-pointer"><figcaption class="gif-caption">자연어 종료 명령을 검증한 뒤 실행 중인 시뮬레이션을 중단하는 과정</figcaption></figure><figure class="gif-item"><img src="/gifs/project5/simulation-optionA-result-ezgif.com-video-to-gif-converter.gif" alt="시뮬레이션 결과 보고" loading="lazy" style="display:block;margin:0 auto" class="modal-trigger cursor-pointer"><figcaption class="gif-caption">완료된 실행의 KPI와 개선 포인트를 결과 리포트로 확인하는 과정</figcaption></figure></div>
 
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-8 items-start"><figure class="flex flex-col items-center"><img src="/images/project5/simulation_optionA_result-1.png" alt="시뮬레이션 결과 보고 요약" class="w-full rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 9. 기본 시뮬레이션 결과 보고 요약</figcaption></figure><figure class="flex flex-col items-center"><img src="/images/project5/simulation_optionA_result-2.png" alt="시뮬레이션 결과 상세 KPI" class="w-full rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 10. KPI와 개선 포인트를 포함한 결과 상세</figcaption></figure></div>
 
@@ -104,6 +105,19 @@ AGV 행동은 Behavior Tree보다 StateTree가 적합하다고 판단했습니�
 
 * * *
 
+#### 7\. 다국어 RAG와 Typed Graph 기반 운영 지식 추출
+
+기존의 명령 실행 에이전트를 **근거 기반 운영 코파일럿**으로 확장했습니다. 일반 운영 질의와 KPI 리포트 생성 시 LangGraph의 `retrieve` 노드가 다국어 지식을 검색하고, 출처가 확인된 컨텍스트만 답변에 주입합니다. 영문 질의로 한국어 AGV 절차서를 찾을 수 있으며, 근거가 없으면 `not in the knowledge base`로 명시적으로 응답을 보류합니다.
+
+-   **Multilingual Vector RAG**: 14개 AGV 도메인 문서를 16개 deterministic point로 청킹하고, 로컬 `bge-m3`의 1024차원 embedding과 Qdrant cosine search를 결합했습니다. 2026-06-21 Managed Cloud acceptance에서 영문 충돌 대응 질의에 한국어 `sop_collision_001`이 0.62117743으로 1위 검색됐습니다.
+-   **Hybrid GraphRAG**: 자유 텍스트 SOP·사양 질의는 vector path로, 스테이션 상태와 과거 KPI를 결합해야 하는 관계형 질의는 typed graph path로 분기합니다. `Cell -> Zone -> Station -> Capability`와 `Cell -> Run -> Kpi`를 연결해 Zone별 작업 가능 스테이션, readiness/accessibility, 최신 저장 run의 `bottleneck_rate`를 한 번에 추출합니다.
+-   **Hexagonal Knowledge Boundary**: 도메인은 `KnowledgeGateway` port만 의존하고 Qdrant, hybrid graph, null/degraded adapter를 설정으로 교체합니다. Cloud primary 검색 실패 시 동일 collection schema와 point ID를 가진 local Qdrant mirror로 재시도해 오프라인 데모 경로를 유지합니다.
+-   **Cited Answer Contract**: 검색 결과를 신뢰되지 않은 컨텍스트로 취급해 sanitize한 뒤 문서 출처와 함께 주입합니다. 근거 없는 모델 기억보다 검색된 절차를 우선하고, 최소 score를 통과한 근거가 없으면 답변을 생성하지 않습니다.
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-8 items-start"><figure class="flex flex-col items-center"><img src="/images/project5/rag_architecture_before_after.png" alt="RAG 도입 전후 지식 검색 아키텍처" class="w-full rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 13. Fake-vector scaffold에서 retrieve-rerank-sanitize-cite 파이프라인으로의 확장</figcaption></figure><figure class="flex flex-col items-center"><img src="/images/project5/hybrid_graphrag_path.png" alt="Hybrid GraphRAG typed multi-hop 경로" class="w-full rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 14. Zone, Station, Capability, Run, KPI를 연결하는 typed multi-hop retrieval</figcaption></figure></div>
+
+* * *
+
 ### 주요 문제 해결 과정 (Problem Solving)
 
 #### 1\. LLM 출력 불안정성과 Validation Layer
@@ -112,7 +126,7 @@ AGV 행동은 Behavior Tree보다 StateTree가 적합하다고 판단했습니�
 -   **Solution**: JSON 추출, schema 검증, range 검증, 제한적 repair retry, safe decline, rule-based fallback을 포함한 Validation Layer를 구축했습니다. 실행 가능한 명령만 UE5 Command Client로 전달하고, 모호하거나 위험한 요청은 되묻거나 거부합니다.
 -   **Result**: LLM 출력 실패와 시스템 실행 실패를 분리했고, benchmark에서 validation layer의 실제 기여와 부작용을 ablation으로 측정할 수 있는 구조를 확보했습니다.
 
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-8 items-start"><figure class="flex flex-col items-center"><img src="/images/project5/tool_success.png" alt="Tool routing 성공률" class="max-w-md rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 13. Tool selection schema와 종단 상태 검증</figcaption></figure><figure class="flex flex-col items-center"><img src="/images/project5/ablation_matrix.png" alt="Validation ablation matrix" class="w-full rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 14. Provider 및 Validation Layer 조합별 ablation 결과</figcaption></figure></div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-8 items-start"><figure class="flex flex-col items-center"><img src="/images/project5/tool_success.png" alt="Tool routing 성공률" class="max-w-md rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 15. Tool selection schema와 종단 상태 검증</figcaption></figure><figure class="flex flex-col items-center"><img src="/images/project5/ablation_matrix.png" alt="Validation ablation matrix" class="w-full rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 16. Provider 및 Validation Layer 조합별 ablation 결과</figcaption></figure></div>
 
 #### 2\. 온프레미스 LLM 서빙 엔진 선택
 
@@ -126,13 +140,19 @@ AGV 행동은 Behavior Tree보다 StateTree가 적합하다고 판단했습니�
 -   **Solution**: Qwen3.5-2B 기반 QLoRA SFT를 수행하여 프롬프트 기반 tool-routing 규칙을 모델 가중치에 증류했습니다. Train 300 / Val 50 / Test 100 split으로 학습하고, 모든 라벨을 live ToolRouter.validate로 검증했습니다.
 -   **Result**: Base 모델은 긴 운영 프롬프트가 제거되면 tool-routing 성공률이 49%에서 12%로 하락했지만, SFT 모델은 4줄 최소 프롬프트만으로 96%를 달성했습니다. 세부 지표도 disambiguation 30% -> 95%, KPI acceptance 50% -> 100%, invalid/missing parameter decline 0% -> 100%로 개선했습니다.
 
-<figure class="flex flex-col items-center my-8"><img src="/images/project5/sft_heldout.png" alt="Prompt-distilled SFT held-out 평가" class="max-w-3xl rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans">Fig 15. Base + Minimal, Base + Full, SFT + Minimal 조건별 held-out 평가 결과</figcaption></figure>
+<figure class="flex flex-col items-center my-8"><img src="/images/project5/sft_heldout.png" alt="Prompt-distilled SFT held-out 평가" class="max-w-3xl rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans">Fig 17. Base + Minimal, Base + Full, SFT + Minimal 조건별 held-out 평가 결과</figcaption></figure>
 
 #### 4\. Adapter Toggle 기반 단일 엔드포인트 배포
 
 -   **Problem**: 라우팅 전용 SFT 모델과 일반 chat/report용 base 모델을 분리해 운영하려 했지만 8GB VRAM 예산을 초과했습니다. 또한 SFT 모델 하나로 일반 보고·대화까지 처리하면 반복 출력과 언어 누출 문제가 발생했습니다.
 -   **Solution**: llama.cpp의 LoRA adapter on/off 기능을 활용해 base 모델 하나를 상주시켰습니다. routing 요청에서만 adapter scale을 1.0으로 켜고, chat/report/plan 요청에서는 0.0으로 꺼서 역할 분리를 유지했습니다.
 -   **Result**: 상주 모델 구조를 `Base 1개 + 소형 LoRA adapter`로 줄였고, routing 경로는 99.4%, chat/report 경로는 결함 0건, backend unit test 32건 통과를 확인했습니다.
+
+#### 5\. 검색 근거 없는 환각과 RAG 품질 회귀 방지
+
+-   **Problem**: 초기 Qdrant는 placeholder hash vector를 생성하는 seed scaffold에 머물렀고 application retrieval path가 연결되지 않았습니다. 모델이 절차를 내부 기억만으로 생성하면 근거 없는 운영 지침을 답할 수 있고, 검색이 한 번 성공하더라도 corpus·reranker·routing 변경 후 ranking과 citation 품질이 조용히 회귀할 위험이 있었습니다.
+-   **Solution**: `classify -> retrieve -> rerank -> score filter -> sanitize -> cite/abstain` 경로를 LangGraph에 연결했습니다. 검색 문서는 untrusted input으로 취급해 instruction-like phrase를 neutralize하고 email·전화번호·주민등록번호·secret pattern을 redact했습니다. 또한 vector 6건, graph 2건, answer 3건의 소규모 deterministic regression set으로 retrieval, citation, faithfulness, grounding, abstention contract를 gate했습니다.
+-   **Result**: checked-in baseline에서 vector retrieval recall@5 1.00 / nDCG@5 0.88, graph retrieval recall@3 1.00 / nDCG@3 1.00을 기록했고, 3개 answer case의 citation·faithfulness·grounding·abstention을 각각 1.00으로 고정했습니다. 각 turn에는 route, node path, retrieval hit, latency, estimated token, `low_grounding` / `possible_misroute`를 포함한 redacted trace를 남겨 실패 원인을 재현할 수 있게 했습니다.
 
 * * *
 
@@ -142,8 +162,10 @@ AGV 행동은 Behavior Tree보다 StateTree가 적합하다고 판단했습니�
 -   **로컬 LLM 운영 최적화**: 외부 호스팅 LLM API 없이 온프레미스 tool planning을 수행하고, llama.cpp CUDA build와 reasoning-off 설정으로 latency를 줄였습니다.
 -   **Tool-routing 성능 개선**: 프롬프트 증류 QLoRA SFT를 통해 4줄 최소 프롬프트 조건에서 tool-routing 성공률 96%를 달성했습니다.
 -   **실시간 공정 관찰**: Firebase RTDB와 SSE를 통해 AGV 가동률, 처리율, 충돌 위험, 혼잡 히트맵을 웹 UI에 시각화했습니다.
+-   **근거 기반 운영 지식 확장**: 16개 Qdrant point와 typed graph를 LangGraph에 연결해 다국어 SOP 검색, 출처 인용, 명시적 abstention, 최신 run KPI 결합 질의를 하나의 운영 대화 흐름으로 통합했습니다.
+-   **RAG 회귀 품질 정량화**: 소규모 regression set에서 vector recall@5 1.00, graph recall@3 1.00, citation·faithfulness·grounding·abstention 1.00을 기준선으로 고정했습니다.
 
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-8 items-start"><figure class="flex flex-col items-center"><img src="/images/project5/simulationresult_success.png" alt="시뮬레이션 성공 결과" class="max-w-sm rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 16. Acceptance 기준을 만족한 성공 결과</figcaption></figure><figure class="flex flex-col items-center"><img src="/images/project5/simulationresult_fail.png" alt="시뮬레이션 실패 결과" class="max-w-sm rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 17. 기준 미달 또는 충돌 위험에 따른 실패 판정</figcaption></figure></div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-8 items-start"><figure class="flex flex-col items-center"><img src="/images/project5/simulationresult_success.png" alt="시뮬레이션 성공 결과" class="max-w-sm rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 18. Acceptance 기준을 만족한 성공 결과</figcaption></figure><figure class="flex flex-col items-center"><img src="/images/project5/simulationresult_fail.png" alt="시뮬레이션 실패 결과" class="max-w-sm rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 19. 기준 미달 또는 충돌 위험에 따른 실패 판정</figcaption></figure></div>
 
 * * *
 
@@ -153,3 +175,6 @@ AGV 행동은 Behavior Tree보다 StateTree가 적합하다고 판단했습니�
 -   **다중 사용자 검증 필요**: adapter toggle은 단일 사용자 환경에서는 효과적이었지만, 다중 사용자 요청이 동시에 들어오는 환경의 동시성 검증이 추가로 필요합니다.
 -   **고정 Tool Set 의존성**: 현재 SFT는 학습 당시의 tool schema에 최적화되어 있어 tool 추가 또는 schema 변경 시 재학습 또는 범용 라우팅 규칙 학습 전략이 필요합니다.
 -   **MLOps 자동화 부족**: 모델 버전 관리, 평가 자동화, 배포 추적을 더 체계화할 필요가 있습니다.
+-   **RAG 평가셋 규모 제한**: 현재 기준선은 vector 6건, graph 2건, answer 3건의 의도적으로 작은 회귀 검증셋입니다. 파이프라인 계약과 알려진 회귀는 방지하지만 통계적 production benchmark는 아니므로, 실제 운영 로그 기반 hard-negative와 한국어·영어 질의 변형을 포함한 평가 데이터셋을 확장해야 합니다.
+-   **GraphRAG 표현력 제한**: 현재 graph는 station registry와 저장된 run/KPI로 매번 in-process 재구축되며 관계형 query grammar도 영어 rule 기반입니다. 향후 persistent graph store와 한국어 entity/constraint parsing을 도입하고, station별 KPI attribution까지 확장할 필요가 있습니다.
+-   **Cloud Failback의 운영 한계**: Qdrant Managed Cloud와 local mirror 간 retrieval failback은 제공하지만 전체 플랫폼 HA나 SLA를 보장하지 않습니다. corpus 동기화 검증, 장애 전환 관측성, secret rotation을 포함한 배포 자동화가 추가로 필요합니다.
