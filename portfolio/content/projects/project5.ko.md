@@ -34,6 +34,8 @@
 
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-8 items-start"><figure class="flex flex-col items-center"><img src="/images/project5/agent_layer1.png" alt="에이전트 라우팅 그래프" class="w-full rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 1. LangGraph 기반 라우트 분류 및 제어 흐름</figcaption></figure><figure class="flex flex-col items-center"><img src="/images/project5/agent_layer2.png" alt="툴 플래닝 그래프" class="w-full rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 2. robot_command 라우트의 2단계 Tool Planning</figcaption></figure></div>
 
+<br/>
+
 * * *
 
 ### 2\. KPI 기반 공정 판정과 Simulation Studio
@@ -51,6 +53,8 @@
 
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-8 items-start"><figure class="flex flex-col items-center"><img src="/images/project5/simulation_studio.png" alt="시뮬레이션 스튜디오" class="w-full rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 3. 시나리오 목록, 실행 기록, 결과 KPI를 확인하는 Simulation Studio</figcaption></figure><figure class="flex flex-col items-center"><img src="/images/project5/congestion_heatmap.png" alt="혼잡 히트맵" class="max-w-md rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 4. AGV 위치 샘플링 기반 혼잡 히트맵</figcaption></figure></div>
 
+<br/>
+
 * * *
 
 ### 3\. 기본 시뮬레이션 실행
@@ -65,6 +69,8 @@
 
 <div class="gif-grid-container" style="grid-template-columns:50% 50%;margin-top:0;padding-top:0"><figure class="gif-item"><img src="/gifs/project5/simulation-optionA-start-ezgif.com-video-to-gif-converter.gif" alt="AGV 3대 2배속 시뮬레이션 시작" loading="lazy" style="display:block;margin:0 auto" class="modal-trigger cursor-pointer"><figcaption class="gif-caption">AGV 대수 및 실행 배속 설정 후 기본 시뮬레이션 시작</figcaption></figure><figure class="gif-item"><img src="/gifs/project5/simulation-optionA-agv-ezgif.com-video-to-gif-converter.gif" alt="AGV 3대 시뮬레이션 주행 화면" loading="lazy" style="display:block;margin:0 auto" class="modal-trigger cursor-pointer"><figcaption class="gif-caption">설정된 공정 경로를 따라 이동하는 AGV 3대의 주행 화면</figcaption></figure></div>
 
+<br/>
+
 * * *
 
 ### 4\. Agentic Loop 기반 AGV 최적 대수 탐색
@@ -75,9 +81,9 @@
 -   **후보 실행**: 후보 AGV 대수마다 KPI와 병목률을 산출하고 실행 기록에 저장합니다.
 -   **결과 선택**: 목표를 만족하는 후보 중 가장 높은 처리 여유를 가진 AGV 대수를 선택하고, 모든 시도 내역을 한국어 리포트로 반환합니다.
 
-<figure class="flex flex-col items-center my-8"><img src="/images/project5/simulation_optionB.png" alt="목표 탐색형 시뮬레이션" class="max-w-3xl rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 6. 사용 예시 B: 병목률 기준 AGV 대수 탐색</figcaption></figure>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-8 items-start"><figure class="flex flex-col items-center"><img src="/images/project5/simulation_optionB.png" alt="목표 탐색형 시뮬레이션" class="w-full rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 6. 사용 예시 B: 병목률 기준 AGV 대수 탐색</figcaption></figure><div class="gif-grid-container" style="grid-template-columns:100%;margin:0;padding:0"><figure class="gif-item"><img src="/gifs/project5/simulation-optionB-start-ezgif.com-video-to-gif-converter.gif" alt="목표 탐색 시뮬레이션 시작" loading="lazy" style="display:block;margin:0 auto" class="modal-trigger cursor-pointer"><figcaption class="gif-caption">목표 병목률에 도달하기 위한 최적 AGV 대수 탐색 시작</figcaption></figure><figure class="gif-item"><img src="/gifs/project5/simulation-optionB-loop-ezgif.com-video-to-gif-converter.gif" alt="목표 탐색 반복 실행" loading="lazy" style="display:block;margin:0 auto" class="modal-trigger cursor-pointer"><figcaption class="gif-caption">목표를 만족할 때까지 AGV 대수를 조정하며 시뮬레이션 반복 실행</figcaption></figure><figure class="gif-item"><img src="/gifs/project5/simulation-optionB-success-ezgif.com-video-to-gif-converter.gif" alt="목표 탐색 성공 결과" loading="lazy" style="display:block;margin:0 auto" class="modal-trigger cursor-pointer"><figcaption class="gif-caption">목표 병목률 기준을 충족하는 AGV 대수 탐색 성공 결과</figcaption></figure></div></div>
 
-<div class="gif-grid-container" style="grid-template-columns:50% 50%;margin-top:0;padding-top:0"><figure class="gif-item"><img src="/gifs/project5/simulation-optionB-start-ezgif.com-video-to-gif-converter.gif" alt="목표 탐색 시뮬레이션 시작" loading="lazy" style="display:block;margin:0 auto" class="modal-trigger cursor-pointer"><figcaption class="gif-caption">목표 병목률에 도달하기 위한 최적 AGV 대수 탐색 시작</figcaption></figure><figure class="gif-item"><img src="/gifs/project5/simulation-optionB-loop-ezgif.com-video-to-gif-converter.gif" alt="목표 탐색 반복 실행" loading="lazy" style="display:block;margin:0 auto" class="modal-trigger cursor-pointer"><figcaption class="gif-caption">목표를 만족할 때까지 AGV 대수를 조정하며 시뮬레이션 반복 실행</figcaption></figure><figure class="gif-item"><img src="/gifs/project5/simulation-optionB-success-ezgif.com-video-to-gif-converter.gif" alt="목표 탐색 성공 결과" loading="lazy" style="display:block;margin:0 auto" class="modal-trigger cursor-pointer"><figcaption class="gif-caption">목표 병목률 기준을 충족하는 AGV 대수 탐색 성공 결과</figcaption></figure></div>
+<br/>
 
 * * *
 
@@ -89,11 +95,11 @@ V-CORE는 시뮬레이션 실행 후에도 사용자의 후속 요청을 같은 
 -   **시뮬레이션 종료**: 진행 중인 UE5 run을 안전하게 정지하고 종료 상태를 사용자에게 확인시킵니다.
 -   **결과 보고**: 완료된 run의 KPI, acceptance 판정, 병목 구간, 개선 제안을 한국어 리포트로 생성합니다.
 
-<figure class="flex flex-col items-center my-8"><img src="/images/project5/process_status_terminate.png" alt="시뮬레이션 상태 보고와 종료 화면" class="max-w-3xl rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 7. 시뮬레이션 상태 보고 및 종료 명령 처리</figcaption></figure>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-8 items-start"><figure class="flex flex-col items-center"><img src="/images/project5/process_status_terminate.png" alt="시뮬레이션 상태 보고와 종료 화면" class="w-full rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 7. 시뮬레이션 상태 보고 및 종료 명령 처리</figcaption></figure><figure class="flex flex-col items-center"><img src="/images/project5/simulation_optionA_result-1.png" alt="시뮬레이션 결과 보고 요약" class="w-full rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 8. 기본 시뮬레이션 결과 보고 요약</figcaption></figure><figure class="flex flex-col items-center"><img src="/images/project5/simulation_optionA_result-2.png" alt="시뮬레이션 결과 상세 KPI" class="w-full rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 9. KPI와 개선 포인트를 포함한 결과 상세</figcaption></figure></div>
 
-<div class="gif-grid-container" style="grid-template-columns:50% 50%;margin-top:0;padding-top:0"><figure class="gif-item"><img src="/gifs/project5/simulation-status-ezgif.com-video-to-gif-converter.gif" alt="시뮬레이션 상태 보고" loading="lazy" style="display:block;margin:0 auto" class="modal-trigger cursor-pointer"><figcaption class="gif-caption">실행 중인 시뮬레이션의 실시간 진행 상태 및 주요 지표 확인</figcaption></figure><figure class="gif-item"><img src="/gifs/project5/simulation-termination-ezgif.com-video-to-gif-converter.gif" alt="시뮬레이션 종료 처리" loading="lazy" style="display:block;margin:0 auto" class="modal-trigger cursor-pointer"><figcaption class="gif-caption">자연어 종료 명령을 검증하고 실행 중인 시뮬레이션 안전하게 종료</figcaption></figure><figure class="gif-item"><img src="/gifs/project5/simulation-optionA-result-ezgif.com-video-to-gif-converter.gif" alt="시뮬레이션 결과 보고" loading="lazy" style="display:block;margin:0 auto" class="modal-trigger cursor-pointer"><figcaption class="gif-caption">완료된 시뮬레이션의 KPI 및 개선점이 요약된 결과 리포트 확인</figcaption></figure></div>
+<div class="gif-grid-container" style="grid-template-columns:100%;margin-top:0;padding-top:0"><figure class="gif-item"><img src="/gifs/project5/simulation-status-ezgif.com-video-to-gif-converter.gif" alt="시뮬레이션 상태 보고" loading="lazy" style="display:block;margin:0 auto" class="modal-trigger cursor-pointer"><figcaption class="gif-caption">실행 중인 시뮬레이션의 실시간 진행 상태 및 주요 지표 확인</figcaption></figure><figure class="gif-item"><img src="/gifs/project5/simulation-termination-ezgif.com-video-to-gif-converter.gif" alt="시뮬레이션 종료 처리" loading="lazy" style="display:block;margin:0 auto" class="modal-trigger cursor-pointer"><figcaption class="gif-caption">자연어 종료 명령을 검증하고 실행 중인 시뮬레이션 안전하게 종료</figcaption></figure><figure class="gif-item"><img src="/gifs/project5/simulation-optionA-result-ezgif.com-video-to-gif-converter.gif" alt="시뮬레이션 결과 보고" loading="lazy" style="display:block;margin:0 auto" class="modal-trigger cursor-pointer"><figcaption class="gif-caption">완료된 시뮬레이션의 KPI 및 개선점이 요약된 결과 리포트 확인</figcaption></figure></div>
 
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-8 items-start"><figure class="flex flex-col items-center"><img src="/images/project5/simulation_optionA_result-1.png" alt="시뮬레이션 결과 보고 요약" class="w-full rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 8. 기본 시뮬레이션 결과 보고 요약</figcaption></figure><figure class="flex flex-col items-center"><img src="/images/project5/simulation_optionA_result-2.png" alt="시뮬레이션 결과 상세 KPI" class="w-full rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 9. KPI와 개선 포인트를 포함한 결과 상세</figcaption></figure></div>
+<br/>
 
 * * *
 
@@ -102,6 +108,8 @@ V-CORE는 시뮬레이션 실행 후에도 사용자의 후속 요청을 같은 
 AGV 행동은 Behavior Tree보다 StateTree가 적합하다고 판단했습니다. AGV는 정해진 스플라인을 따라 이동하고, `pick_up`, `drop_off`처럼 상태와 전환 조건이 명확합니다. 복잡한 네비게이션 연산 대신 Pawn 기반 Transition Update를 StateTree Task로 정의하여 시뮬레이션 요구사항을 직관적으로 표현했습니다.
 
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-8 items-start"><figure class="flex flex-col items-center"><img src="/images/project5/statetree1.png" alt="AGV StateTree 전체 구조" class="w-full rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 10. AGV 행동을 표현한 UE5 StateTree 구조</figcaption></figure><figure class="flex flex-col items-center"><img src="/images/project5/statetree2.png" alt="AGV StateTree 상세" class="w-full rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 11. 스테이션 도달 및 작업 상태 전환 로직</figcaption></figure></div>
+
+<br/>
 
 * * *
 
@@ -116,9 +124,21 @@ AGV 행동은 Behavior Tree보다 StateTree가 적합하다고 판단했습니�
 -   **Memoized graph projection**: typed graph를 관계형 질의마다 재구축하지 않고 `(stations, runs)` 콘텐츠 fingerprint 기반으로 memoize해, 상태가 바뀔 때만 재구축하고 동일 상태의 다중 질의는 캐시된 graph를 공유합니다.
 
 
-<figure class="flex flex-col items-center my-8"><img src="/images/project5/graphrag-sequence.png" alt="GraphRAG의 Hybrid 조건 분기" class="max-w-xl rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 12. GraphRAG의 Hybrid 조건 분기</figcaption></figure>
+<figure class="flex flex-col items-center my-8"><img src="/images/project5/graphrag-sequence.png" alt="GraphRAG의 Hybrid 조건 분기" class="max-w-md rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 12. GraphRAG의 Hybrid 조건 분기</figcaption></figure>
 
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-8 items-start"><figure class="flex flex-col items-center"><img src="/images/project5/graphrag-chat1.png" alt="AGV StateTree 전체 구조" class="w-full rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 13. 복합 질의 채팅 입력</figcaption></figure><figure class="flex flex-col items-center"><img src="/images/project5/graphrag-chat2.png" alt="AGV StateTree 상세" class="w-full rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 14. GraphRAG 기반 결과 반환</figcaption></figure></div>
+
+<br/>
+
+* * *
+
+### 8\. Google Cloud VM 기반 원격 서비스 배포
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-8 items-start"><figure class="flex flex-col items-center"><img src="/images/project5/cloud.png" alt="Cloud VM을 통한 스트리밍 서빙 구조" class="w-full rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 15. Cloud VM을 통한 스트리밍 서빙 구조</figcaption></figure><figure class="flex flex-col items-center"><img src="/images/project5/domain.png" alt="도메인 배포" class="w-full rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 16. 도메인 배포</figcaption></figure></div>
+
+Google Cloud VM에는 Pixel Streaming의 Signalling/Player 및 TURN 중계 계층만 배포하고, GPU 렌더링을 수행하는 UE5와 웹·LLM 백엔드는 로컬 워크스테이션에서 실행하였습니다. 운영 웹은 Cloudflare Tunnel을 통해 도메인으로 공개했으며, UE5는 outbound WebSocket으로 클라우드 Signalling Server에 영상을 송출하도록 구성하였습니다.
+
+
 
 
 * * *
@@ -141,6 +161,10 @@ LLM 출력 실패와 시스템 실행 실패를 분리했고, benchmark에서 va
 
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-8 items-start"><figure class="flex flex-col items-center"><img src="/images/project5/tool_success.png" alt="Tool routing 성공률" class="max-w-md rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 15. Tool selection schema와 종단 상태 검증</figcaption></figure><figure class="flex flex-col items-center"><img src="/images/project5/ablation_matrix.png" alt="Validation ablation matrix" class="w-full rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 16. Provider 및 Validation Layer 조합별 ablation 결과</figcaption></figure></div>
 
+<br/>
+
+* * *
+
 ### 2\. 온프레미스 LLM 서빙 엔진 선택
 
 #### Problem
@@ -154,6 +178,10 @@ Ollama와 llama.cpp CUDA build를 동일 benchmark로 비교했습니다. 133개
 #### Result
 
 reasoning-off 및 CUDA 기반 llama.cpp 경로에서 추론 지연을 약 11.7초에서 약 2.4초로 줄였고, 운영 도메인에 더 적합한 서빙 경로를 판단할 수 있었습니다.
+
+<br/>
+
+* * *
 
 ### 3\. Prompt-Distilled SFT Router
 
@@ -171,6 +199,10 @@ Base 모델은 긴 운영 프롬프트가 제거되면 tool-routing 성공률이
 
 <figure class="flex flex-col items-center my-8"><img src="/images/project5/sft_heldout.png" alt="Prompt-distilled SFT held-out 평가" class="max-w-3xl rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans">Fig 17. Base + Minimal, Base + Full, SFT + Minimal 조건별 held-out 평가 결과</figcaption></figure>
 
+<br/>
+
+* * *
+
 ### 4\. Adapter Toggle 기반 단일 엔드포인트 배포
 
 #### Problem
@@ -184,6 +216,10 @@ llama.cpp의 LoRA adapter on/off 기능을 활용해 base 모델 하나를 상�
 #### Result
 
 상주 모델 구조를 `Base 1개 + 소형 LoRA adapter`로 줄였고, routing 경로는 99.4%, chat/report 경로는 결함 0건, backend unit test 32건 통과를 확인했습니다.
+
+<br/>
+
+* * *
 
 ### 5\. 검색 근거 없는 환각과 RAG 품질 회귀 방지
 
@@ -199,6 +235,9 @@ llama.cpp의 LoRA adapter on/off 기능을 활용해 base 모델 하나를 상�
 
 checked-in baseline에서 vector retrieval recall@5 1.00 / nDCG@5 0.88, graph retrieval recall@3 1.00 / nDCG@3 1.00을 기록했고, 3개 answer case의 citation·faithfulness·grounding·abstention을 각각 1.00으로 고정했습니다. 각 turn에는 route, node path, retrieval hit, latency, estimated token, `low_grounding` / `possible_misroute`를 포함한 redacted trace를 남겨 실패 원인을 재현할 수 있게 했습니다.
 
+<br/>
+
+* * *
 
 ### 6\. GraphRAG in-process 재구축 비용 제거 (memoized graph)
 
@@ -216,7 +255,9 @@ per-query 재구축이 per-state-change 재구축으로 바뀌어, 상태가 같
 
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-8 items-start"><figure class="flex flex-col items-center"><img src="/images/project5/graphrag-before.png" alt="AGV StateTree 전체 구조" class="w-full rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 18. 캐싱 적용 전</figcaption></figure><figure class="flex flex-col items-center"><img src="/images/project5/graphrag-after.png" alt="AGV StateTree 상세" class="w-full rounded-lg shadow-md mb-2 modal-trigger cursor-pointer"><figcaption class="text-sm text-gray-500 italic font-sans text-center">Fig 19. 캐싱 적용 후</figcaption></figure></div>
 
+
 * * *
+
 
 ## 결과 (Results)
 
@@ -237,4 +278,3 @@ per-query 재구축이 per-state-change 재구축으로 바뀌어, 상태가 같
 -   **다중 사용자 검증 필요**: adapter toggle은 단일 사용자 환경에서는 효과적이었지만, 다중 사용자 요청이 동시에 들어오는 환경의 동시성 검증이 추가로 필요합니다.
 -   **고정 Tool Set 의존성**: 현재 SFT는 학습 당시의 tool schema에 최적화되어 있어 tool 추가 또는 schema 변경 시 재학습 또는 범용 라우팅 규칙 학습 전략이 필요합니다.
 -   **MLOps 자동화 부족**: 모델 버전 관리, 평가 자동화, 배포 추적을 더 체계화할 필요가 있습니다.
--   **웹 프론트가 로컬호스트**: 초기에는 웹 프론트엔드만 외부망에 공개하여 원격 시뮬레이션 제어를 구현하고자 하였으나 UE5 Pixel Streaming은 웹 UI 외에도 시그널링 서버, WebRTC 연결, 렌더링 스트림 전달 경로가 함께 구성되어야 하므로 단순 프론트엔드 배포만으로는 원격 클라이언트에서 UE5 화면을 수신할 수 없었습니다. 이를 해결하기 위해 클라우드 환경에 Pixel Streaming 서비스를 별도로 구축하고, UE5 인스턴스가 생성하는 렌더링 데이터를 해당 서버로 직접 전송하는 구조로 변경할 필요가 있습니다.
