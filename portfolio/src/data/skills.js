@@ -216,8 +216,8 @@ export const credentials = [
                 proofImage: '/images/experience/aws.png',
                 date: '2026.01',
                 details: {
-                    ko: ['Amazon Web Services (AWS)'],
-                    en: ['Amazon Web Services (AWS)'],
+                    ko: ['AWS Cloud'],
+                    en: ['AWS CLoud'],
                 },
             },
             {

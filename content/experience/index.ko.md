@@ -38,7 +38,7 @@ certifications:
     date: "2025. 10. 03"
     image: "/images/experience/cer2.png"
   - title: "AWS Certified Solutions Architect – Associate"
-    issuer: "Amazon Web Services"
+    issuer: "AWS certified"
     date: "2026. 01. 25"
     url: "https://www.credly.com/badges/08322275-9f83-4f94-b641-ea0b559945e4/linked_in?t=t9f9h4"
   - title: "지식재산능력시험(IPAT)"
