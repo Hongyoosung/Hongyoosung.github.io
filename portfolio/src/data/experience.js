@@ -9,8 +9,7 @@ export const experience = [
             ko: 'IX 기술연구소 연구원',
             en: 'Researcher, IX Technology Lab',
         },
-        type: { ko: '현직', en: 'Current' },
-        period: '2025.03 - Present',
+        period: '2025.03 - 2026.07',
         description: {
             ko: 'XR, 시뮬레이션, 인터랙티브 플랫폼 영역에서 게임 엔진 기반 시스템과 AI 기능을 연구 개발하고 있습니다.',
             en: 'Researching and developing game-engine-based systems and AI features for XR, simulation, and interactive platforms.',
