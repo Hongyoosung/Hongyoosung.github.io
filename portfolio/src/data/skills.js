@@ -260,6 +260,31 @@ export const credentials = [
     },
     {
         title: {
+            ko: '어학',
+            en: 'Languages', // 'Language Proficiency'도 좋지만 보통 'Languages'가 더 간결하고 보편적입니다.
+        },
+        items: [
+            {
+                name: {
+                    ko: 'OPIc Intermediate Mid 2 (IM2)', // 공식 등급명을 풀네임으로 적어주면 더 격식 있어 보입니다.
+                    en: 'OPIc Intermediate Mid 2 (IM2)',
+                },
+                date: '2026. 07', // 빈칸(empty string)으로 두기보다는 취득 연월을 넣어주는 것이 신뢰감을 줍니다.
+                details: {
+                    ko: [
+                        '발급기관: ACTFL',
+                        '영어 회화 및 실무 문서 이해 가능' // 개발자로서의 실무 활용 능력을 한 줄 어필
+                    ],
+                    en: [
+                        'Issuing Organization: ACTFL',
+                        'Capable of basic technical communication and reading documentation'
+                    ],
+                },
+            },
+        ],
+    },
+    {
+        title: {
             ko: '기술 기여',
             en: 'Technical Contributions',
         },
