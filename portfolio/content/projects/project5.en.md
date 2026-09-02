@@ -2,7 +2,7 @@
 
 ### Overview
 
-**V-CORE** is an **AI agent-based simulation control platform** for validating industrial operating strategies in an Unreal Engine 5 digital twin. Users enter natural-language requests such as "How many AGVs should we deploy?" or "Find the optimal number of AGVs with a bottleneck rate below 5%." The system automates the entire workflow—from LangGraph-based agent routing, local LLM tool calling, a validation layer, and a UE5 command proxy to actual simulation execution and KPI reporting. It also combines multilingual Vector RAG with a typed graph to connect operating procedures, real-time equipment status, and historical run KPIs in traceable, source-backed answers.
+**Virtual Factory Simulation using AI agents** is a **simulation control platform** for validating industrial operating strategies in an Unreal Engine 5 digital twin. Users enter natural-language requests such as "How many AGVs should we deploy?" or "Find the optimal number of AGVs with a bottleneck rate below 5%." The system automates the entire workflow—from LangGraph-based agent routing, local LLM tool calling, a validation layer, and a UE5 command proxy to actual simulation execution and KPI reporting. It also combines multilingual Vector RAG with a typed graph to connect operating procedures, real-time equipment status, and historical run KPIs in traceable, source-backed answers.
 
 The primary goal is to let users control and observe process status through **Pixel Streaming 2 and a web dashboard** without requiring a heavy UE5 runtime on their own PCs. At the same time, the project optimizes an on-premise LLM for the operating environment and improves tool-routing stability through prompt-distilled SFT.
 
@@ -75,7 +75,7 @@ A single imperative request such as "Run a simulation with 3 AGVs at 2x speed" i
 
 ### 4\. Agentic Loop-Based AGV Count Optimization
 
-A goal-seeking request such as "Find the optimal number of AGVs with a bottleneck rate below 5%" does not end with a single Tool Call. V-CORE first identifies the optimization request, parses its target metric, queries the feasible AGV upper bound from the UE5 state, and then runs an **observe - judge - decide - re-run** closed loop.
+A goal-seeking request such as "Find the optimal number of AGVs with a bottleneck rate below 5%" does not end with a single Tool Call. The system first identifies the optimization request, parses its target metric, queries the feasible AGV upper bound from the UE5 state, and then runs an **observe - judge - decide - re-run** closed loop.
 
 -   **Goal Parsing**: Structures "bottleneck rate ≤ 5%" into a metric, comparator, and threshold.
 -   **Candidate Runs**: Calculates KPIs and bottleneck rates for each candidate AGV count, then stores the run history.
@@ -89,7 +89,7 @@ A goal-seeking request such as "Find the optimal number of AGVs with a bottlenec
 
 ### 5\. Simulation Status, Termination, and Result Reporting
 
-V-CORE continues to handle follow-up requests in the same conversational flow after a simulation begins. "Tell me the current status" maps to a real-time telemetry summary, "Stop the simulation" maps to a termination command and state check, and "Report the result" maps to a KPI-based natural-language report.
+The platform continues to handle follow-up requests in the same conversational flow after a simulation begins. "Tell me the current status" maps to a real-time telemetry summary, "Stop the simulation" maps to a termination command and state check, and "Report the result" maps to a KPI-based natural-language report.
 
 -   **Status Reporting**: Summarizes AGV positions, uptime, throughput, and wait states collected through Firebase RTDB and SSE.
 -   **Simulation Termination**: Safely stops the active UE5 run and confirms its terminal state for the user.

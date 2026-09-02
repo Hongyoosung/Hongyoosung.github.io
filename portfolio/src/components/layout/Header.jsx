@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Menu, X, Sun, Moon } from 'lucide-react'
-import { navLinks } from '../../data/navigation'
+import { Menu, X, Sun, Moon, Download } from 'lucide-react'
+import { navLinks, resumeFiles, resumeLabel } from '../../data/navigation'
 import { personalInfo } from '../../data/personal'
 
 function Header({ isDark, lang, onToggleTheme, onToggleLanguage, navigate }) {
@@ -159,6 +159,28 @@ function Header({ isDark, lang, onToggleTheme, onToggleLanguage, navigate }) {
                                 {link.label[lang]}
                             </button>
                         ))}
+
+                        <a
+                            className="nav-page-link nav-resume-link"
+                            href={resumeFiles[lang]}
+                            download
+                            style={{
+                                color: fgMuted,
+                                borderColor: borderTone,
+                            }}
+                            onMouseEnter={e => {
+                                e.currentTarget.style.color = fgColor
+                                e.currentTarget.style.borderColor = fgColor
+                            }}
+                            onMouseLeave={e => {
+                                e.currentTarget.style.color = fgMuted
+                                e.currentTarget.style.borderColor = borderTone
+                            }}
+                            aria-label={lang === 'ko' ? '이력서 PDF 내려받기' : 'Download resume PDF'}
+                        >
+                            <Download size={13} />
+                            {resumeLabel[lang]}
+                        </a>
                     </div>
 
                     <div className="flex items-center gap-1">
@@ -229,6 +251,28 @@ function Header({ isDark, lang, onToggleTheme, onToggleLanguage, navigate }) {
                             {link.label[lang]}
                         </button>
                     ))}
+
+                    <a
+                        href={resumeFiles[lang]}
+                        download
+                        onClick={() => setMobileOpen(false)}
+                        style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '12px 0',
+                            fontFamily: 'var(--font-body)',
+                            fontSize: '15px',
+                            fontWeight: 500,
+                            color: 'var(--color-fg-secondary)',
+                            textDecoration: 'none',
+                            borderBottom: '1px solid var(--color-border-subtle)',
+                        }}
+                        role="menuitem"
+                    >
+                        <Download size={15} />
+                        {resumeLabel[lang]}
+                    </a>
                 </div>
             )}
         </header>

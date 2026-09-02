@@ -8,3 +8,13 @@ export const navLinks = [
     { id: 'news', label: { ko: '뉴스', en: 'News' }, type: 'page', path: '/news' },
     { id: 'contact', label: { ko: 'Contact', en: 'Contact' }, type: 'section' },
 ]
+
+// Language-specific resume file. Drop the PDFs at:
+//   static/resume/yoosung-hong-resume-en.pdf
+//   static/resume/yoosung-hong-resume-ko.pdf
+export const resumeFiles = {
+    en: '/resume/yoosung-hong-resume-en.pdf',
+    ko: '/resume/yoosung-hong-resume-ko.pdf',
+}
+
+export const resumeLabel = { ko: '이력서', en: 'Resume' }

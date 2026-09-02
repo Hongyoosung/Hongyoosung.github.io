@@ -4,6 +4,6 @@ import project3 from './projects/project3'
 import project4 from './projects/project4'
 import project5 from './projects/project5'
 
-export const projects = [project5, project1, project2, project3, project4]
+export const projects = [project1, project5, project2, project3, project4]
 
 export const getProjectBySlug = (slug) => projects.find((project) => project.slug === slug)

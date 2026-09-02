@@ -5,7 +5,7 @@ import { cpSync, createReadStream, existsSync, statSync } from 'node:fs'
 import { dirname, extname, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const staticAssetDirs = ['gifs', 'images', 'js', 'papers', 'formula']
+const staticAssetDirs = ['gifs', 'images', 'js', 'papers', 'formula', 'resume']
 const portfolioRoot = dirname(fileURLToPath(import.meta.url))
 const repositoryRoot = resolve(portfolioRoot, '..')
 

@@ -5,8 +5,8 @@ const project5 = {
     "id": 5,
     "slug": "v-core",
     "title": {
-        "ko": "V-CORE: AI Agent 기반 UE5 디지털 트윈 시뮬레이션 플랫폼",
-        "en": "V-CORE: AI Agent-Based UE5 Digital Twin Simulation Platform"
+        "ko": "AI 에이전트를 활용한 가상 공장 시뮬레이션",
+        "en": "Virtual Factory Simulation using AI agents"
     },
     "description": {
         "ko": "LangGraph, 로컬 LLM, Validation Layer, Pixel Streaming을 결합한 산업 공정 시뮬레이션 제어 플랫폼",
